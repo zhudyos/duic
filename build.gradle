@@ -1,0 +1,84 @@
+buildscript {
+    ext {
+        kotlinVersion = "1.1.61"
+        springBootVersion = "1.5.8.RELEASE"
+        springVersion = "5.0.1.RELEASE"
+    }
+
+    repositories {
+        mavenLocal()
+        maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
+        maven { url "https://repo.spring.io/libs-milestone" }
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion"
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.0.0.M6"
+        classpath "net.researchgate:gradle-release:2.4.0"
+        classpath "org.hidetake:gradle-ssh-plugin:2.9.0"
+        classpath "net.ltgt.gradle:gradle-apt-plugin:0.12"
+    }
+}
+
+plugins {
+    id "com.moowork.node" version "1.2.0"
+}
+
+apply plugin: "java"
+apply plugin: "maven"
+apply plugin: "idea"
+apply plugin: "kotlin"
+apply plugin: "kotlin-kapt"
+apply plugin: "kotlin-spring"
+apply plugin: "org.springframework.boot"
+apply plugin: "org.hidetake.ssh"
+apply plugin: "net.researchgate.release"
+
+group "io.zhudy.duic"
+
+repositories {
+    mavenLocal()
+    maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
+    maven { url "https://repo.spring.io/libs-milestone" }
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlinVersion"
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    // compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.1"
+
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.1"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.1"
+
+    compile "org.springframework.boot:spring-boot-starter:2.0.0.M6"
+    compile "io.javalin:javalin:1.1.0"
+    compile "org.springframework.data:spring-data-mongodb:2.0.1.RELEASE"
+
+//    compile "org.springframework:spring-core:$springVersion"
+//    compile "org.springframework:spring-beans:$springVersion"
+//    compile "org.springframework:spring-context:$springVersion"
+//    compile "org.springframework:spring-expression:$springVersion"
+//    compile "org.springframework:spring-aop:$springVersion"
+//    compile "org.springframework:spring-context-support:$springVersion"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}

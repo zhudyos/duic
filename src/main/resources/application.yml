@@ -1,0 +1,7 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://192.168.31.249:10000/duic
+
+app:
+  port: 7777
