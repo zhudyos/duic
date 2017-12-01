@@ -107,7 +107,7 @@ class Routes(
                         post("/", adminResource::saveApp)
                         get("/", adminResource::findAll)
                         get("/:name/:profile", adminResource::findOne)
-                        put("/:name/:profile", adminResource::updateApp)
+                        put("/", adminResource::updateApp)
                         delete("/:name/:profile", adminResource::deleteApp)
                     }
                 }

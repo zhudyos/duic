@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.google.common.cache.CacheBuilder
+import com.memeyule.cryolite.core.BizCodeException
 import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.Updates.*
+import io.zhudy.duic.BizCodes
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.PageResponse
 import io.zhudy.duic.dto.AppDto
@@ -70,12 +72,16 @@ class AppRepository(
     /**
      *
      */
-    fun updateContent(name: String, profile: String, content: String) {
-        mongoTemplate.execute(App::class.java) { coll ->
+    fun updateContent(app: App) {
+        val n = mongoTemplate.execute(App::class.java) { coll ->
             coll.updateOne(
-                    Document("name", name).append("profile", profile),
-                    combine(set("content", content), set("updated_at", DateTime.now()), inc("v", 1))
+                    Document("name", app.name).append("profile", app.profile).append("v", app.v),
+                    combine(set("content", app.content), set("updated_at", DateTime.now()), inc("v", 1))
             )
+        }.modifiedCount
+
+        if (n < 1) {
+            throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
         }
     }
 

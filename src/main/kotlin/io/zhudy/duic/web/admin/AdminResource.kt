@@ -36,15 +36,12 @@ class AdminResource(
      *
      */
     fun updateApp(ctx: Context) {
-        val name = ctx.param("name") ?: throw IllegalArgumentException("缺少 name 参数")
-        val profile = ctx.param("profile") ?: throw IllegalArgumentException("缺少 profile 参数")
-        val vo = ctx.bodyAsClass(UpdateAppVo::class.java)
-        appService.updateContent(name, profile, vo.content)
+        val app = ctx.bodyAsClass(App::class.java)
+        appService.updateContent(app)
         ctx.status(204)
     }
 
     fun deleteApp(ctx: Context) {
-
     }
 
     /**

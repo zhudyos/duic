@@ -24,8 +24,8 @@ class AppService(val appRepository: AppRepository) {
     /**
      * 更新配置内容.
      */
-    fun updateContent(name: String, profile: String, content: String) {
-        appRepository.updateContent(name, profile, content)
+    fun updateContent(app: App) {
+        appRepository.updateContent(app)
     }
 
     /**
