@@ -1,17 +1,28 @@
 <style lang="less">
+    .toolbar {
+        text-align: right;
+        margin-bottom: 5px;
+    }
+
+    .page {
+        text-align: right;
+        margin-top: 5px;
+    }
 </style>
 <template>
     <div>
+        <div class="toolbar">
+            <i-button type="primary" @click="createApp()">创建</i-button>
+        </div>
+
         <i-table border :columns="appColumns" :data="appData">
         </i-table>
 
-        <row>
-            <i-col offset="14">
-                <page ref="page" :total="total" show-sizer show-total
-                      @on-change="loadApps()"
-                      @on-page-size-change="loadApps()"></page>
-            </i-col>
-        </row>
+        <div class="page">
+            <page ref="page" :total="total" show-sizer show-total
+                  @on-change="loadApps()"
+                  @on-page-size-change="loadApps()"></page>
+        </div>
     </div>
 </template>
 
@@ -60,13 +71,16 @@
         },
         methods: {
             loadApps() {
-                var p = this.$refs.page
+                var p = this.$refs.page;
                 axios.get(`/api/admin/apps?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
                     this.appData = resp.data.items;
                     this.total = resp.data.total
                 }).catch(resp => {
 
                 })
+            },
+            createApp() {
+                this.$router.push({path: '/app-create'})
             }
         }
     };

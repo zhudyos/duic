@@ -53,13 +53,22 @@ export const otherRouter = {
     children: [
         {
             path: '/apps/:name/:profile',
-            title: '编辑应用',
-            name: 'app_edit',
+            name: 'app-edit',
             meta: {
                 title: '编辑应用'
             },
             component: resolve => {
                 require(['@/views/app/app-edit.vue'], resolve);
+            }
+        },
+        {
+            path: '/app-create',
+            name: 'app-create',
+            meta: {
+                title: '创建应用'
+            },
+            component: resolve => {
+                require(['@/views/app/app-create.vue'], resolve);
             }
         }
     ]
@@ -71,7 +80,7 @@ export const appRouter = [
         path: '/apps',
         icon: 'document',
         title: '应用管理',
-        name: 'app_parent',
+        name: 'app-parent',
         component: Main,
         children: [
             {

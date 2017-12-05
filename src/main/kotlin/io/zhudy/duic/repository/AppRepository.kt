@@ -13,6 +13,7 @@ import io.zhudy.duic.domain.PageResponse
 import io.zhudy.duic.dto.AppDto
 import org.bson.Document
 import org.bson.types.ObjectId
+import org.hashids.Hashids
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
@@ -31,6 +32,7 @@ class AppRepository(
         val mongoTemplate: MongoTemplate
 ) {
 
+    private val hashids = Hashids()
     private val log = LoggerFactory.getLogger(AppRepository::class.java)
     private val mapper = ObjectMapper(YAMLFactory())
     private val localCache = CacheBuilder.newBuilder().build<String, AppDto>()
@@ -73,14 +75,26 @@ class AppRepository(
      *
      */
     fun updateContent(app: App) {
+        val old = loadOne(app.name, app.profile)
         val n = mongoTemplate.execute(App::class.java) { coll ->
+            val updatedAt = Date()
             coll.updateOne(
                     Document("name", app.name).append("profile", app.profile).append("v", app.v),
-                    combine(set("content", app.content), set("updated_at", DateTime.now()), inc("v", 1))
+                    combine(
+                            set("content", app.content), set("updated_at", updatedAt), inc("v", 1),
+                            push("histories", mapOf<String, Any>(
+                                    "hid" to hashids.encode(app.id.hashCode().toLong(), System.currentTimeMillis(), app.v.toLong()),
+                                    "content" to old.content,
+                                    "created_at" to updatedAt
+                            ))
+                    )
             )
         }.modifiedCount
 
         if (n < 1) {
+            if (app.v != old.v) {
+                throw BizCodeException(BizCodes.C_1004)
+            }
             throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
         }
     }

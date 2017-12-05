@@ -1,5 +1,7 @@
 package io.zhudy.duic.service
 
+import com.memeyule.cryolite.core.BizCodeException
+import io.zhudy.duic.BizCodes
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.PageResponse
 import io.zhudy.duic.domain.SingleValue
@@ -90,7 +92,7 @@ class AppService(val appRepository: AppRepository) {
         return m
     }
 
-    private fun mergeProps(a: MutableMap<String, Any>, b: MutableMap<String, Any>) {
+    private fun mergeProps(a: MutableMap<String, Any>, b: MutableMap<String, Any>, prefix: String = "") {
         if (a.isEmpty()) {
             a.putAll(b)
             return
@@ -98,8 +100,15 @@ class AppService(val appRepository: AppRepository) {
 
         b.forEach { k, v ->
             if (v is Map<*, *>) {
-                val m = hashMapOf<String, Any>()
-                mergeProps(m, v.toMutableMap() as MutableMap<String, Any>)
+                val field = if (prefix.isEmpty()) k else "$prefix.$k"
+
+                val o = a[k]
+                if (o != null && o !is Map<*, *>) {
+                    throw BizCodeException(BizCodes.C_1005, "[$field] 数据类型为 [${o.javaClass}] 不能与 [Object] 合并")
+                }
+
+                val m = (o as? Map<String, Any>)?.toMutableMap() ?: hashMapOf()
+                mergeProps(m, v.toMutableMap() as MutableMap<String, Any>, field)
                 a.put(k, m)
             } else {
                 a.put(k, v)

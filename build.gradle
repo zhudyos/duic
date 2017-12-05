@@ -61,6 +61,7 @@ dependencies {
     compile "org.mapstruct:mapstruct-jdk8:1.2.0.Final"
     compile "redis.clients:jedis:2.9.0"
     compile "joda-time:joda-time:2.9.9"
+    compile "org.hashids:hashids:1.0.3"
     compile "org.pac4j:pac4j-mongo:2.2.0"
 
     kapt "org.mapstruct:mapstruct-processor:1.2.0.Final"

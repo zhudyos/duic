@@ -65,6 +65,11 @@ class Routes(
 
     @PostConstruct
     fun init() {
+        // charset encoding
+        lin.before { ctx ->
+            ctx.charset(Charsets.UTF_8.name())
+        }
+
         // request id
         lin.before { ctx ->
             var requestId = ctx.header(WebConstants.REQUEST_ID)
