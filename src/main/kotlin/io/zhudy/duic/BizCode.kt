@@ -18,9 +18,14 @@ interface BizCode {
     val msg: String
 
     /**
+     * HTTP Status.
+     */
+    val status: Int
+
+    /**
      * 经典错误码.
      */
-    enum class Classic(override val code: Int, override val msg: String) : BizCode {
+    enum class Classic(override val code: Int, override val msg: String, override val status: Int = 400) : BizCode {
         /**
          * 未知的系统错误.
          */
@@ -28,11 +33,15 @@ interface BizCode {
         /**
          * 未认证.
          */
-        C_401(401, "未认证"),
+        C_401(401, "未认证", 401),
+        /**
+         *
+         */
+        C_403(403, "拒绝访问", 403),
         /**
          * 服务器内部错误.
          */
-        C_500(500, "服务器内部错误"),
+        C_500(500, "服务器内部错误", 500),
         C_995(995, "唯一索引冲突"),
         C_996(996, "不是可选的枚举值"),
         C_997(997, "获取第三方数据失败"),

@@ -20,8 +20,8 @@
 
         <div class="page">
             <page ref="page" :total="total" show-sizer show-total
-                  @on-change="loadApps()"
-                  @on-page-size-change="loadApps()"></page>
+                  @on-change="loadUsers()"
+                  @on-page-size-change="loadUsers()"></page>
         </div>
     </div>
 </template>
@@ -55,7 +55,11 @@
                                         click: () => {
                                             var r = params.row;
                                             this.$router.push({
-                                                path: `/apps/${r.name}/${r.profile}`
+                                                path: `/app-content-edit`,
+                                                query: {
+                                                    name: r.name,
+                                                    profile: r.profile
+                                                }
                                             })
                                         }
                                     }
@@ -67,16 +71,14 @@
             };
         },
         mounted() {
-            this.loadApps()
+            this.loadUsers()
         },
         methods: {
-            loadApps() {
+            loadUsers() {
                 var p = this.$refs.page;
                 axios.get(`/api/admin/apps?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
                     this.appData = resp.data.items;
                     this.total = resp.data.total
-                }).catch(resp => {
-
                 })
             },
             createApp() {

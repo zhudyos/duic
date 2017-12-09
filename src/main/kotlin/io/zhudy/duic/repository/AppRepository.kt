@@ -140,8 +140,7 @@ class AppRepository(
             coll.find().limit(page.pageSize).skip(page.offset.toInt()).forEach {
                 list.add(mapToAppDto(it))
             }
-            coll.find().count()
-            PageResponse(coll.find().count(), list)
+            PageResponse(coll.count(), list)
         }
     }
 

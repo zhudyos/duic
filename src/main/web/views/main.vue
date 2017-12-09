@@ -4,9 +4,7 @@
 <template>
     <div class="main" :class="{'main-hide-text': shrink}">
         <div class="sidebar-menu-con" :style="{width: shrink?'60px':'200px', overflow: shrink ? 'visible' : 'auto'}">
-            <shrinkable-menu
-                    :shrink="shrink"
-                    :menu-list="menuList">
+            <shrinkable-menu :shrink="shrink" :menu-list="menuList">
                 <div slot="top" class="logo-con">
                     <img v-show="!shrink" src="../images/logo.jpg" key="max-logo"/>
                     <img v-show="shrink" src="../images/logo-min.jpg" key="min-logo"/>
@@ -16,25 +14,25 @@
         <div class="main-header-con" :style="{paddingLeft: shrink?'60px':'200px'}">
             <div class="main-header">
                 <div class="navicon-con">
-                    <Button :style="{transform: 'rotateZ(' + (this.shrink ? '-90' : '0') + 'deg)'}" type="text"
-                            @click="toggleClick">
-                        <Icon type="navicon" size="32"></Icon>
-                    </Button>
+                    <i-button :style="{transform: 'rotateZ(' + (this.shrink ? '-90' : '0') + 'deg)'}" type="text"
+                              @click="toggleClick">
+                        <icon type="navicon" size="32"></icon>
+                    </i-button>
                 </div>
                 <div class="header-avator-con">
                     <div class="user-dropdown-menu-con">
-                        <Row type="flex" justify="end" align="middle" class="user-dropdown-innercon">
-                            <Dropdown transfer trigger="click" @on-click="handleClickUserDropdown">
+                        <row type="flex" justify="end" align="middle" class="user-dropdown-innercon">
+                            <dropdown transfer trigger="click" @on-click="handleClickUserDropdown">
                                 <a href="javascript:void(0)">
-                                    <span class="main-user-name">{{ userName }}</span>
-                                    <Icon type="arrow-down-b"></Icon>
+                                    <span class="main-user-name">{{ email }}</span>
+                                    <icon type="arrow-down-b"></icon>
                                 </a>
-                                <DropdownMenu slot="list">
-                                    <DropdownItem name="loginout" divided>退出登录</DropdownItem>
-                                </DropdownMenu>
-                            </Dropdown>
-                            <Avatar icon="person" style="background: #619fe7;margin-left:10px;"></Avatar>
-                        </Row>
+                                <dropdown-menu slot="list">
+                                    <dropdown-item name="logout" divided>退出登录</dropdown-item>
+                                </dropdown-menu>
+                            </dropdown>
+                            <avatar icon="person" style="background: #619fe7;margin-left:10px;"></avatar>
+                        </row>
                     </div>
                 </div>
             </div>
@@ -47,6 +45,7 @@
     </div>
 </template>
 <script>
+    import axios from 'js-cookie';
     import Cookies from 'js-cookie';
     import shrinkableMenu from './main-components/shrinkable-menu/shrinkable-menu.vue';
 
@@ -57,7 +56,7 @@
         data() {
             return {
                 shrink: false,
-                userName: ''
+                email: ''
             };
         },
         computed: {
@@ -66,20 +65,27 @@
             }
         },
         methods: {
-            init() {
-                this.userName = Cookies.get('user');
-            },
             toggleClick() {
                 this.shrink = !this.shrink;
             },
             handleClickUserDropdown(name) {
-                this.$router.push({
-                    name: 'login'
-                });
+                if (name === 'logout') {
+                    this.logout()
+                }
+            },
+            logout() {
+                Cookies.remove('token');
+                Cookies.remove('email');
+                this.$router.push({name: 'login'});
             }
         },
         mounted() {
-            this.init();
+            var token = Cookies.get('token');
+            if (!token) {
+                this.$router.push({name: 'login'});
+                return
+            }
+            this.email = Cookies.get('email');
         }
     };
 </script>

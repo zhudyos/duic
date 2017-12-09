@@ -30,7 +30,7 @@ module.exports = merge(webpackBaseConfig, {
             minChunks: Infinity
         }),
         new HtmlWebpackPlugin({
-            title: 'iView admin v' + package.version,
+            title: 'DuiC Admin v' + package.version,
             filename: './index.html',
             template: './src/main/web/template/index.ejs',
             inject: false

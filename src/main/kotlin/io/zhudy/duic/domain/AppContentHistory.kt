@@ -7,6 +7,7 @@ import org.joda.time.DateTime
  */
 class AppContentHistory(
         var hid: String = "",
+        var modifier: String = "",
         var content: String = "",
-        var created_at: DateTime = DateTime.now()
+        var updated_at: DateTime = DateTime.now()
 )

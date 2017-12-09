@@ -1,22 +1,18 @@
 <style type="less">
-    .breadcrumb-menu {
-        padding-top: 10px;
-        padding-bottom: 10px;
-    }
 </style>
 <template>
     <div>
-        <breadcrumb class="breadcrumb-menu">
-            <breadcrumb-item to="/apps">应用列表</breadcrumb-item>
+        <breadcrumb class="ctn-breadcrumb-menu">
+            <breadcrumb-item to="/app">应用列表</breadcrumb-item>
             <breadcrumb-item>创建应用</breadcrumb-item>
         </breadcrumb>
         <card>
             <i-form :model="app" :rules="validation" label-position="right" :label-width="80">
                 <form-item label="应用名称" prop="name">
-                    <i-input v-model="app.name" placeholder="应用名称 Name"></i-input>
+                    <i-input v-model="app.name" placeholder="应用名称 name"></i-input>
                 </form-item>
                 <form-item label="应用环境" prop="profile">
-                    <i-input v-model="app.profile" placeholder="应用环境 Profile"></i-input>
+                    <i-input v-model="app.profile" placeholder="应用环境 profile"></i-input>
                 </form-item>
                 <form-item label="所属用户">
                     <i-select v-model="app.users" multiple filterable>
@@ -24,7 +20,7 @@
                     </i-select>
                 </form-item>
                 <form-item>
-                    <i-button type="primary">提交</i-button>
+                    <i-button type="primary" @click="commit()">提交</i-button>
                 </form-item>
             </i-form>
         </card>
@@ -57,6 +53,12 @@
         },
         methods: {
             commit() {
+                axios.post(`/api/admin/apps`, this.app).then(() => {
+                    this.$Message.success('应用添加成功');
+                }).catch((err) => {
+                    var d = err.response.data || {};
+                    this.$Message.error(d.message || '应用添加失败');
+                })
             }
         }
     }

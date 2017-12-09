@@ -32,8 +32,8 @@
             }
         },
         mounted() {
-            var params = this.$route.params;
-            axios.get(`/api/admin/apps/${params.name}/${params.profile}`).then((resp) => {
+            var query = this.$route.query;
+            axios.get(`/api/admin/apps/${query.name}/${query.profile}`).then((resp) => {
                 this.app = resp.data;
                 this.initEditor();
             });
@@ -71,7 +71,7 @@
                     this.editor = editor;
                 });
             },
-            changeContent(e) {
+            changeContent() {
                 this.$refs.commitBtn.disabled = false;
             }
         }

@@ -16,9 +16,14 @@ import io.javalin.Javalin
 import io.javalin.embeddedserver.jetty.EmbeddedJettyFactory
 import io.javalin.translator.json.JavalinJacksonPlugin
 import io.zhudy.duic.Config
+import io.zhudy.duic.web.MissingRequestParameterException
+import io.zhudy.duic.web.RequestParameterFormatException
 import io.zhudy.duic.web.WebConstants
 import io.zhudy.duic.web.admin.AdminResource
-import io.zhudy.duic.web.admin.AppResource
+import io.zhudy.duic.web.security.AccessManagerImpl
+import io.zhudy.duic.web.security.AuthUserInterceptor
+import io.zhudy.duic.web.security.RootUserInterceptor
+import io.zhudy.duic.web.v1.AppResource
 import org.eclipse.jetty.server.Server
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -40,6 +45,9 @@ class Routes(
 ) {
 
     private val log = LoggerFactory.getLogger(Routes::class.java)
+    private val authRoles = listOf(AuthUserInterceptor)
+    private val rootRoles = listOf(AuthUserInterceptor, RootUserInterceptor)
+
     private val lin: Javalin
 
     init {
@@ -90,13 +98,14 @@ class Routes(
             ctx.header("Cache-Control", "no-cache").header("Pragma", "no-cache")
         }
 
+        // 访问权限控制
+        lin.accessManager(AccessManagerImpl)
+
         lin.routes {
             // api
             path("/api") {
                 path("/v1") {
-                    get("/sc") { ctx ->
-                        ctx.result("HELLO")
-                    }
+                    get("/ssc/:name/:profiles", appResource::loadSpringCloudConfig)
 
                     path("/apps/:name/:profiles") {
                         get("", appResource::loadConfigByNp)
@@ -107,13 +116,21 @@ class Routes(
                 // admin
                 path("/admin") {
                     post("/login", adminResource::login)
+                    get("/user/root", adminResource::rootUser, authRoles)
+
+                    path("/users") {
+                        post("/", adminResource::saveUser, authRoles)
+                        get("/", adminResource::findPageUser, authRoles)
+                        delete("/:email", adminResource::deleteUser, rootRoles)
+                        patch("/password", adminResource::resetUserPassword, rootRoles) // 重置密码
+                    }
 
                     path("/apps") {
-                        post("/", adminResource::saveApp)
-                        get("/", adminResource::findAll)
-                        get("/:name/:profile", adminResource::findOne)
-                        put("/", adminResource::updateApp)
-                        delete("/:name/:profile", adminResource::deleteApp)
+                        post("/", adminResource::saveApp, authRoles)
+                        get("/", adminResource::findAllApp, authRoles)
+                        get("/:name/:profile", adminResource::findOneApp, authRoles)
+                        put("/", adminResource::updateApp, authRoles)
+                        delete("/:name/:profile", adminResource::deleteApp, authRoles)
                     }
                 }
             }
@@ -122,13 +139,27 @@ class Routes(
         // ======================================== 异常处理 ==============================================
         lin.exception(DuplicateKeyException::class.java) { e: DuplicateKeyException, ctx: Context ->
             ctx.status(400).json(mapOf(
-                    "code" to BizCode.Classic.C_995,
+                    "code" to BizCode.Classic.C_995.code,
                     "message" to e.rootCause.message
             ))
             Unit
         }
-        lin.exception(BizCodeException::class.java) { e: BizCodeException, ctx: Context ->
+        lin.exception(MissingRequestParameterException::class.java) { e: MissingRequestParameterException, ctx: Context ->
             ctx.status(400).json(mapOf(
+                    "code" to BizCode.Classic.C_999.code,
+                    "message" to e.message
+            ))
+            Unit
+        }
+        lin.exception(RequestParameterFormatException::class.java) { e: RequestParameterFormatException, ctx: Context ->
+            ctx.status(400).json(mapOf(
+                    "code" to BizCode.Classic.C_998.code,
+                    "message" to e.message
+            ))
+            Unit
+        }
+        lin.exception(BizCodeException::class.java) { e: BizCodeException, ctx: Context ->
+            ctx.status(e.bizCode.status).json(mapOf(
                     "code" to e.bizCode.code,
                     "message" to if (e.exactMessage.isNotEmpty()) e.exactMessage else e.bizCode.msg
             ))

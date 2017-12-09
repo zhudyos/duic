@@ -44,7 +44,7 @@ module.exports = merge(webpackBaseConfig, {
             }
         }),
         new HtmlWebpackPlugin({
-            title: 'iView admin v' + package.version,
+            title: 'DuiC Admin v' + package.version,
             favicon: './td_icon.ico',
             filename: './index.html',
             template: './src/main/web/template/index.ejs',

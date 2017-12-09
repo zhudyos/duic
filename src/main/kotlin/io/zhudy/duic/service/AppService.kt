@@ -6,9 +6,12 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.PageResponse
 import io.zhudy.duic.domain.SingleValue
 import io.zhudy.duic.dto.AppDto
+import io.zhudy.duic.dto.SpringCloudPropertySource
+import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -42,6 +45,22 @@ class AppService(val appRepository: AppRepository) {
      */
     fun findOne(name: String, profile: String): AppDto {
         return appRepository.findOne(name, profile)
+    }
+
+    /**
+     *
+     */
+    fun loadSpringCloudConfig(name: String, profiles: List<String>): SpringCloudResponseDto {
+        val apps = arrayListOf<AppDto>()
+        profiles.forEach {
+            apps.add(appRepository.findOne(name, it))
+        }
+
+        val ps = arrayListOf<SpringCloudPropertySource>()
+        apps.forEach {
+            ps.add(SpringCloudPropertySource(name = "${it.name}_${it.profile}", source = flattenedMap(it.properties)))
+        }
+        return SpringCloudResponseDto(name = name, profiles = profiles, propertySources = ps)
     }
 
     /**
@@ -112,6 +131,43 @@ class AppService(val appRepository: AppRepository) {
                 a.put(k, m)
             } else {
                 a.put(k, v)
+            }
+        }
+    }
+
+    private fun flattenedMap(source: Map<String, Any>): Map<String, Any> {
+        val result = mutableMapOf<String, Any>()
+        buildFlattenedMap(result, source, "")
+        return result
+    }
+
+    private fun buildFlattenedMap(result: MutableMap<String, Any>, source: Map<String, Any>, path: String) {
+        for (entry in source.entries) {
+            var key = entry.key
+            if (path.isNotEmpty()) {
+                key = if (key.startsWith("[")) {
+                    path + key
+                } else {
+                    path + '.' + key
+                }
+            }
+
+            val value = entry.value
+            when (value) {
+                is String -> result.put(key, value)
+                is Map<*, *> -> {
+                    // Need a compound key
+                    val map = value as Map<String, Any>
+                    buildFlattenedMap(result, map, key)
+                }
+                is Collection<*> -> {
+                    // Need a compound key
+                    val collection = value as Collection<Any>
+                    for ((count, o) in collection.withIndex()) {
+                        buildFlattenedMap(result, mapOf("[$count]" to o), key)
+                    }
+                }
+                else -> result.put(key, value)
             }
         }
     }

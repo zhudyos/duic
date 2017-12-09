@@ -29,6 +29,7 @@ class App(
         var updatedAt: DateTime? = null,
         @Field
         var content: String = "",
+        @Indexed
         @Field
         var users: Array<String> = emptyArray()
 )

@@ -52,13 +52,23 @@ export const otherRouter = {
     component: Main,
     children: [
         {
-            path: '/apps/:name/:profile',
-            name: 'app-edit',
+            path: '/user-create',
+            name: 'user-create',
             meta: {
-                title: '编辑应用'
+                title: '创建用户'
             },
             component: resolve => {
-                require(['@/views/app/app-edit.vue'], resolve);
+                require(['@/views/user/user-create.vue'], resolve);
+            }
+        },
+        {
+            path: '/app-content-edit',
+            name: 'app-content-edit',
+            meta: {
+                title: '编辑配置'
+            },
+            component: resolve => {
+                require(['@/views/app/app-content-edit.vue'], resolve);
             }
         },
         {
@@ -77,21 +87,39 @@ export const otherRouter = {
 // 作为Main组件的子页面展示并且在左侧菜单显示的路由写在appRouter里
 export const appRouter = [
     {
-        path: '/apps',
+        path: '/app',
         icon: 'document',
-        title: '应用管理',
         name: 'app-parent',
+        title: '应用管理',
         component: Main,
         children: [
             {
                 path: '',
-                title: '应用管理',
                 name: 'app',
                 meta: {
                     title: '应用管理'
                 },
                 component: resolve => {
                     require(['@/views/app/app.vue'], resolve);
+                }
+            }
+        ]
+    },
+    {
+        path: '/user',
+        icon: 'document',
+        name: 'user-parent',
+        title: '用户管理',
+        component: Main,
+        children: [
+            {
+                path: '',
+                name: 'user',
+                meta: {
+                    title: '用户管理'
+                },
+                component: resolve => {
+                    require(['@/views/user/user.vue'], resolve);
                 }
             }
         ]

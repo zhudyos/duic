@@ -1,7 +1,7 @@
 package io.zhudy.duic.domain
 
 import org.joda.time.DateTime
-import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 
@@ -10,10 +10,9 @@ import org.springframework.data.mongodb.core.mapping.Field
  */
 @Document(collection = "user")
 class User(
-        @Id
-        var id: String = "",
+        @Indexed(unique = true)
         @Field
-        var username: String = "",
+        var email: String = "",
         @Field
         var password: String = "",
         @Field("created_at")

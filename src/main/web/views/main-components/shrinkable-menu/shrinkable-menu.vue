@@ -73,9 +73,7 @@
                     }
                 }
                 if (willpush) {
-                    this.$router.push({
-                        name: name
-                    });
+                    this.$router.push({name: name});
                 }
                 this.$emit('on-change', name);
             }

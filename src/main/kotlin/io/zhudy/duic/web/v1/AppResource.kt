@@ -1,9 +1,11 @@
-package io.zhudy.duic.web.admin
+package io.zhudy.duic.web.v1
 
 import com.memeyule.cryolite.core.BizCode
 import com.memeyule.cryolite.core.BizCodeException
 import io.javalin.Context
 import io.zhudy.duic.service.AppService
+import io.zhudy.duic.web.pathString
+import io.zhudy.duic.web.pathTrimString
 import org.springframework.stereotype.Controller
 
 /**
@@ -15,8 +17,17 @@ class AppResource(val appService: AppService) {
     /**
      *
      */
+    fun loadSpringCloudConfig(ctx: Context) {
+        val name = ctx.pathTrimString("name")
+        val profiles = getProfilesParam(ctx)
+        ctx.json(appService.loadSpringCloudConfig(name, profiles))
+    }
+
+    /**
+     *
+     */
     fun loadConfigByNp(ctx: Context) {
-        val name = getNameParam(ctx)
+        val name = ctx.pathTrimString("name")
         val profiles = getProfilesParam(ctx)
         ctx.json(appService.loadConfigByNp(name, profiles))
     }
@@ -25,20 +36,17 @@ class AppResource(val appService: AppService) {
      *
      */
     fun loadConfigByNpAndKey(ctx: Context) {
-        val name = getNameParam(ctx)
+        val name = ctx.pathTrimString("name")
         val profiles = getProfilesParam(ctx)
         val key = ctx.param("key")?.trim() ?: throw BizCodeException(BizCode.Classic.C_999, "缺少 key 参数")
         ctx.json(appService.loadConfigByNpAndKey(name, profiles, key) ?: emptyMap<Any, Any>())
     }
 
-    private fun getNameParam(ctx: Context) = ctx.param("name")?.trim() ?: throw BizCodeException(BizCode.Classic.C_999, "缺少 name 参数")
-
     private fun getProfilesParam(ctx: Context): List<String> {
-        val profiles = ctx.param("profiles")?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
+        val profiles = ctx.pathString("profiles")?.split(",")?.map { it.trim() }?.filter { it.isNotEmpty() }
         if (profiles == null || profiles.isEmpty()) {
             throw BizCodeException(BizCode.Classic.C_999, "缺少 profiles 参数")
         }
         return profiles
     }
-
 }

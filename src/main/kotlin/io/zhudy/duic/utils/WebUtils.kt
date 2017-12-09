@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 
 /**
+ * `Web` 工具包.
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 object WebUtils {

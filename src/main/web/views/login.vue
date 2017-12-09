@@ -5,50 +5,51 @@
 <template>
     <div class="login" @keydown.enter="handleSubmit">
         <div class="login-con">
-            <Card :bordered="false">
+            <card :bordered="false">
                 <p slot="title">
-                    <Icon type="log-in"></Icon>
+                    <icon type="log-in"></icon>
                     欢迎登录
                 </p>
                 <div class="form-con">
-                    <Form ref="loginForm" :model="form" :rules="rules">
-                        <FormItem prop="userName">
-                            <Input v-model="form.userName" placeholder="请输入用户名">
-                            <span slot="prepend">
-                                    <Icon :size="16" type="person"></Icon>
+                    <i-form ref="loginForm" :model="form" :rules="rules">
+                        <form-item prop="email">
+                            <i-input v-model="form.email" placeholder="email" autofocus>
+                                <span slot="prepend">
+                                    <icon :size="16" type="person"></icon>
                                 </span>
-                            </Input>
-                        </FormItem>
-                        <FormItem prop="password">
-                            <Input type="password" v-model="form.password" placeholder="请输入密码">
-                            <span slot="prepend">
-                                    <Icon :size="14" type="locked"></Icon>
+                            </i-input>
+                        </form-item>
+                        <form-item prop="password">
+                            <i-input type="password" v-model="form.password" placeholder="password">
+                                <span slot="prepend">
+                                    <icon :size="14" type="locked"></icon>
                                 </span>
-                            </Input>
-                        </FormItem>
-                        <FormItem>
-                            <Button @click="handleSubmit" type="primary" long>登录</Button>
-                        </FormItem>
-                    </Form>
+                            </i-input>
+                        </form-item>
+                        <form-item>
+                            <i-button @click="handleSubmit" type="primary" long>登录</i-button>
+                        </form-item>
+                    </i-form>
                 </div>
-            </Card>
+            </card>
         </div>
     </div>
 </template>
 
 <script>
+    import axios from 'axios';
     import Cookies from 'js-cookie';
 
     export default {
         data() {
             return {
                 form: {
-                    userName: '',
+                    email: '',
                     password: ''
                 },
                 rules: {
-                    userName: [
-                        {required: true, message: '账号不能为空', trigger: 'blur'}
+                    email: [
+                        {required: true, type: 'email', message: '邮箱错误', trigger: 'blur'}
                     ],
                     password: [
                         {required: true, message: '密码不能为空', trigger: 'blur'}
@@ -59,12 +60,28 @@
         methods: {
             handleSubmit() {
                 this.$refs.loginForm.validate((valid) => {
-                    if (valid) {
-                        Cookies.set('user', this.form.userName);
-                        this.$router.push({
-                            name: 'home_index'
-                        });
+                    if (!valid) {
+                        return
                     }
+
+                    var params = new URLSearchParams();
+                    params.append('email', this.form.email);
+                    params.append('password', this.form.password);
+
+                    axios.post('/api/admin/login', params).then((resp) => {
+                        Cookies.set('token', resp.data.token);
+                        Cookies.set('email', this.form.email);
+                        this.$router.push({path: '/'});
+                    }).catch((err) => {
+                        var d = err.response.data || {};
+                        var msg = '登录失败';
+                        if(d.code === 2000) {
+                            msg = '用户不存在'
+                        } else if (d.code === 2001) {
+                            msg = '密码不匹配'
+                        }
+                        this.$Message.error(msg);
+                    });
                 });
             }
         }
