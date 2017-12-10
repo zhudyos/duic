@@ -5,8 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.datatype.joda.JodaModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import java.io.InputStream
 import java.util.*
@@ -25,7 +24,7 @@ object JacksonUtils {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        objectMapper.registerModules(Jdk8Module(), JavaTimeModule())
+        objectMapper.registerModules(JodaModule())
         objectMapper.registerKotlinModule()
     }
 

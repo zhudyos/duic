@@ -16,6 +16,7 @@
 
     export default {
         mounted() {
+            this.$Message.config({duration: 3});
         },
         methods: {}
     };

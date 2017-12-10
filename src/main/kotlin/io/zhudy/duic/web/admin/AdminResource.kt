@@ -118,6 +118,13 @@ class AdminResource(
     }
 
     /**
+     * 查询用户的 apps.
+     */
+    fun findAppByUser(ctx: Context) {
+
+    }
+
+    /**
      *
      */
     fun findAllApp(ctx: Context) {

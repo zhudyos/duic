@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlinVersion = "1.1.61"
+        kotlinVersion = "1.2.0"
         springBootVersion = "1.5.8.RELEASE"
     }
 
@@ -15,8 +15,6 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion"
         classpath "org.springframework.boot:spring-boot-gradle-plugin:2.0.0.M6"
-        classpath "org.hidetake:gradle-ssh-plugin:2.9.0"
-        classpath "net.ltgt.gradle:gradle-apt-plugin:0.12"
     }
 }
 
@@ -28,10 +26,8 @@ apply plugin: "java"
 apply plugin: "maven"
 apply plugin: "idea"
 apply plugin: "kotlin"
-apply plugin: "kotlin-kapt"
 apply plugin: "kotlin-spring"
 apply plugin: "org.springframework.boot"
-apply plugin: "org.hidetake.ssh"
 
 group "io.zhudy.duic"
 
@@ -45,27 +41,20 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlinVersion"
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
-    // compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19.1"
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1"
-    compile "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.9.1"
-    compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.9.1"
     compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.1"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.1"
 
     compile "org.springframework.boot:spring-boot-starter:2.0.0.M6"
     compile "io.javalin:javalin:1.1.0"
     compile "com.google.guava:guava:23.5-jre"
-    // compile "org.springframework.data:spring-data-redis:2.0.1.RELEASE"
     compile "org.springframework.data:spring-data-mongodb:2.0.1.RELEASE"
-    compile "org.mapstruct:mapstruct-jdk8:1.2.0.Final"
     compile "redis.clients:jedis:2.9.0"
     compile "joda-time:joda-time:2.9.9"
     compile "org.hashids:hashids:1.0.3"
     compile "com.auth0:java-jwt:3.3.0"
     compile "org.springframework.security:spring-security-crypto:5.0.0.RELEASE"
-
-    kapt "org.mapstruct:mapstruct-processor:1.2.0.Final"
 }
 
 compileKotlin {
@@ -84,3 +73,27 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 artifacts {
     archives sourcesJar
 }
+
+node {
+    version = "7.7.1"
+    npmVersion = "4.1.2"
+    download = true
+}
+
+//task cnpmInstall(type: NpmTask) {
+//    group = 'node'
+//    args = ['install', '--registry=http://registry.cnpmjs.org']
+//}
+
+task buildAdmin(type: NpmTask) {
+    group = 'node'
+    args = ['run', 'build']
+}
+
+task copyAdminFiles(type: Copy) {
+    group = 'node'
+    from 'dist'
+    into "${project.buildDir}/resources/main"
+}
+
+jar.dependsOn copyAdminFiles

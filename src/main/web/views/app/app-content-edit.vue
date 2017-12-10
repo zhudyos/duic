@@ -1,7 +1,7 @@
 <style type="less">
     #editor {
         position: absolute;
-        top: 0;
+        top: 30px;
         right: 0;
         bottom: 10%;
         left: 0;
@@ -16,8 +16,13 @@
 </style>
 <template>
     <div>
+        <breadcrumb class="ctn-breadcrumb-menu">
+            <breadcrumb-item>首页</breadcrumb-item>
+            <breadcrumb-item to="/app">应用列表</breadcrumb-item>
+            <breadcrumb-item>修改配置(name: {{app.name}}, profile: {{app.profile}})</breadcrumb-item>
+        </breadcrumb>
         <pre id="editor"></pre>
-        <i-button ref="commitBtn" class="commit-btn" type="primary" @click="commit()" disabled> 提 交 </i-button>
+        <i-button ref="commitBtn" class="commit-btn" type="primary" @click="commit()" disabled>提交</i-button>
     </div>
 </template>
 <script>
@@ -40,7 +45,6 @@
         },
         methods: {
             commit() {
-                this.$refs.commitBtn.loading = true;
                 axios.put(`/api/admin/apps`, {
                     name: this.app.name,
                     profile: this.app.profile,
@@ -48,11 +52,14 @@
                     content: this.editor.getValue()
                 }).then(() => {
                     this.$Message.success('配置修改成功');
-                    this.$router.go({path: this.$route.path, force: true});
+                    this.$refs.commitBtn.disabled = true;
                 }).catch((err) => {
                     var d = err.response.data || {};
-                    this.$Message.error(d.message || '配置修改失败');
-                    this.$refs.commitBtn.loading = false;
+                    var msg = d.message;
+                    if (d.code === 1006) {
+                        msg = '文件格式错误';
+                    }
+                    this.$Message.error(msg || '配置修改失败');
                 });
             },
             initEditor() {

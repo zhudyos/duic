@@ -23,6 +23,7 @@ import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
+import kotlin.collections.HashMap
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -36,6 +37,7 @@ class AppRepository(
     private val log = LoggerFactory.getLogger(AppRepository::class.java)
     private val mapper = ObjectMapper(YAMLFactory())
     private val localCache = CacheBuilder.newBuilder().build<String, AppDto>()
+    private val hashMapTypeRef = object : TypeReference<HashMap<String, Any>>() {}
 
     private val reloadExec = Executors.newSingleThreadScheduledExecutor {
         val t = Thread(it)
@@ -75,6 +77,12 @@ class AppRepository(
      *
      */
     fun updateContent(app: App) {
+        try {
+            mapper.readValue<HashMap<String, Any>>(app.content, hashMapTypeRef)
+        } catch (e: Exception) {
+            throw BizCodeException(BizCodes.C_1006, e)
+        }
+
         val old = loadOne(app.name, app.profile)
         val n = mongoTemplate.execute(App::class.java) { coll ->
             val updatedAt = Date()
@@ -161,7 +169,6 @@ class AppRepository(
     }
 
     private fun mapToAppDto(doc: Document): AppDto {
-        val hashMapTypeRef = object : TypeReference<HashMap<String, Any>>() {}
         val content = doc.getString("content") ?: ""
         val properties = if (content.isNotEmpty()) {
             mapper.readValue(content, hashMapTypeRef)

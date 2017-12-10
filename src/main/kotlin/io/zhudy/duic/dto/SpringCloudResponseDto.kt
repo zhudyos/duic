@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 class SpringCloudResponseDto(
         val name: String,
         val profiles: List<String>,
+        val state: String,
         @JsonProperty("propertySources")
         val propertySources: List<SpringCloudPropertySource>
 )

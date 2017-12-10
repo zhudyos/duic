@@ -11,6 +11,7 @@ import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import java.lang.StringBuilder
 
 
 /**
@@ -57,10 +58,12 @@ class AppService(val appRepository: AppRepository) {
         }
 
         val ps = arrayListOf<SpringCloudPropertySource>()
+        val state = StringBuilder()
         apps.forEach {
             ps.add(SpringCloudPropertySource(name = "${it.name}_${it.profile}", source = flattenedMap(it.properties)))
+            state.append(it.v)
         }
-        return SpringCloudResponseDto(name = name, profiles = profiles, propertySources = ps)
+        return SpringCloudResponseDto(name = name, profiles = profiles, state = state.toString(), propertySources = ps)
     }
 
     /**
