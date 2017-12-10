@@ -1,7 +1,7 @@
 {
-  "name": "iview-admin-template",
+  "name": "duic-admin",
   "version": "1.0.0",
-  "description": "a management template bases on iview",
+  "description": "DuiC Admin",
   "main": "index.js",
   "scripts": {
     "init": "webpack --progress --config buildSrc/webpack.dev.config.js",
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/iview/iview-admin.git"
+    "url": "https://github.com/zhudyos/duic"
   },
   "author": "",
   "license": "MIT",
