@@ -1,0 +1,9 @@
+sudo: required
+language: java
+jdk:
+  - oraclejdk8
+
+services:
+  - docker
+
+script: ./gradlew clean build
