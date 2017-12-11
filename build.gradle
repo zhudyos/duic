@@ -120,7 +120,7 @@ task createDockerfile(type: Dockerfile, dependsOn: jar) {
         }
     }
 
-    def jarName = "${jar.archiveName}.jar".toString()
+    def jarName = "${project.name}.jar".toString()
 
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
 
