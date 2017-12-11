@@ -99,8 +99,8 @@ jar.dependsOn copyAdminFiles
 docker {
     registryCredentials {
         url = "https://index.docker.io/v1/"
-        username = "kevin70"
-        password = "njSzbjie0+"
+        username = System.env.DOCKER_REGISTRY_USERNAME
+        password = System.env.DOCKER_REGISTRY_PASSWORD
         email = "kevinz@weghst.com"
     }
 }
