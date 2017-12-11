@@ -109,15 +109,24 @@ docker {
     }
 }
 
-task createDockerfile(type: Dockerfile) {
+task createDockerfile(type: Dockerfile, dependsOn: jar) {
     group = "docker"
+
+    copy {
+        from jar.archivePath.path
+        into "${project.buildDir}/docker"
+        rename { String fileName ->
+            fileName.replace("-${project.version}", "")
+        }
+    }
+
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
     from "openjdk:8-jdk-alpine"
     maintainer "Kevin Zou <kevinz@weghst.com>"
-    copyFile(jar.archivePath.path, "app.jar")
+    copyFile("${jar.archiveName}.jar".toString(), "/apps/${jar.archiveName}.jar".toString())
     environmentVariable("JAVA_OPTS", "-server -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -Xloggc:logs/gc.log")
     exposePort(7777)
-    entryPoint("java", "-jar", "app.jar", "\$JAVA_OPTS")
+    entryPoint("java", "-jar", "${jar.archiveName}.jar".toString(), "\$JAVA_OPTS")
 }
 
 task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) {
