@@ -115,7 +115,7 @@ task createDockerfile(type: Dockerfile) {
     from "openjdk:8-jdk-alpine"
     maintainer "Kevin Zou <kevinz@weghst.com>"
     copyFile(jar.archivePath.path, "app.jar")
-    environmentVariable("JAVA_OPTS", "")
+    environmentVariable("JAVA_OPTS", "-server -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -Xloggc:logs/gc.log")
     exposePort(7777)
     entryPoint("java", "-jar", "app.jar", "\$JAVA_OPTS")
 }
@@ -123,5 +123,5 @@ task createDockerfile(type: Dockerfile) {
 task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) {
     group = "docker"
     inputDir = createDockerfile.destFile.parentFile
-    tags = ["zhudyos/${project.name}:${project.version}", "zhudyos/${project.name}:latest"]
+    tags = ["zhudyos/${project.name}:${project.version}".toString(), "zhudyos/${project.name}:latest".toString()]
 }
