@@ -9,8 +9,8 @@ buildscript {
 
     repositories {
         mavenLocal()
-        maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
+        maven { url "https://repo.spring.io/libs-milestone" }
     }
 
     dependencies {
@@ -37,8 +37,8 @@ group "io.zhudy.duic"
 
 repositories {
     mavenLocal()
-    maven { url "https://repo.spring.io/libs-milestone" }
     mavenCentral()
+    maven { url "https://repo.spring.io/libs-milestone" }
 }
 
 dependencies {
