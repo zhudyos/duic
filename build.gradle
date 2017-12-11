@@ -9,7 +9,6 @@ buildscript {
 
     repositories {
         mavenLocal()
-        maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
         maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
     }
@@ -38,7 +37,6 @@ group "io.zhudy.duic"
 
 repositories {
     mavenLocal()
-    maven { url "http://maven.aliyun.com/nexus/content/groups/public" }
     maven { url "https://repo.spring.io/libs-milestone" }
     mavenCentral()
 }
