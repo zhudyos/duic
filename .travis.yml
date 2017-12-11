@@ -9,4 +9,6 @@ services:
 before_install:
   - chmod +x gradlew
 
-script: ./gradlew clean build
+script:
+  - ./gradlew clean build
+  - ./gradlew buildImage

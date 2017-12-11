@@ -1,3 +1,6 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+
 buildscript {
     ext {
         kotlinVersion = "1.2.0"
@@ -15,6 +18,7 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
         classpath "org.jetbrains.kotlin:kotlin-allopen:$kotlinVersion"
         classpath "org.springframework.boot:spring-boot-gradle-plugin:2.0.0.M6"
+        classpath "com.bmuschko:gradle-docker-plugin:3.2.1"
     }
 }
 
@@ -28,6 +32,7 @@ apply plugin: "idea"
 apply plugin: "kotlin"
 apply plugin: "kotlin-spring"
 apply plugin: "org.springframework.boot"
+apply plugin: "com.bmuschko.docker-remote-api"
 
 group "io.zhudy.duic"
 
@@ -66,7 +71,7 @@ compileTestKotlin {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = 'sources'
+    classifier = "sources"
     from sourceSets.main.allSource
 }
 
@@ -81,19 +86,44 @@ node {
 }
 
 //task cnpmInstall(type: NpmTask) {
-//    group = 'node'
-//    args = ['install', '--registry=http://registry.cnpmjs.org']
+//    group = "node"
+//    args = ["install", "--registry=http://registry.cnpmjs.org"]
 //}
 
 task buildAdmin(type: NpmTask) {
-    group = 'node'
-    args = ['run', 'build']
+    group = "node"
+    args = ["run", "build"]
 }
 
 task copyAdminFiles(type: Copy) {
-    group = 'node'
-    from 'dist'
+    group = "node"
+    from "dist"
     into "${project.buildDir}/resources/main"
 }
-
 jar.dependsOn copyAdminFiles
+
+docker {
+    registryCredentials {
+        url = "https://index.docker.io/v1/"
+        username = "kevin70"
+        password = "njSzbjie0+"
+        email = "kevinz@weghst.com"
+    }
+}
+
+task createDockerfile(type: Dockerfile) {
+    group = "docker"
+    destFile = project.file("${project.buildDir}/docker/Dockerfile")
+    from "openjdk:8-jdk-alpine"
+    maintainer "Kevin Zou <kevinz@weghst.com>"
+    copyFile(jar.archivePath.path, "app.jar")
+    environmentVariable("JAVA_OPTS", "")
+    exposePort(7777)
+    entryPoint("java", "-jar", "app.jar", "\$JAVA_OPTS")
+}
+
+task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) {
+    group = "docker"
+    inputDir = createDockerfile.destFile.parentFile
+    tags = ["zhudyos/${project.name}:${project.version}", "zhudyos/${project.name}:latest"]
+}
