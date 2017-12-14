@@ -75,4 +75,6 @@ class UserService(val userRepository: UserRepository,
      *
      */
     fun findPage(page: Pageable) = userRepository.findPage(page)
+
+    fun findAllEmail() = userRepository.findAllEmail()
 }

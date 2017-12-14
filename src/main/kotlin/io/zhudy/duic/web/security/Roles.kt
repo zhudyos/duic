@@ -38,6 +38,8 @@ object AuthUserInterceptor : RoleInterceptor {
         ctx.attribute(UserContext.CONTEXT_KEY, object : UserContext {
             override val email: String
                 get() = jwt.id
+            override val isRoot: Boolean
+                get() = Config.rootEmail == email
         })
     }
 }

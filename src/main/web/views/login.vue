@@ -68,7 +68,7 @@
                     params.append('email', this.form.email);
                     params.append('password', this.form.password);
 
-                    axios.post('/api/admin/login', params).then((resp) => {
+                    axios.post('/api/admins/login', params).then((resp) => {
                         Cookies.set('token', resp.data.token);
                         Cookies.set('email', this.form.email);
                         this.$router.push({path: '/'});

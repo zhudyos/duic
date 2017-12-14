@@ -12,6 +12,7 @@ import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
 import io.zhudy.duic.web.formString
 import io.zhudy.duic.web.pathString
+import io.zhudy.duic.web.security.userContext
 import org.joda.time.DateTime
 import org.springframework.stereotype.Controller
 
@@ -82,6 +83,13 @@ class AdminResource(
         ctx.json(userService.findPage(WebUtils.getPage(ctx)))
     }
 
+    /**
+     *
+     */
+    fun findAllEmail(ctx: Context) {
+        ctx.json(userService.findAllEmail())
+    }
+
     // ======================================= USER ====================================================== //
 
 
@@ -99,10 +107,10 @@ class AdminResource(
     /**
      *
      */
-    fun updateApp(ctx: Context) {
+    fun updateContent(ctx: Context) {
         val app = ctx.bodyAsClass(App::class.java)
-        appService.updateContent(app)
-        ctx.status(204)
+        val v = appService.updateContent(app, ctx.userContext())
+        ctx.json(mapOf("v" to v))
     }
 
     fun deleteApp(ctx: Context) {
@@ -121,7 +129,8 @@ class AdminResource(
      * 查询用户的 apps.
      */
     fun findAppByUser(ctx: Context) {
-
+        val page = WebUtils.getPage(ctx)
+        ctx.json(appService.findPageByUser(page, ctx.userContext()))
     }
 
     /**

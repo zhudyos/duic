@@ -19,7 +19,7 @@
         <breadcrumb class="ctn-breadcrumb-menu">
             <breadcrumb-item>首页</breadcrumb-item>
             <breadcrumb-item to="/app">应用列表</breadcrumb-item>
-            <breadcrumb-item>修改配置(name: {{app.name}}, profile: {{app.profile}})</breadcrumb-item>
+            <breadcrumb-item>编辑配置(name: {{app.name}}, profile: {{app.profile}})</breadcrumb-item>
         </breadcrumb>
         <pre id="editor"></pre>
         <i-button ref="commitBtn" class="commit-btn" type="primary" @click="commit()" disabled>提交</i-button>
@@ -38,20 +38,21 @@
         },
         mounted() {
             var query = this.$route.query;
-            axios.get(`/api/admin/apps/${query.name}/${query.profile}`).then((resp) => {
+            axios.get(`/api/admins/apps/${query.name}/${query.profile}`).then((resp) => {
                 this.app = resp.data;
                 this.initEditor();
             });
         },
         methods: {
             commit() {
-                axios.put(`/api/admin/apps`, {
+                axios.put(`/api/admins/apps`, {
                     name: this.app.name,
                     profile: this.app.profile,
                     v: this.app.v,
                     content: this.editor.getValue()
-                }).then(() => {
+                }).then((resp) => {
                     this.$Message.success('配置修改成功');
+                    this.app.v = resp.data.v;
                     this.$refs.commitBtn.disabled = true;
                 }).catch((err) => {
                     var d = err.response.data || {};

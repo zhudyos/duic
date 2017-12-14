@@ -6,8 +6,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.google.common.cache.CacheBuilder
 import com.memeyule.cryolite.core.BizCodeException
 import com.mongodb.client.model.Filters.*
+import com.mongodb.client.model.Projections
 import com.mongodb.client.model.Updates.*
 import io.zhudy.duic.BizCodes
+import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.PageResponse
 import io.zhudy.duic.dto.AppDto
@@ -18,12 +20,12 @@ import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.MongoTemplate
+import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.isEqualTo
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Repository
 import java.util.*
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import javax.annotation.PostConstruct
-import kotlin.collections.HashMap
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -38,29 +40,22 @@ class AppRepository(
     private val mapper = ObjectMapper(YAMLFactory())
     private val localCache = CacheBuilder.newBuilder().build<String, AppDto>()
     private val hashMapTypeRef = object : TypeReference<HashMap<String, Any>>() {}
-
-    private val reloadExec = Executors.newSingleThreadScheduledExecutor {
-        val t = Thread(it)
-        t.name = "reload-latest-app"
-        t.isDaemon = true
-        t
-    }
     private var lastUpdatedAt: DateTime? = null
 
-    @PostConstruct
-    fun init() {
-        reloadExec.scheduleAtFixedRate({
-            try {
-                val l = lastUpdatedAt
-                lastUpdatedAt = DateTime.now()
-
-                findByUpdatedAt(l).forEach {
-                    localCache.put(localKey(it.name, it.profile), it)
-                }
-            } catch (e: Exception) {
-                log.error("加载应用信息至缓存中失败", e)
+    @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch.fixed_delay:5000}")
+    protected fun watchApps() {
+        try {
+            if (lastUpdatedAt == null) {
+                findAll()
+            } else {
+                findByUpdatedAt(lastUpdatedAt!!)
+            }.forEach {
+                localCache.put(localKey(it.name, it.profile), it)
             }
-        }, 1, 3, TimeUnit.SECONDS)
+            lastUpdatedAt = DateTime.now()
+        } catch (e: Exception) {
+            log.error("加载应用信息至缓存中失败", e)
+        }
     }
 
     /**
@@ -76,7 +71,21 @@ class AppRepository(
     /**
      *
      */
-    fun updateContent(app: App) {
+    fun findApp(name: String, profile: String): App {
+        return mongoTemplate.findOne(
+                Query(Criteria.where("name").isEqualTo(name).and("profile").isEqualTo(profile)),
+                App::class.java
+        )
+    }
+
+    /**
+     *
+     * 错误:
+     * - [BizCodes.C_1003]
+     * - [BizCodes.C_1004]
+     * - [BizCodes.C_1006]
+     */
+    fun updateContent(app: App, userContext: UserContext): Int {
         try {
             mapper.readValue<HashMap<String, Any>>(app.content, hashMapTypeRef)
         } catch (e: Exception) {
@@ -93,7 +102,8 @@ class AppRepository(
                             push("histories", mapOf<String, Any>(
                                     "hid" to hashids.encode(app.id.hashCode().toLong(), System.currentTimeMillis(), app.v.toLong()),
                                     "content" to old.content,
-                                    "created_at" to updatedAt
+                                    "revised_by" to userContext.email,
+                                    "updated_at" to updatedAt
                             ))
                     )
             )
@@ -105,6 +115,7 @@ class AppRepository(
             }
             throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
         }
+        return app.v + 1
     }
 
     /**
@@ -122,7 +133,10 @@ class AppRepository(
      */
     fun findOne(name: String, profile: String): AppDto {
         return mongoTemplate.execute(App::class.java) { coll ->
-            mapToAppDto(coll.find(and(eq("name", name), eq("profile", profile))).first())
+            mapToAppDto(coll.find(and(eq("name", name), eq("profile", profile)))
+                    .projection(Projections.include("name", "profile", "v", "created_at", "updated_at", "content", "users"))
+                    .first()
+            )
         }
     }
 
@@ -155,10 +169,21 @@ class AppRepository(
     /**
      *
      */
-    fun findByUpdatedAt(updatedAt: DateTime?): List<AppDto> {
-        if (updatedAt == null) {
-            return findAll()
+    fun findPageByUser(page: Pageable, userContext: UserContext): PageResponse {
+        return mongoTemplate.execute(App::class.java) { coll ->
+            val list = arrayListOf<AppDto>()
+
+            coll.find(elemMatch("users", eq("\$eq", userContext.email))).limit(page.pageSize).skip(page.offset.toInt()).forEach {
+                list.add(mapToAppDto(it))
+            }
+            PageResponse(coll.count(), list)
         }
+    }
+
+    /**
+     *
+     */
+    fun findByUpdatedAt(updatedAt: DateTime): List<AppDto> {
         return mongoTemplate.execute(App::class.java) { coll ->
             val list = arrayListOf<AppDto>()
             coll.find(gte("updated_at", updatedAt.toDate())).forEach {

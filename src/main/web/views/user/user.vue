@@ -84,7 +84,7 @@
         methods: {
             loadUsers() {
                 var p = this.$refs.page;
-                axios.get(`/api/admin/users?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
+                axios.get(`/api/admins/users?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
                     this.userData = resp.data.items;
                     this.total = resp.data.total
                 })
@@ -97,7 +97,7 @@
                     title: '删除用户',
                     content: `确认删除用户 ${email} 吗?`,
                     onOk: () => {
-                        axios.delete(`/api/admin/users/${email}`).then(resp => {
+                        axios.delete(`/api/admins/users/${email}`).then(resp => {
                             this.$Message.success('删除成功');
                             this.loadUsers();
                         })
@@ -121,7 +121,7 @@
                         })
                     },
                     onOk: () => {
-                        axios.patch(`/api/admin/users/password`, {
+                        axios.patch(`/api/admins/users/password`, {
                             email: email,
                             password: this.newPassword
                         }).then(() => {

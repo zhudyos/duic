@@ -45,7 +45,7 @@
         },
         methods: {
             commit() {
-                axios.post(`/api/admin/users`, this.user).then(() => {
+                axios.post(`/api/admins/users`, this.user).then(() => {
                     this.$Message.success('用户添加成功');
                 }).catch((err) => {
                     var d = err.response.data || {};

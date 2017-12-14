@@ -1,6 +1,7 @@
 package io.zhudy.duic.repository
 
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.Projections
 import com.mongodb.client.model.Updates
 import com.mongodb.client.model.Updates.combine
 import io.zhudy.duic.domain.PageResponse
@@ -54,6 +55,15 @@ class UserRepository(val mongoTemplate: MongoTemplate, val passwordEncoder: Pass
         val items = mongoTemplate.find(Query().with(page), User::class.java)
         val count = mongoTemplate.count(Query(), User::class.java)
         return PageResponse(count, items)
+    }
+
+    /**
+     *
+     */
+    fun findAllEmail(): List<String> {
+        return mongoTemplate.execute(User::class.java) { coll ->
+            coll.find().projection(Projections.include("email")).toList().map { it.getString("email") }
+        }
     }
 
 }

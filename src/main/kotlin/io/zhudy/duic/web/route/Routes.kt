@@ -106,7 +106,7 @@ class Routes(
             path("/api") {
                 path("/v1") {
                     get("/ssc/:name/:profiles", appResource::loadSpringCloudConfig)
-
+                    get("/apps/states/:name/:profiles", appResource::getConfigState)
                     path("/apps/:name/:profiles") {
                         get("", appResource::loadConfigByNp)
                         get("/:key", appResource::loadConfigByNpAndKey)
@@ -114,22 +114,24 @@ class Routes(
                 }
 
                 // admin
-                path("/admin") {
+                path("/admins") {
                     post("/login", adminResource::login)
                     get("/user/root", adminResource::rootUser, authRoles)
 
                     path("/users") {
                         post("/", adminResource::saveUser, authRoles)
                         get("/", adminResource::findPageUser, authRoles)
+                        get("/emails", adminResource::findAllEmail, authRoles)
                         delete("/:email", adminResource::deleteUser, rootRoles)
                         patch("/password", adminResource::resetUserPassword, rootRoles) // 重置密码
                     }
 
                     path("/apps") {
                         post("/", adminResource::saveApp, authRoles)
-                        get("/", adminResource::findAllApp, authRoles)
+                        put("/", adminResource::updateContent, authRoles)
+                        get("/", adminResource::findAllApp, rootRoles)
+                        get("/user", adminResource::findAppByUser, authRoles)
                         get("/:name/:profile", adminResource::findOneApp, authRoles)
-                        put("/", adminResource::updateApp, authRoles)
                         delete("/:name/:profile", adminResource::deleteApp, authRoles)
                     }
                 }

@@ -76,7 +76,7 @@
         methods: {
             loadUsers() {
                 var p = this.$refs.page;
-                axios.get(`/api/admin/apps?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
+                axios.get(`/api/admins/apps/user?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
                     this.appData = resp.data.items;
                     this.total = resp.data.total
                 })

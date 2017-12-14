@@ -27,9 +27,7 @@
                 this.$router.go(-1);
             },
             goHome() {
-                this.$router.push({
-                    name: 'home_index'
-                });
+                this.$router.push({path: '/'});
             }
         }
     };

@@ -1,7 +1,9 @@
 package io.zhudy.duic.service
 
+import com.memeyule.cryolite.core.BizCode
 import com.memeyule.cryolite.core.BizCodeException
 import io.zhudy.duic.BizCodes
+import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.PageResponse
 import io.zhudy.duic.domain.SingleValue
@@ -30,22 +32,50 @@ class AppService(val appRepository: AppRepository) {
     /**
      * 更新配置内容.
      */
-    fun updateContent(app: App) {
-        appRepository.updateContent(app)
+    fun updateContent(app: App, userContext: UserContext) {
+        if (!userContext.isRoot) {
+            val dbApp = appRepository.findApp(app.name, app.profile)
+            if (!dbApp.users.contains(userContext.email)) {
+                throw BizCodeException(BizCode.Classic.C_403,
+                        "${userContext.email} 没有修改应用权限: name=${app.name}, profile=${app.profile}")
+            }
+        }
+
+        appRepository.updateContent(app, userContext)
     }
 
     /**
      *
      */
-    fun findPage(page: Pageable): PageResponse {
-        return appRepository.findPage(page)
+    fun findPage(page: Pageable) = appRepository.findPage(page)
+
+    /**
+     *
+     */
+    fun findPageByUser(page: Pageable, userContext: UserContext) = if (userContext.isRoot) {
+        findPage(page)
+    } else {
+        appRepository.findPageByUser(page, userContext)
     }
 
     /**
      *
      */
-    fun findOne(name: String, profile: String): AppDto {
-        return appRepository.findOne(name, profile)
+    fun findOne(name: String, profile: String) = appRepository.findOne(name, profile)
+
+    /**
+     *
+     */
+    fun getConfigState(name: String, profiles: List<String>): String {
+        val apps = arrayListOf<AppDto>()
+        profiles.forEach {
+            apps.add(appRepository.loadOne(name, it))
+        }
+        val state = StringBuilder()
+        apps.forEach {
+            state.append(it.v)
+        }
+        return state.toString()
     }
 
     /**
@@ -54,7 +84,7 @@ class AppService(val appRepository: AppRepository) {
     fun loadSpringCloudConfig(name: String, profiles: List<String>): SpringCloudResponseDto {
         val apps = arrayListOf<AppDto>()
         profiles.forEach {
-            apps.add(appRepository.findOne(name, it))
+            apps.add(appRepository.loadOne(name, it))
         }
 
         val ps = arrayListOf<SpringCloudPropertySource>()
@@ -72,7 +102,7 @@ class AppService(val appRepository: AppRepository) {
     fun loadConfigByNp(name: String, profiles: List<String>): Map<String, Any> {
         val apps = arrayListOf<AppDto>()
         profiles.forEach {
-            apps.add(appRepository.findOne(name, it))
+            apps.add(appRepository.loadOne(name, it))
         }
         return mergeProps(apps)
     }

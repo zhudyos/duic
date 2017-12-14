@@ -96,6 +96,7 @@ export const appRouter = [
             {
                 path: '',
                 name: 'app',
+                title: '应用管理',
                 meta: {
                     title: '应用管理'
                 },
@@ -115,6 +116,7 @@ export const appRouter = [
             {
                 path: '',
                 name: 'user',
+                title: '用户管理',
                 meta: {
                     title: '用户管理'
                 },

@@ -14,4 +14,9 @@ interface UserContext {
      */
     val email: String
 
+    /**
+     *
+     */
+    val isRoot: Boolean
+
 }

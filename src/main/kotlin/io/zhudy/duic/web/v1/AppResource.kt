@@ -5,7 +5,6 @@ import com.memeyule.cryolite.core.BizCodeException
 import io.javalin.Context
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.web.pathString
-import io.zhudy.duic.web.pathTrimString
 import org.springframework.stereotype.Controller
 
 /**
@@ -17,8 +16,17 @@ class AppResource(val appService: AppService) {
     /**
      *
      */
+    fun getConfigState(ctx: Context) {
+        val name = ctx.pathString("name")
+        val profiles = getProfilesParam(ctx)
+        ctx.json(mapOf("state" to appService.getConfigState(name, profiles)))
+    }
+
+    /**
+     *
+     */
     fun loadSpringCloudConfig(ctx: Context) {
-        val name = ctx.pathTrimString("name")
+        val name = ctx.pathString("name")
         val profiles = getProfilesParam(ctx)
         ctx.json(appService.loadSpringCloudConfig(name, profiles))
     }
@@ -27,7 +35,7 @@ class AppResource(val appService: AppService) {
      *
      */
     fun loadConfigByNp(ctx: Context) {
-        val name = ctx.pathTrimString("name")
+        val name = ctx.pathString("name")
         val profiles = getProfilesParam(ctx)
         ctx.json(appService.loadConfigByNp(name, profiles))
     }
@@ -36,7 +44,7 @@ class AppResource(val appService: AppService) {
      *
      */
     fun loadConfigByNpAndKey(ctx: Context) {
-        val name = ctx.pathTrimString("name")
+        val name = ctx.pathString("name")
         val profiles = getProfilesParam(ctx)
         val key = ctx.param("key")?.trim() ?: throw BizCodeException(BizCode.Classic.C_999, "缺少 key 参数")
         ctx.json(appService.loadConfigByNpAndKey(name, profiles, key) ?: emptyMap<Any, Any>())

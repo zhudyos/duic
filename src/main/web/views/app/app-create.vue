@@ -48,12 +48,20 @@
                     profile: '',
                     users: []
                 },
-                users: ["kevin", "kevin2"]
+                users: []
             }
+        },
+        mounted() {
+            axios.get(`/api/admins/users/emails`).then((resp) => {
+                this.users = resp.data;
+            }).catch((err) => {
+                var d = err.response.data || {};
+                this.$Message.error(d.message || '获取用户邮箱失败');
+            })
         },
         methods: {
             commit() {
-                axios.post(`/api/admin/apps`, this.app).then(() => {
+                axios.post(`/api/admins/apps`, this.app).then(() => {
                     this.$Message.success('应用添加成功');
                 }).catch((err) => {
                     var d = err.response.data || {};
