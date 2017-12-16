@@ -14,5 +14,5 @@ data class AppDto(
         val updatedAt: DateTime,
         val content: String,
         @JsonIgnore
-        val properties: Map<String, Any>
+        val properties: Map<Any, Any>
 )

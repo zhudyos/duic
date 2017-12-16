@@ -19,9 +19,9 @@
         </i-table>
 
         <div class="page">
-            <page ref="page" :total="total" show-sizer show-total
-                  @on-change="loadUsers()"
-                  @on-page-size-change="loadUsers()"></page>
+            <page ref="page" page-size="50" size="small" :total="total" show-total
+                  @on-change="loadAppByUser()"
+                  @on-page-size-change="loadAppByUser()"></page>
         </div>
     </div>
 </template>
@@ -79,10 +79,10 @@
             };
         },
         mounted() {
-            this.loadUsers()
+            this.loadAppByUser()
         },
         methods: {
-            loadUsers() {
+            loadAppByUser() {
                 var p = this.$refs.page;
                 axios.get(`/api/admins/users?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
                     this.userData = resp.data.items;
@@ -99,7 +99,7 @@
                     onOk: () => {
                         axios.delete(`/api/admins/users/${email}`).then(resp => {
                             this.$Message.success('删除成功');
-                            this.loadUsers();
+                            this.loadAppByUser();
                         })
                     }
                 });

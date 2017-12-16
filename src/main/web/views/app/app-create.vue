@@ -14,6 +14,9 @@
                 <form-item label="应用环境" prop="profile">
                     <i-input v-model="app.profile" placeholder="应用环境 profile"></i-input>
                 </form-item>
+                <form-item label="应用描述" prop="description">
+                    <i-input v-model="app.description" type="textarea" placeholder="应用描述 description"></i-input>
+                </form-item>
                 <form-item label="所属用户">
                     <i-select v-model="app.users" multiple filterable>
                         <i-option v-for="item in users" :value="item" :key="item">{{item}}</i-option>
@@ -41,11 +44,15 @@
                     profile: [
                         {required: true, message: '应用环境不能为空', trigger: 'blur'},
                         {pattern: /^[\w-]+$/, message: '环境只能由数字、字母、下划线、中划线组成', trigger: 'blur'}
+                    ],
+                    description: [
+                        {required: true, message: '应用描述不能为空', trigger: 'blur'}
                     ]
                 },
                 app: {
                     name: '',
                     profile: '',
+                    description: '',
                     users: []
                 },
                 users: []
@@ -62,10 +69,14 @@
         methods: {
             commit() {
                 axios.post(`/api/admins/apps`, this.app).then(() => {
-                    this.$Message.success('应用添加成功');
+                    this.$Notice.success({title: '应用添加成功'});
                 }).catch((err) => {
                     var d = err.response.data || {};
-                    this.$Message.error(d.message || '应用添加失败');
+                    if (d.code === 995) {
+                        this.$Notice.error({title: '应用/环境已经存在不能重复添加'});
+                        return
+                    }
+                    this.$Notice.error({title: '应用添加失败', desc: d.message});
                 })
             }
         }

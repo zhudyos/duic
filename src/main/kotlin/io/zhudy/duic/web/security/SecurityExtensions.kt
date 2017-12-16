@@ -2,8 +2,9 @@ package io.zhudy.duic.web.security
 
 import com.memeyule.cryolite.core.BizCode
 import com.memeyule.cryolite.core.BizCodeException
-import io.javalin.Context
 import io.zhudy.duic.UserContext
+import org.springframework.web.reactive.function.server.ServerRequest
+
 
 /**
  * 认证用户上下文.
@@ -12,4 +13,6 @@ import io.zhudy.duic.UserContext
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-fun Context.userContext(): UserContext = attribute(UserContext.CONTEXT_KEY) ?: throw BizCodeException(BizCode.Classic.C_401)
+fun ServerRequest.userContext(): UserContext = attribute(UserContext.CONTEXT_KEY).orElseThrow {
+    BizCodeException(BizCode.Classic.C_401)
+} as UserContext

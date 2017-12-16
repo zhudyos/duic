@@ -2,7 +2,6 @@ package io.zhudy.duic.domain
 
 import org.joda.time.DateTime
 import org.springframework.data.annotation.Id
-import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
@@ -10,9 +9,8 @@ import org.springframework.data.mongodb.core.mapping.Field
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Document(collection = "app")
-@CompoundIndex(name = "name_profile", unique = true, def = """{"name":1, "profile":1}""")
-class App(
+@Document(collection = "app_history")
+class AppHistory(
         @Id
         var id: String = "",
         @Field
@@ -26,12 +24,10 @@ class App(
         @Indexed
         @Field("created_at")
         var createdAt: DateTime? = null,
-        @Indexed
-        @Field("updated_at")
-        var updatedAt: DateTime? = null,
+        @Field
+        var deletedBy: String = "",
         @Field
         var content: String = "",
-        @Indexed
         @Field
         var users: List<String> = emptyList()
 )

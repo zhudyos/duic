@@ -2,7 +2,6 @@ package io.zhudy.duic.web.admin
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import io.javalin.Context
 import io.zhudy.duic.Config
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.User
@@ -10,11 +9,17 @@ import io.zhudy.duic.dto.UpdatePasswordDto
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
-import io.zhudy.duic.web.formString
+import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
 import io.zhudy.duic.web.security.userContext
 import org.joda.time.DateTime
 import org.springframework.stereotype.Controller
+import org.springframework.web.reactive.function.BodyExtractors
+import org.springframework.web.reactive.function.server.ServerRequest
+import org.springframework.web.reactive.function.server.ServerResponse
+import org.springframework.web.reactive.function.server.ServerResponse.noContent
+import org.springframework.web.reactive.function.server.ServerResponse.ok
+import reactor.core.publisher.Mono
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -26,18 +31,18 @@ class AdminResource(
         val jwtAlgorithm: Algorithm
 ) {
 
+    data class LoginUser(val email: String, val password: String)
+
     /**
      * 登录.
      */
-    fun login(ctx: Context) {
-        val email = ctx.formString("email")
-        val password = ctx.formString("password")
-        userService.login(email, password)
-
-        val token = JWT.create().withJWTId(email)
-                .withExpiresAt(DateTime.now().plusMinutes(Config.Jwt.expiresIn).toDate())
-                .sign(jwtAlgorithm)
-        ctx.json(mapOf("token" to token))
+    fun login(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
+        userService.login(it.email, it.password).flatMap {
+            val token = JWT.create().withJWTId(it.email)
+                    .withExpiresAt(DateTime.now().plusMinutes(Config.Jwt.expiresIn).toDate())
+                    .sign(jwtAlgorithm)
+            ok().body(mapOf("token" to token))
+        }
     }
 
     // ======================================= USER ====================================================== \\
@@ -45,51 +50,49 @@ class AdminResource(
     /**
      * 返回 `root` 用户登录名.
      */
-    fun rootUser(ctx: Context) {
-        ctx.json(mapOf("root" to Config.rootEmail))
-    }
+    fun rootUser(request: ServerRequest): Mono<ServerResponse> = ok().body(mapOf("root" to Config.rootEmail))
 
     /**
      * 保存用户.
      */
-    fun saveUser(ctx: Context) {
-        val user = ctx.bodyAsClass(User::class.java)
-        userService.save(user)
-        ctx.status(201)
+    fun insertUser(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(User::class.java)).flatMap {
+        userService.insert(it)
+        ok().build()
     }
 
     /**
      * 删除用户.
      */
-    fun deleteUser(ctx: Context) {
-        val email = ctx.pathString("email")
-        userService.delete(email)
-        ctx.status(204)
+    fun deleteUser(request: ServerRequest): Mono<ServerResponse> {
+        val email = request.pathString("email")
+        return userService.delete(email).flatMap {
+            noContent().build()
+        }
     }
 
     /**
      * 重置用户密码.
      */
-    fun resetUserPassword(ctx: Context) {
-        val dto = ctx.bodyAsClass(UpdatePasswordDto::class.java)
-        userService.resetPassword(dto)
-        ctx.status(204)
+    fun resetUserPassword(request: ServerRequest): Mono<ServerResponse>
+            = request.bodyToMono(UpdatePasswordDto::class.java).flatMap {
+        userService.resetPassword(it).flatMap {
+            noContent().build()
+        }
     }
 
     /**
      *
      */
-    fun findPageUser(ctx: Context) {
-        ctx.json(userService.findPage(WebUtils.getPage(ctx)))
+    fun findPageUser(request: ServerRequest): Mono<ServerResponse> = userService.findPage(WebUtils.getPage(request)).flatMap {
+        ok().body(it)
     }
+
 
     /**
      *
      */
-    fun findAllEmail(ctx: Context) {
-        ctx.json(userService.findAllEmail())
-    }
-
+    fun findAllEmail(request: ServerRequest): Mono<ServerResponse> =
+            ok().body(userService.findAllEmail(), String::class.java)
     // ======================================= USER ====================================================== //
 
 
@@ -98,47 +101,56 @@ class AdminResource(
     /**
      * 保存应用.
      */
-    fun saveApp(ctx: Context) {
-        val app = ctx.bodyAsClass(App::class.java)
-        appService.save(app)
-        ctx.status(201)
+    fun insertApp(request: ServerRequest): Mono<ServerResponse> {
+        return request.bodyToMono(App::class.java).flatMap {
+            appService.insert(it).flatMap {
+                ok().build()
+            }
+        }
     }
 
     /**
      *
      */
-    fun updateContent(ctx: Context) {
-        val app = ctx.bodyAsClass(App::class.java)
-        val v = appService.updateContent(app, ctx.userContext())
-        ctx.json(mapOf("v" to v))
+    fun updateContent(request: ServerRequest): Mono<ServerResponse> {
+        return request.bodyToMono(App::class.java).flatMap {
+            appService.updateContent(it, request.userContext()).flatMap {
+                ok().body(mapOf("v" to it))
+            }
+        }
     }
 
-    fun deleteApp(ctx: Context) {
+    /**
+     *
+     */
+    fun deleteApp(request: ServerRequest): Mono<ServerResponse> {
+        val name = request.pathString("name")
+        val profile = request.pathString("profile")
+        return appService.delete(App(name = name, profile = profile), request.userContext()).flatMap {
+            noContent().build()
+        }
     }
 
     /**
      * 查询单个应用配置.
      */
-    fun findOneApp(ctx: Context) {
-        val name = ctx.pathString("name")
-        val profile = ctx.pathString("profile")
-        ctx.json(appService.findOne(name, profile))
+    fun findOneApp(request: ServerRequest): Mono<ServerResponse> {
+        val name = request.pathString("name")
+        val profile = request.pathString("profile")
+
+        return appService.findOne(name, profile).flatMap {
+            ok().body(it)
+        }
     }
 
     /**
      * 查询用户的 apps.
      */
-    fun findAppByUser(ctx: Context) {
-        val page = WebUtils.getPage(ctx)
-        ctx.json(appService.findPageByUser(page, ctx.userContext()))
+    fun findAppByUser(request: ServerRequest): Mono<ServerResponse> {
+        val page = WebUtils.getPage(request)
+        return appService.findPageByUser(page, request.userContext()).flatMap {
+            ok().body(it)
+        }
     }
-
-    /**
-     *
-     */
-    fun findAllApp(ctx: Context) {
-        ctx.json(appService.findPage(WebUtils.getPage(ctx)))
-    }
-
     // ======================================= APP ======================================================= //
 }

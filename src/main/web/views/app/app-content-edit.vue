@@ -51,21 +51,23 @@
                     v: this.app.v,
                     content: this.editor.getValue()
                 }).then((resp) => {
-                    this.$Message.success('配置修改成功');
+                    this.$Notice.success({title: '配置修改成功'});
                     this.app.v = resp.data.v;
                     this.$refs.commitBtn.disabled = true;
                 }).catch((err) => {
                     var d = err.response.data || {};
                     var msg = d.message;
-                    if (d.code === 1006) {
-                        msg = '文件格式错误';
-                    }
-                    this.$Message.error(msg || '配置修改失败');
+
+                    this.$Notice.error({title: '配置修改失败', desc: msg});
                 });
             },
             initEditor() {
                 head.load('//cdnjs.cloudflare.com/ajax/libs/ace/1.2.9/ace.js', () => {
                     var editor = ace.edit("editor");
+                    editor.setOptions({
+                        printMarginColumn: 120
+                    });
+
                     var session = editor.session;
                     session.setMode("ace/mode/yaml");
                     session.setTabSize(2);

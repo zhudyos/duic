@@ -4,19 +4,25 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.exceptions.JWTDecodeException
 import com.memeyule.cryolite.core.BizCode
 import com.memeyule.cryolite.core.BizCodeException
-import io.javalin.Context
 import io.zhudy.duic.Config
 import io.zhudy.duic.UserContext
+import org.springframework.web.reactive.function.server.HandlerFilterFunction
+import org.springframework.web.reactive.function.server.HandlerFunction
+import org.springframework.web.reactive.function.server.ServerRequest
+import org.springframework.web.reactive.function.server.ServerResponse
+import reactor.core.publisher.Mono
 
 /**
- * 用户认证.
- *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-object AuthUserInterceptor : RoleInterceptor {
+class AuthorizedHandlerFilter : HandlerFilterFunction<ServerResponse, ServerResponse> {
 
-    override fun handle(ctx: Context) {
-        val token = ctx.cookie("token")
+    override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
+        if (request.uri().path.endsWith("/api/admins/login")) {
+            return next.handle(request)
+        }
+
+        val token = request.cookies().getFirst("token")?.value
         if (token.isNullOrEmpty()) {
             throw BizCodeException(BizCode.Classic.C_401, "缺少 token")
         }
@@ -35,25 +41,13 @@ object AuthUserInterceptor : RoleInterceptor {
             throw BizCodeException(BizCode.Classic.C_401, "错误的 token")
         }
 
-        ctx.attribute(UserContext.CONTEXT_KEY, object : UserContext {
+        request.attributes()[UserContext.CONTEXT_KEY] = object : UserContext {
             override val email: String
                 get() = jwt.id
             override val isRoot: Boolean
                 get() = Config.rootEmail == email
-        })
-    }
-}
-
-/**
- * 超过用户校验.
- */
-object RootUserInterceptor : RoleInterceptor {
-
-    override fun handle(ctx: Context) {
-        val userContext = ctx.userContext()
-        if (userContext.email != Config.rootEmail) {
-            throw BizCodeException(BizCode.Classic.C_403)
         }
+
+        return next.handle(request)
     }
 }
-

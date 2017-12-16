@@ -1,12 +1,20 @@
+server:
+  port: 7777
+
 spring:
+  jackson:
+    default-property-inclusion: non_default
+    joda-date-time-format: yyyy-MM-dd'T'HH:mm:ss
+    property-naming-strategy: CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES
   data:
     mongodb:
       uri: mongodb://192.168.31.249:10000/duic
 
-app:
-  port: 7777
+duic:
   root_email: kevinz@weghst.com
   root_password: 123456
   jwt:
     secret: U2FsdGVkX1/jO0KlWumac4yDM8rOgWPkaV0KrSHDynWOP6n8FMJB9uSc8EW/qM+VagrMBAXGpyw=
     expires_in: 180
+
+
