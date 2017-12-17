@@ -88,7 +88,7 @@ node {
     download = true
 }
 
-task buildAdmin(type: NpmTask) {
+task buildAdmin(type: NpmTask, dependsOn: npmInstall) {
     group = "node"
     args = ["run", "build"]
 }

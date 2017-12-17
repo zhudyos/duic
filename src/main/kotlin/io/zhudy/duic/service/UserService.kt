@@ -23,10 +23,8 @@ class UserService(val userRepository: UserRepository,
 
     @EventListener
     fun listenContextStarted(event: ApplicationReadyEvent) {
-        userRepository.findByEmail(Config.rootEmail).subscribe {
-            if (it == null) {
-                insert(User(email = Config.rootEmail, password = Config.rootPassword))
-            }
+        userRepository.findByEmail(Config.rootEmail).hasElement().subscribe {
+            insert(User(email = Config.rootEmail, password = Config.rootPassword)).subscribe()
         }
     }
 
