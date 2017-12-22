@@ -1,25 +1,27 @@
 <style lang="less">
     .toolbar {
         text-align: right;
-        margin-bottom: 5px;
-    }
-
-    .page {
-        text-align: right;
-        margin-top: 5px;
     }
 </style>
 <template>
     <div>
-        <div class="toolbar">
-            <i-button type="primary" @click="createUser()">创建</i-button>
-        </div>
+        <row>
+            <i-col span="12">
+                <breadcrumb class="ctn-breadcrumb-menu">
+                    <breadcrumb-item to="/">首页</breadcrumb-item>
+                    <breadcrumb-item>用户列表</breadcrumb-item>
+                </breadcrumb>
+            </i-col>
+            <i-col span="12" class="toolbar">
+                <i-button type="primary" @click="createUser()">创建</i-button>
+            </i-col>
+        </row>
 
         <i-table border :columns="userColumns" :data="userData">
         </i-table>
 
         <div class="page">
-            <page ref="page" page-size="50" size="small" :total="total" show-total
+            <page ref="page" :page-size="pageSize" size="small" :total="total" show-total
                   @on-change="loadAppByUser()"
                   @on-page-size-change="loadAppByUser()"></page>
         </div>
@@ -34,6 +36,7 @@
         data() {
             return {
                 total: 0,
+                pageSize: 50,
                 userData: [],
                 userColumns: [
                     {title: 'E-Mail', key: 'email'},

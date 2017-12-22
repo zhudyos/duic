@@ -7,18 +7,18 @@
           @on-select="changeMenu">
         <template v-for="item in menuList">
             <MenuItem v-if="item.children.length<=1" :name="item.children[0].name" :key="item.path">
-                <Icon :type="item.icon" :size="iconSize" :key="item.path"></Icon>
+                <i :class="item.icon" aria-hidden="true"></i>
                 <span class="layout-text" :key="item.path">{{ itemTitle(item) }}</span>
             </MenuItem>
 
             <Submenu v-if="item.children.length > 1" :name="item.name" :key="item.path">
                 <template slot="title">
-                    <Icon :type="item.icon" :size="iconSize"></Icon>
+                    <i :class="item.icon" aria-hidden="true"></i>
                     <span class="layout-text">{{ itemTitle(item) }}</span>
                 </template>
                 <template v-for="child in item.children">
                     <MenuItem :name="child.name" :key="child.name">
-                        <Icon :type="child.icon" :size="iconSize" :key="child.name"></Icon>
+                        <i :class="child.icon" aria-hidden="true"></i>
                         <span class="layout-text" :key="child.name">{{ child.title }}</span>
                     </MenuItem>
                 </template>

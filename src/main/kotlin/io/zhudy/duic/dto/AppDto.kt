@@ -9,6 +9,7 @@ import org.joda.time.DateTime
 data class AppDto(
         val name: String,
         val profile: String,
+        val token: String,
         val v: Int,
         val createdAt: DateTime,
         val updatedAt: DateTime,

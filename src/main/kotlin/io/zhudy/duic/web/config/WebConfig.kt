@@ -63,15 +63,18 @@ class WebConfig(val objectMapper: ObjectMapper,
                 GET("/emails", adminResource::findAllEmail)
                 DELETE("/{email}", adminResource::deleteUser)
                 DELETE("/{email}", RootRoleHandler(adminResource::deleteUser))
+                PUT("/password", adminResource::updateUserPassword)
                 PATCH("/password", RootRoleHandler(adminResource::resetUserPassword))
             }
 
             path("/apps").nest {
                 POST("/", adminResource::insertApp)
-                PUT("/", adminResource::updateContent)
-                DELETE("/{name}/{profile}", adminResource::deleteApp)
+                PUT("/", adminResource::updateApp)
+                PUT("/contents", adminResource::updateAppContent)
                 GET("/user", adminResource::findAppByUser)
+                DELETE("/{name}/{profile}", adminResource::deleteApp)
                 GET("/{name}/{profile}", adminResource::findOneApp)
+                GET("/{name}/{profile}/histories", adminResource::findAppContentHistory)
             }
         }
     }.filter(AuthorizedHandlerFilter())!!

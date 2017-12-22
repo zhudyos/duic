@@ -1,7 +1,7 @@
 package io.zhudy.duic.web.security
 
-import com.memeyule.cryolite.core.BizCode
-import com.memeyule.cryolite.core.BizCodeException
+import io.zhudy.duic.BizCode
+import io.zhudy.duic.BizCodeException
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono

@@ -4,8 +4,9 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.zhudy.duic.Config
 import io.zhudy.duic.domain.App
+import io.zhudy.duic.domain.AppContentHistory
 import io.zhudy.duic.domain.User
-import io.zhudy.duic.dto.UpdatePasswordDto
+import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
@@ -32,6 +33,7 @@ class AdminResource(
 ) {
 
     data class LoginUser(val email: String, val password: String)
+    data class UpdatePassword(val oldPassword: String, val newPassword: String)
 
     /**
      * 登录.
@@ -71,10 +73,21 @@ class AdminResource(
     }
 
     /**
+     *
+     */
+    fun updateUserPassword(request: ServerRequest): Mono<ServerResponse> {
+        return request.bodyToMono(UpdatePassword::class.java).flatMap {
+            val userContext = request.userContext()
+            userService.updatePassword(userContext.email, it.oldPassword, it.newPassword).flatMap {
+                noContent().build()
+            }
+        }
+    }
+
+    /**
      * 重置用户密码.
      */
-    fun resetUserPassword(request: ServerRequest): Mono<ServerResponse>
-            = request.bodyToMono(UpdatePasswordDto::class.java).flatMap {
+    fun resetUserPassword(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(ResetPasswordDto::class.java).flatMap {
         userService.resetPassword(it).flatMap {
             noContent().build()
         }
@@ -91,8 +104,9 @@ class AdminResource(
     /**
      *
      */
-    fun findAllEmail(request: ServerRequest): Mono<ServerResponse> =
-            ok().body(userService.findAllEmail(), String::class.java)
+    fun findAllEmail(request: ServerRequest): Mono<ServerResponse> = userService.findAllEmail().collectList().flatMap {
+        ok().body(it)
+    }
     // ======================================= USER ====================================================== //
 
 
@@ -112,7 +126,18 @@ class AdminResource(
     /**
      *
      */
-    fun updateContent(request: ServerRequest): Mono<ServerResponse> {
+    fun updateApp(request: ServerRequest): Mono<ServerResponse> {
+        return request.bodyToMono(App::class.java).flatMap {
+            appService.update(it, request.userContext()).flatMap {
+                ok().body(mapOf("v" to it))
+            }
+        }
+    }
+
+    /**
+     *
+     */
+    fun updateAppContent(request: ServerRequest): Mono<ServerResponse> {
         return request.bodyToMono(App::class.java).flatMap {
             appService.updateContent(it, request.userContext()).flatMap {
                 ok().body(mapOf("v" to it))
@@ -151,6 +176,17 @@ class AdminResource(
         return appService.findPageByUser(page, request.userContext()).flatMap {
             ok().body(it)
         }
+    }
+
+    /**
+     * 查询 App 内容历史记录.
+     */
+    fun findAppContentHistory(request: ServerRequest): Mono<ServerResponse> {
+        val name = request.pathString("name")
+        val profile = request.pathString("profile")
+
+        return ok().body(appService.findLast50History(name, profile, request.userContext()),
+                AppContentHistory::class.java)
     }
     // ======================================= APP ======================================================= //
 }

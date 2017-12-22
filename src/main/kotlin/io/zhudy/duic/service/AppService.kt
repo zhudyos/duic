@@ -1,7 +1,7 @@
 package io.zhudy.duic.service
 
-import com.memeyule.cryolite.core.BizCode
-import com.memeyule.cryolite.core.BizCodeException
+import io.zhudy.duic.BizCode
+import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.App
@@ -31,10 +31,12 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
 
     private val cache = cacheManager.getCache("apps")
     private var lastUpdatedAt: Date? = null
+    private var lastAppHistoryCreatedAt: Date? = null
     private val yaml = Yaml()
 
     @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch.fixed_delay:5000}")
     protected fun watchApps() {
+        // 更新 APP 配置信息
         if (lastUpdatedAt == null) {
             findAll()
         } else {
@@ -43,6 +45,14 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             cache.put(localKey(it.name, it.profile), it)
         }
         lastUpdatedAt = Date()
+
+        // 清理已经删除的 APP
+        if (lastAppHistoryCreatedAt != null) {
+            appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt!!).toStream().forEach {
+                cache.evict(localKey(it.name, it.profile))
+            }
+        }
+        lastAppHistoryCreatedAt = Date()
     }
 
     /**
@@ -78,6 +88,15 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
+    fun update(app: App, userContext: UserContext): Mono<Int> {
+        return checkPermission(app.name, app.profile, userContext).flatMap {
+            appRepository.update(app, userContext)
+        }
+    }
+
+    /**
+     *
+     */
     fun updateContent(app: App, userContext: UserContext): Mono<Int> {
         try {
             yaml.load<Map<String, Any>>(app.content)
@@ -93,8 +112,8 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun getConfigState(name: String, profiles: List<String>): Mono<String> {
-        return Flux.merge(profiles.map { loadOne(name, it) }).collectList().map { apps ->
+    fun getConfigState(name: String, profiles: List<String>, configTokens: List<String>): Mono<String> {
+        return loadAndCheckApps(name, profiles, configTokens).map { apps ->
             val state = StringBuilder()
             apps.forEach {
                 state.append(it.v)
@@ -106,8 +125,8 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadSpringCloudConfig(name: String, profiles: List<String>): Mono<SpringCloudResponseDto> {
-        return Flux.merge(profiles.map { loadOne(name, it) }).collectList().map { apps ->
+    fun loadSpringCloudConfig(name: String, profiles: List<String>, configTokens: List<String>): Mono<SpringCloudResponseDto> {
+        return loadAndCheckApps(name, profiles, configTokens).map { apps ->
             val ps = arrayListOf<SpringCloudPropertySource>()
             val state = StringBuilder()
             apps.forEach {
@@ -121,8 +140,8 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadConfigByNameProfile(name: String, profiles: List<String>): Mono<Map<Any, Any>> {
-        return Flux.merge(profiles.map { loadOne(name, it) }).collectList().map {
+    fun loadConfigByNameProfile(name: String, profiles: List<String>, configTokens: List<String>): Mono<Map<Any, Any>> {
+        return loadAndCheckApps(name, profiles, configTokens).map {
             mergeProps(it)
         }
     }
@@ -130,8 +149,8 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadConfigByNameProfileKey(name: String, profiles: List<String>, key: String): Mono<Any> {
-        return loadConfigByNameProfile(name, profiles).map {
+    fun loadConfigByNameProfileKey(name: String, profiles: List<String>, configTokens: List<String>, key: String): Mono<Any> {
+        return loadConfigByNameProfile(name, profiles, configTokens).map {
             var props = it
             var v: Any? = null
             for (k in key.split(".")) {
@@ -158,7 +177,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
      *
      */
     fun loadOne(name: String, profile: String): Mono<AppDto> {
-        val dto = cache.get(localKey(name, profile), { findOne(name, profile).block() })
+        val dto = cache.get(localKey(name, profile), { findOneDto(name, profile).block() })
                 ?: throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
         return Mono.just(dto)
     }
@@ -166,7 +185,12 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun findOne(name: String, profile: String): Mono<AppDto> = appRepository.findOne(name, profile).map { mapToAppDto(it) }
+    fun findOneDto(name: String, profile: String): Mono<AppDto> = appRepository.findOne(name, profile).map { mapToAppDto(it) }
+
+    /**
+     *
+     */
+    fun findOne(name: String, profile: String) = appRepository.findOne(name, profile)
 
     /**
      *
@@ -192,6 +216,14 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         appRepository.findPageByUser(pageable, userContext)
     }
 
+    /**
+     *
+     */
+    fun findLast50History(name: String, profile: String, userContext: UserContext)
+            = checkPermission(name, profile, userContext).flatMapMany {
+        appRepository.findLast50History(name, profile)
+    }!!
+
     private fun checkPermission(name: String, profile: String, userContext: UserContext): Mono<Unit> {
         if (userContext.isRoot) {
             return Mono.just(Unit)
@@ -206,6 +238,14 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             Mono.just(Unit)
         }
     }
+
+    private fun loadAndCheckApps(name: String, profiles: List<String>, configTokens: List<String>) = Flux.merge(profiles.map {
+        loadOne(name, it).doOnNext {
+            if (it.token.isNotEmpty() && !configTokens.contains(it.token)) {
+                throw BizCodeException(BizCode.Classic.C_401, "${it.name}/${it.profile} 认证失败")
+            }
+        }
+    }).collectList()
 
     private fun mergeProps(apps: List<AppDto>): Map<Any, Any> {
         if (apps.size == 1) {
@@ -292,9 +332,10 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         return AppDto(
                 name = app.name,
                 profile = app.profile,
+                token = app.token,
                 v = app.v,
                 createdAt = app.createdAt!!,
-                updatedAt = app.createdAt!!,
+                updatedAt = app.updatedAt!!,
                 content = content,
                 properties = properties
         )

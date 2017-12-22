@@ -1,8 +1,8 @@
 package io.zhudy.duic.web.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.memeyule.cryolite.core.BizCode
-import com.memeyule.cryolite.core.BizCodeException
+import io.zhudy.duic.BizCode
+import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.web.MissingRequestParameterException
 import io.zhudy.duic.web.RequestParameterFormatException
 import org.slf4j.LoggerFactory

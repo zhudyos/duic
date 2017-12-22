@@ -2,6 +2,7 @@ const path = require('path');
 const os = require('os');
 const webpack = require('webpack');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HappyPack = require('happypack');
 var happyThreadPool = HappyPack.ThreadPool({size: os.cpus().length});
 
@@ -84,6 +85,10 @@ module.exports = {
             cache: true,
             verbose: true
         })
+        // ,
+        // new CopyWebpackPlugin([{
+        //     from: 'src/main/web/externals/ace-diff.min.js',
+        // }])
     ],
     resolve: {
         extensions: ['.js', '.vue'],
@@ -93,6 +98,6 @@ module.exports = {
         }
     },
     externals: {
-        head: 'head'
+        ace: 'ace'
     }
 };

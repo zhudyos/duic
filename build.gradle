@@ -30,6 +30,7 @@ plugins {
 apply plugin: "java"
 apply plugin: "maven"
 apply plugin: "idea"
+apply plugin: "jacoco"
 apply plugin: "kotlin"
 apply plugin: "kotlin-spring"
 apply plugin: "org.springframework.boot"
@@ -59,10 +60,15 @@ dependencies {
     compile "com.auth0:java-jwt:3.3.0"
     compile "org.springframework.security:spring-security-crypto:5.0.0.RELEASE"
 
-    testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile("org.springframework.boot:spring-boot-starter-test") {
+        exclude group: "junit"
+    }
     testCompile "io.projectreactor:reactor-test"
+    testCompile "org.testng:testng:6.10"
     apt "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
 }
+
+[compileJava, compileTestJava]*.options*.encoding = "UTF-8"
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
@@ -72,6 +78,22 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 compileJava.dependsOn(processResources)
+
+test {
+    useTestNG()
+}
+
+jacoco {
+    toolVersion = '0.7.9'
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+        html.destination file("${buildDir}/jacocoHtml")
+    }
+}
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = "sources"

@@ -62,6 +62,16 @@ export const otherRouter = {
             }
         },
         {
+            path: '/user-update-password',
+            name: 'user-update-password',
+            meta: {
+                title: '修改密码'
+            },
+            component: resolve => {
+                require(['@/views/user/user-update-password.vue'], resolve);
+            }
+        },
+        {
             path: '/app-content-edit',
             name: 'app-content-edit',
             meta: {
@@ -80,6 +90,26 @@ export const otherRouter = {
             component: resolve => {
                 require(['@/views/app/app-create.vue'], resolve);
             }
+        },
+        {
+            path: '/app-edit',
+            name: 'app-edit',
+            meta: {
+                title: '编辑应用'
+            },
+            component: resolve => {
+                require(['@/views/app/app-edit.vue'], resolve);
+            }
+        },
+        {
+            path: '/app-history',
+            name: 'app-history',
+            meta: {
+                title: '修改历史'
+            },
+            component: resolve => {
+                require(['@/views/app/app-history.vue'], resolve);
+            }
         }
     ]
 };
@@ -88,7 +118,7 @@ export const otherRouter = {
 export const appRouter = [
     {
         path: '/app',
-        icon: 'document',
+        icon: 'fa fa-fire',
         name: 'app-parent',
         title: '应用管理',
         component: Main,
@@ -108,9 +138,10 @@ export const appRouter = [
     },
     {
         path: '/user',
-        icon: 'document',
+        icon: 'fa fa-user',
         name: 'user-parent',
         title: '用户管理',
+        root: true,
         component: Main,
         children: [
             {

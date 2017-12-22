@@ -1,25 +1,27 @@
 <style lang="less">
     .toolbar {
         text-align: right;
-        margin-bottom: 5px;
-    }
-
-    .page {
-        text-align: right;
-        margin-top: 5px;
     }
 </style>
 <template>
     <div>
-        <div class="toolbar">
-            <i-button type="primary" @click="createApp()">创建</i-button>
-        </div>
+        <row>
+            <i-col span="12">
+                <breadcrumb class="ctn-breadcrumb-menu">
+                    <breadcrumb-item to="/">首页</breadcrumb-item>
+                    <breadcrumb-item>应用列表</breadcrumb-item>
+                </breadcrumb>
+            </i-col>
+            <i-col span="12" class="toolbar">
+                <i-button type="primary" @click="createApp()">创建</i-button>
+            </i-col>
+        </row>
 
         <i-table border :columns="appColumns" :data="appData">
         </i-table>
 
         <div class="page">
-            <page ref="page" page-size="50" size="small" :total="total" show-total
+            <page ref="page" :page-size="pageSize" size="small" :total="total" show-total
                   @on-change="loadAppByUser()"
                   @on-page-size-change="loadAppByUser()"></page>
         </div>
@@ -34,16 +36,38 @@
         data() {
             return {
                 total: 0,
+                pageSize: 50,
                 appData: [],
                 appColumns: [
                     {title: '名称 (name)', key: 'name', sortable: true},
                     {title: '环境 (profile)', key: 'profile', sortable: true},
                     {title: '描述', key: 'description', width: 400},
+                    {
+                        title: '令牌',
+                        render: (h, params) => {
+                            var token = params.row.token;
+                            if (token) {
+                                return h('a', {
+                                    on: {
+                                        click: () => {
+                                            this.$copyText(token).then(() => {
+                                                this.$Message.success('复制成功');
+                                            }, (e) => {
+                                                this.$Message.error('复制失败');
+                                                console.log(e);
+                                            });
+                                        }
+                                    }
+                                }, '复制')
+                            }
+                        },
+                        width: 64
+                    },
                     {title: '创建时间', key: 'created_at', sortable: true},
                     {title: '更新时间', key: 'updated_at', sortable: true},
                     {
                         title: '操作',
-                        width: 200,
+                        width: 220,
                         align: 'center',
                         render: (h, params) => {
                             return h('div', [
@@ -80,7 +104,7 @@
                                         click: () => {
                                             var r = params.row;
                                             this.$router.push({
-                                                path: `/app-content-edit`,
+                                                path: `/app-edit`,
                                                 query: {
                                                     name: r.name,
                                                     profile: r.profile
@@ -94,6 +118,9 @@
                                         type: 'error',
                                         size: 'small'
                                     },
+                                    style: {
+                                        marginRight: '5px'
+                                    },
                                     on: {
                                         click: () => {
                                             var r = params.row;
@@ -106,7 +133,24 @@
                                             });
                                         }
                                     }
-                                }, '删除')
+                                }, '删除'),
+                                h('i-button', {
+                                    props: {
+                                        size: 'small'
+                                    },
+                                    on: {
+                                        click: () => {
+                                            var r = params.row;
+                                            this.$router.push({
+                                                path: '/app-history',
+                                                query: {
+                                                    name: r.name,
+                                                    profile: r.profile
+                                                }
+                                            });
+                                        }
+                                    }
+                                }, '历史')
                             ])
                         }
                     }

@@ -2,8 +2,8 @@ package io.zhudy.duic.web.security
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.exceptions.JWTDecodeException
-import com.memeyule.cryolite.core.BizCode
-import com.memeyule.cryolite.core.BizCodeException
+import io.zhudy.duic.BizCode
+import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.Config
 import io.zhudy.duic.UserContext
 import org.springframework.web.reactive.function.server.HandlerFilterFunction

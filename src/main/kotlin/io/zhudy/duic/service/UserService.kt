@@ -1,10 +1,10 @@
 package io.zhudy.duic.service
 
-import com.memeyule.cryolite.core.BizCodeException
+import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
 import io.zhudy.duic.domain.User
-import io.zhudy.duic.dto.UpdatePasswordDto
+import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.repository.UserRepository
 import org.joda.time.DateTime
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -24,7 +24,9 @@ class UserService(val userRepository: UserRepository,
     @EventListener
     fun listenContextStarted(event: ApplicationReadyEvent) {
         userRepository.findByEmail(Config.rootEmail).hasElement().subscribe {
-            insert(User(email = Config.rootEmail, password = Config.rootPassword)).subscribe()
+            if (!it) {
+                insert(User(email = Config.rootEmail, password = Config.rootPassword)).subscribe()
+            }
         }
     }
 
@@ -60,7 +62,14 @@ class UserService(val userRepository: UserRepository,
     /**
      *
      */
-    fun updatePassword(email: String, password: String) = userRepository.updatePassword(email, password)
+    fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Int> {
+        return userRepository.findByEmail(email).single().flatMap {
+            if (passwordEncoder.matches(oldPassword, it?.password)) {
+                return@flatMap userRepository.updatePassword(email, passwordEncoder.encode(newPassword))
+            }
+            throw BizCodeException(BizCodes.C_2001)
+        }
+    }
 
     /**
      *
@@ -70,7 +79,7 @@ class UserService(val userRepository: UserRepository,
     /**
      * 重置密码.
      */
-    fun resetPassword(dto: UpdatePasswordDto) = userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
+    fun resetPassword(dto: ResetPasswordDto) = userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
 
     /**
      *

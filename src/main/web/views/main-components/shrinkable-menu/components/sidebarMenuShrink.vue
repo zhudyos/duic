@@ -5,12 +5,12 @@
                 <Dropdown transfer v-if="item.children.length !== 1" placement="right-start" :key="index"
                           @on-click="changeMenu">
                     <Button style="width: 70px;margin-left: -5px;padding:10px 0;" type="text">
-                        <Icon :size="20" :color="iconColor" :type="item.icon"></Icon>
+                        <i :class="item.icon" :style="iconStyle" aria-hidden="true"></i>
                     </Button>
                     <DropdownMenu style="width: 200px;" slot="list">
                         <template v-for="(child, i) in item.children">
                             <DropdownItem :name="child.name" :key="i">
-                                <Icon :type="child.icon"></Icon>
+                                <i :class="child.icon" aria-hidden="true"></i>
                                 <span style="padding-left:10px;">{{ itemTitle(child) }}</span></DropdownItem>
                         </template>
                     </DropdownMenu>
@@ -18,11 +18,11 @@
                 <Dropdown transfer v-else placement="right-start" :key="index" @on-click="changeMenu">
                     <Button @click="changeMenu(item.children[0].name)"
                             style="width: 70px;margin-left: -5px;padding:10px 0;" type="text">
-                        <Icon :size="20" :color="iconColor" :type="item.icon"></Icon>
+                        <i :class="item.icon" :style="iconStyle" aria-hidden="true"></i>
                     </Button>
                     <DropdownMenu style="width: 200px;" slot="list">
                         <DropdownItem :name="item.children[0].name" :key="'d' + index">
-                            <Icon :type="item.icon"></Icon>
+                            <i :class="item.icon" aria-hidden="true"></i>
                             <span style="padding-left:10px;">{{ itemTitle(item.children[0]) }}</span></DropdownItem>
                     </DropdownMenu>
                 </Dropdown>
@@ -45,6 +45,11 @@
             menuTheme: {
                 type: String,
                 default: 'darck'
+            }
+        },
+        computed: {
+            iconStyle() {
+                return `color: ${this.iconColor}; font-size: 18px`;
             }
         },
         methods: {

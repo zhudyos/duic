@@ -20,6 +20,8 @@ class App(
         @Field
         var profile: String = "",
         @Field
+        var token: String = "",
+        @Field
         var description: String = "",
         @Field
         var v: Int = 1,

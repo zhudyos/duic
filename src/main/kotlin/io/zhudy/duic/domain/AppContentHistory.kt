@@ -1,13 +1,18 @@
 package io.zhudy.duic.domain
 
-import org.joda.time.DateTime
+import org.springframework.data.mongodb.core.mapping.Field
+import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 class AppContentHistory(
+        @Field
         var hid: String = "",
-        var modifier: String = "",
+        @Field("revised_by")
+        var revisedBy: String = "",
+        @Field
         var content: String = "",
-        var updated_at: DateTime = DateTime.now()
+        @Field("updated_at")
+        var updatedAt: Date = Date()
 )
