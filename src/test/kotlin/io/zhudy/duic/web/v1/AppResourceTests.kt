@@ -4,6 +4,9 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.server.Application
 import org.joda.time.DateTime
+import org.junit.After
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.BDDMockito.given
 import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,21 +14,19 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.testng.AbstractTestNGSpringContextTests
+import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.testng.annotations.AfterMethod
-import org.testng.annotations.Test
 import reactor.core.publisher.Mono
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@MockBean(*[AppRepository::class])
+@RunWith(SpringRunner::class)
 @ActiveProfiles("test")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class AppResourceTests : AbstractTestNGSpringContextTests() {
+class AppResourceTests {
 
-    @Autowired
+    @MockBean
     lateinit var appRepository: AppRepository
 
     @Autowired
@@ -51,7 +52,7 @@ class AppResourceTests : AbstractTestNGSpringContextTests() {
             users = listOf("kevin", "lucy")
     )
 
-    @AfterMethod
+    @After
     fun afterMethod() {
         Mockito.reset(appRepository)
     }
