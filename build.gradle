@@ -34,7 +34,6 @@ apply plugin: "jacoco"
 apply plugin: "kotlin"
 apply plugin: "kotlin-spring"
 apply plugin: "org.springframework.boot"
-apply plugin: "io.spring.dependency-management"
 apply plugin: "com.bmuschko.docker-remote-api"
 
 group "io.zhudy.duic"
@@ -49,8 +48,8 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8"
     compile "org.jetbrains.kotlin:kotlin-reflect"
 
-    compile "org.springframework.boot:spring-boot-starter-webflux"
-    compile "org.springframework.boot:spring-boot-starter-data-mongodb-reactive"
+    compile "org.springframework.boot:spring-boot-starter-webflux:$springBootVersion"
+    compile "org.springframework.boot:spring-boot-starter-data-mongodb-reactive:$springBootVersion"
     // AbstractSubscription
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1"
@@ -60,10 +59,10 @@ dependencies {
     compile "com.auth0:java-jwt:3.3.0"
     compile "org.springframework.security:spring-security-crypto:5.0.0.RELEASE"
 
-    testCompile("org.springframework.boot:spring-boot-starter-test") {
+    testCompile("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
         exclude group: "junit"
     }
-    testCompile "io.projectreactor:reactor-test"
+    testCompile "io.projectreactor:reactor-test:3.1.2.RELEASE"
     testCompile "org.testng:testng:6.10"
     apt "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
 }
@@ -115,10 +114,11 @@ task buildAdmin(type: NpmTask, dependsOn: npmInstall) {
     args = ["run", "build"]
 }
 
-task copyAdminFiles(type: Copy) {
+task copyAdminFiles(type: Copy, dependsOn: buildAdmin) {
     group = "node"
-    from "dist"
-    into "${project.buildDir}/resources/main"
+    from "dist/dist"
+    include "*"
+    into "${project.buildDir}/resources/main/public-web-resources"
 }
 jar.dependsOn copyAdminFiles
 
@@ -131,16 +131,17 @@ docker {
     }
 }
 
-task createDockerfile(type: Dockerfile, dependsOn: jar) {
+task copyDockerJar(type: Copy, dependsOn: build) {
     group = "docker"
-
-    copy {
-        from jar.archivePath.path
-        into "${project.buildDir}/docker"
-        rename { String fileName ->
-            fileName.replace("-${project.version}", "")
-        }
+    from jar.archivePath.path
+    into "${project.buildDir}/docker"
+    rename { String fileName ->
+        fileName.replace("-${project.version}", "")
     }
+}
+
+task createDockerfile(type: Dockerfile, dependsOn: copyDockerJar) {
+    group = "docker"
 
     def jarName = "${project.name}.jar".toString()
 

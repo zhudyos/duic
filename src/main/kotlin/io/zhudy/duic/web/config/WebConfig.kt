@@ -7,11 +7,13 @@ import io.zhudy.duic.web.security.RootRoleHandler
 import io.zhudy.duic.web.v1.AppResource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.http.CacheControl
 import org.springframework.http.codec.ServerCodecConfigurer
 import org.springframework.http.codec.json.Jackson2JsonDecoder
 import org.springframework.http.codec.json.Jackson2JsonEncoder
 import org.springframework.web.reactive.config.CorsRegistry
 import org.springframework.web.reactive.config.EnableWebFlux
+import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.router
 import java.util.concurrent.TimeUnit
@@ -36,6 +38,12 @@ class WebConfig(val objectMapper: ObjectMapper,
         val defaults = configurer.defaultCodecs()
         defaults.jackson2JsonDecoder(Jackson2JsonDecoder(objectMapper))
         defaults.jackson2JsonEncoder(Jackson2JsonEncoder(objectMapper))
+    }
+
+    override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/public-web-resources/")
+                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS))
     }
 
     @Bean
