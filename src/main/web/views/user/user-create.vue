@@ -3,7 +3,7 @@
 <template>
     <div>
         <breadcrumb class="ctn-breadcrumb-menu">
-            <breadcrumb-item>首页</breadcrumb-item>
+            <breadcrumb-item to="/">首页</breadcrumb-item>
             <breadcrumb-item to="/user">用户列表</breadcrumb-item>
             <breadcrumb-item>创建用户</breadcrumb-item>
         </breadcrumb>

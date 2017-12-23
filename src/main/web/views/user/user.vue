@@ -1,27 +1,29 @@
 <style lang="less">
     .toolbar {
         text-align: right;
-        margin-bottom: 5px;
-    }
-
-    .page {
-        text-align: right;
-        margin-top: 5px;
     }
 </style>
 <template>
     <div>
-        <div class="toolbar">
-            <i-button type="primary" @click="createUser()">创建</i-button>
-        </div>
+        <row>
+            <i-col span="12">
+                <breadcrumb class="ctn-breadcrumb-menu">
+                    <breadcrumb-item to="/">首页</breadcrumb-item>
+                    <breadcrumb-item>用户列表</breadcrumb-item>
+                </breadcrumb>
+            </i-col>
+            <i-col span="12" class="toolbar">
+                <i-button type="primary" @click="createUser()">创建</i-button>
+            </i-col>
+        </row>
 
         <i-table border :columns="userColumns" :data="userData">
         </i-table>
 
         <div class="page">
-            <page ref="page" :total="total" show-sizer show-total
-                  @on-change="loadUsers()"
-                  @on-page-size-change="loadUsers()"></page>
+            <page ref="page" :page-size="pageSize" size="small" :total="total" show-total
+                  @on-change="loadAppByUser()"
+                  @on-page-size-change="loadAppByUser()"></page>
         </div>
     </div>
 </template>
@@ -34,6 +36,7 @@
         data() {
             return {
                 total: 0,
+                pageSize: 50,
                 userData: [],
                 userColumns: [
                     {title: 'E-Mail', key: 'email'},
@@ -79,10 +82,10 @@
             };
         },
         mounted() {
-            this.loadUsers()
+            this.loadAppByUser()
         },
         methods: {
-            loadUsers() {
+            loadAppByUser() {
                 var p = this.$refs.page;
                 axios.get(`/api/admins/users?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
                     this.userData = resp.data.items;
@@ -99,7 +102,7 @@
                     onOk: () => {
                         axios.delete(`/api/admins/users/${email}`).then(resp => {
                             this.$Message.success('删除成功');
-                            this.loadUsers();
+                            this.loadAppByUser();
                         })
                     }
                 });

@@ -16,9 +16,13 @@ class App(
         @Id
         var id: String = "",
         @Field
-        var name: String,
+        var name: String = "",
         @Field
-        var profile: String,
+        var profile: String = "",
+        @Field
+        var token: String = "",
+        @Field
+        var description: String = "",
         @Field
         var v: Int = 1,
         @Indexed
@@ -31,5 +35,5 @@ class App(
         var content: String = "",
         @Indexed
         @Field
-        var users: Array<String> = emptyArray()
+        var users: List<String> = emptyList()
 )

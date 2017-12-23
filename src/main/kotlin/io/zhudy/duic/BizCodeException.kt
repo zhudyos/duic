@@ -1,4 +1,4 @@
-package com.memeyule.cryolite.core
+package io.zhudy.duic
 
 /**
  * 业务异常, 与[BizCode]联合使用.

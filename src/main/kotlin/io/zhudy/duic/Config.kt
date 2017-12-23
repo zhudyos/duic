@@ -1,11 +1,13 @@
 package io.zhudy.duic
 
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.core.annotation.Order
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Order(0)
+@ConfigurationProperties(prefix = "duic")
 object Config {
 
     var address: String = "0.0.0.0"

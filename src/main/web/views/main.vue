@@ -6,8 +6,8 @@
         <div class="sidebar-menu-con" :style="{width: shrink?'60px':'200px', overflow: shrink ? 'visible' : 'auto'}">
             <shrinkable-menu :shrink="shrink" :menu-list="menuList">
                 <div slot="top" class="logo-con">
-                    <img v-show="!shrink" src="../images/logo.jpg" key="max-logo"/>
-                    <img v-show="shrink" src="../images/logo-min.jpg" key="min-logo"/>
+                    <img v-show="!shrink" src="../images/duic180x64.png" key="max-logo"/>
+                    <img v-show="shrink" src="../images/duic64x64.png" key="min-logo"/>
                 </div>
             </shrinkable-menu>
         </div>
@@ -28,6 +28,7 @@
                                     <icon type="arrow-down-b"></icon>
                                 </a>
                                 <dropdown-menu slot="list">
+                                    <dropdown-item name="update-password">修改密码</dropdown-item>
                                     <dropdown-item name="logout" divided>退出登录</dropdown-item>
                                 </dropdown-menu>
                             </dropdown>
@@ -45,7 +46,7 @@
     </div>
 </template>
 <script>
-    import axios from 'js-cookie';
+    import axios from 'axios';
     import Cookies from 'js-cookie';
     import shrinkableMenu from './main-components/shrinkable-menu/shrinkable-menu.vue';
 
@@ -55,11 +56,13 @@
         },
         data() {
             return {
-                shrink: false,
-                email: ''
+                shrink: false
             };
         },
         computed: {
+            email() {
+                return Cookies.get('email');
+            },
             menuList() {
                 return this.$store.state.app.menuList;
             }
@@ -71,6 +74,8 @@
             handleClickUserDropdown(name) {
                 if (name === 'logout') {
                     this.logout()
+                } else if (name === 'update-password') {
+                    this.$router.push({name: 'user-update-password'});
                 }
             },
             logout() {
@@ -81,11 +86,16 @@
         },
         mounted() {
             var token = Cookies.get('token');
-            if (!token) {
+            var email = Cookies.get('email');
+            if (!token || !email) {
                 this.$router.push({name: 'login'});
                 return
             }
-            this.email = Cookies.get('email');
+
+            axios.get(`/api/admins/user/root`).then(response => {
+                this.$store.commit('updateAuthUser', {email: email});
+                this.$store.commit('updateMenulist', email === response.data.root);
+            });
         }
     };
 </script>

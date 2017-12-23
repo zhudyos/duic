@@ -4,6 +4,7 @@ jdk:
   - oraclejdk8
 
 services:
+  - mongodb
   - docker
 
 before_cache:
@@ -14,10 +15,11 @@ cache:
   directories:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
+    - .gradle/
+    - node_modules/
 
 before_install:
   - chmod +x gradlew
 
 script:
-  - ./gradlew clean build
-  - ./gradlew buildImage
+  - ./gradlew clean buildImage
