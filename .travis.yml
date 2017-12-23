@@ -19,5 +19,4 @@ before_install:
   - chmod +x gradlew
 
 script:
-  - ./gradlew clean build
-  - ./gradlew buildImage
+  - ./gradlew clean buildImage
