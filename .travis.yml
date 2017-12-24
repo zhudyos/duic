@@ -22,3 +22,9 @@ before_install:
 
 script:
   - ./gradlew clean buildImage
+
+after_success:
+  - if [ ! -z "$TRAVIS_TAG" ]; then
+      docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
+      docker push zhudyos/duic;
+    fi
