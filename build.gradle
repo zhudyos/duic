@@ -116,15 +116,6 @@ task copyAdminFiles(type: Copy, dependsOn: buildAdmin) {
 }
 jar.dependsOn copyAdminFiles
 
-docker {
-    registryCredentials {
-        url = "https://index.docker.io/v1/"
-        username = System.env.DOCKER_REGISTRY_USERNAME
-        password = System.env.DOCKER_REGISTRY_PASSWORD
-        email = "kevinz@weghst.com"
-    }
-}
-
 task copyDockerJar(type: Copy, dependsOn: build) {
     group = "docker"
     from jar.archivePath.path
@@ -136,9 +127,7 @@ task copyDockerJar(type: Copy, dependsOn: build) {
 
 task createDockerfile(type: Dockerfile, dependsOn: copyDockerJar) {
     group = "docker"
-
     def jarName = "${project.name}.jar".toString()
-
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
 
     from "openjdk:8-jdk-alpine"
@@ -153,9 +142,4 @@ task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) {
     group = "docker"
     inputDir = createDockerfile.destFile.parentFile
     tags = ["zhudyos/${project.name}:${project.version}".toString(), "zhudyos/${project.name}:latest".toString()]
-}
-
-task pushImage(type: DockerPushImage) {
-    imageName = "zhudyos/${project.name}".toString()
-    tag = System.getProperty("image.version", project.version.toString())
 }
