@@ -84,7 +84,10 @@ module.exports = {
             threadPool: happyThreadPool,
             cache: true,
             verbose: true
-        })
+        }),
+        new CopyWebpackPlugin([{
+            from: 'src/main/web/images/favicon.ico',
+        }])
     ],
     resolve: {
         extensions: ['.js', '.vue'],
