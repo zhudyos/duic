@@ -85,10 +85,6 @@ module.exports = {
             cache: true,
             verbose: true
         })
-        // ,
-        // new CopyWebpackPlugin([{
-        //     from: 'src/main/web/externals/ace-diff.min.js',
-        // }])
     ],
     resolve: {
         extensions: ['.js', '.vue'],

@@ -25,6 +25,7 @@ module.exports = merge(webpackBaseConfig, {
         }),
         new HtmlWebpackPlugin({
             title: 'DuiC Admin v' + package.version,
+            favicon: './src/main/web/images/favicon.ico',
             filename: './index.html',
             template: './src/main/web/template/index.ejs',
             inject: false
