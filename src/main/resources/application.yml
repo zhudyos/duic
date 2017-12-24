@@ -10,12 +10,7 @@ spring:
     property_naming_strategy: CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES
   data:
     mongodb:
-      uri: mongodb://192.168.31.249:10000/duic
-#  main:
-#    web_application_type: reactive
-#  resources:
-#    static_locations:
-#      - "classpath:/META-INF/public-web-resources"
+      uri: mongodb://127.0.0.1:27017/duic
 
 duic:
   root_email: kevinz@weghst.com
