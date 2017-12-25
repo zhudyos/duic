@@ -7,6 +7,7 @@ import io.zhudy.duic.web.WebConstants
 import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
 import org.springframework.stereotype.Controller
+import org.springframework.util.StringUtils
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
@@ -24,7 +25,7 @@ class AppResource(val appService: AppService) {
     fun getConfigState(request: ServerRequest): Mono<ServerResponse> {
         val name = request.pathString("name")
         val profiles = getProfiles(request)
-        val configTokens = request.headers().header(WebConstants.X_CONFIG_TOKEN)
+        val configTokens = getConfigToken(request)
         return appService.getConfigState(name, profiles, configTokens).flatMap {
             ok().body(mapOf("state" to it))
         }
@@ -36,7 +37,7 @@ class AppResource(val appService: AppService) {
     fun getSpringCloudConfig(request: ServerRequest): Mono<ServerResponse> {
         val name = request.pathString("name")
         val profiles = getProfiles(request)
-        val configTokens = request.headers().header(WebConstants.X_CONFIG_TOKEN)
+        val configTokens = getConfigToken(request)
         return appService.loadSpringCloudConfig(name, profiles, configTokens).flatMap {
             ok().body(it)
         }
@@ -48,7 +49,7 @@ class AppResource(val appService: AppService) {
     fun getConfigByNameProfile(request: ServerRequest): Mono<ServerResponse> {
         val name = request.pathString("name")
         val profiles = getProfiles(request)
-        val configTokens = request.headers().header(WebConstants.X_CONFIG_TOKEN)
+        val configTokens = getConfigToken(request)
         return appService.loadConfigByNameProfile(name, profiles, configTokens).flatMap {
             ok().body(it)
         }
@@ -60,7 +61,7 @@ class AppResource(val appService: AppService) {
     fun getConfigByNameProfileKey(request: ServerRequest): Mono<ServerResponse> {
         val name = request.pathString("name")
         val profiles = getProfiles(request)
-        val configTokens = request.headers().header(WebConstants.X_CONFIG_TOKEN)
+        val configTokens = getConfigToken(request)
         val key = request.pathString("key")
         return appService.loadConfigByNameProfileKey(name, profiles, configTokens, key).flatMap {
             ok().body(it)
@@ -68,10 +69,18 @@ class AppResource(val appService: AppService) {
     }
 
     private fun getProfiles(request: ServerRequest): List<String> {
-        val profiles = request.pathString("profile").split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        val profiles = request.pathString("profile").split(",").filter { it.isNotEmpty() }
         if (profiles.isEmpty()) {
             throw BizCodeException(BizCode.Classic.C_999, "缺少 profile 参数")
         }
         return profiles
+    }
+
+    private fun getConfigToken(request: ServerRequest): Array<String> {
+        val s = request.headers().header(WebConstants.X_CONFIG_TOKEN).firstOrNull()
+        if (s.isNullOrEmpty()) {
+            return emptyArray()
+        }
+        return StringUtils.commaDelimitedListToStringArray(s)
     }
 }

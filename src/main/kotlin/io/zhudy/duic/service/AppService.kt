@@ -112,7 +112,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun getConfigState(name: String, profiles: List<String>, configTokens: List<String>): Mono<String> {
+    fun getConfigState(name: String, profiles: List<String>, configTokens: Array<String>): Mono<String> {
         return loadAndCheckApps(name, profiles, configTokens).map { apps ->
             val state = StringBuilder()
             apps.forEach {
@@ -125,7 +125,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadSpringCloudConfig(name: String, profiles: List<String>, configTokens: List<String>): Mono<SpringCloudResponseDto> {
+    fun loadSpringCloudConfig(name: String, profiles: List<String>, configTokens: Array<String>): Mono<SpringCloudResponseDto> {
         return loadAndCheckApps(name, profiles, configTokens).map { apps ->
             val ps = arrayListOf<SpringCloudPropertySource>()
             val state = StringBuilder()
@@ -140,7 +140,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadConfigByNameProfile(name: String, profiles: List<String>, configTokens: List<String>): Mono<Map<Any, Any>> {
+    fun loadConfigByNameProfile(name: String, profiles: List<String>, configTokens: Array<String>): Mono<Map<Any, Any>> {
         return loadAndCheckApps(name, profiles, configTokens).map {
             mergeProps(it)
         }
@@ -149,7 +149,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadConfigByNameProfileKey(name: String, profiles: List<String>, configTokens: List<String>, key: String): Mono<Any> {
+    fun loadConfigByNameProfileKey(name: String, profiles: List<String>, configTokens: Array<String>, key: String): Mono<Any> {
         return loadConfigByNameProfile(name, profiles, configTokens).map {
             var props = it
             var v: Any? = null
@@ -239,7 +239,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }
     }
 
-    private fun loadAndCheckApps(name: String, profiles: List<String>, configTokens: List<String>) = Flux.merge(profiles.map {
+    private fun loadAndCheckApps(name: String, profiles: List<String>, configTokens: Array<String>) = Flux.merge(profiles.map {
         loadOne(name, it).doOnNext {
             if (it.token.isNotEmpty() && !configTokens.contains(it.token)) {
                 throw BizCodeException(BizCode.Classic.C_401, "${it.name}/${it.profile} 认证失败")
