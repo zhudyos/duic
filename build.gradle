@@ -49,8 +49,11 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jre8"
     compile "org.jetbrains.kotlin:kotlin-reflect"
 
-    compile "org.springframework.boot:spring-boot-starter-webflux:$springBootVersion"
+    compile("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion") {
+        exclude module: "netty-transport-native-epoll"
+    }
     compile "org.springframework.boot:spring-boot-starter-data-mongodb-reactive:$springBootVersion"
+    compile "io.netty:netty-transport-native-epoll:4.1.17.Final:linux-x86_64"
     // AbstractSubscription
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1"
@@ -132,7 +135,9 @@ task createDockerfile(type: Dockerfile, dependsOn: copyDockerJar) {
 
     from "openjdk:8-jdk-alpine"
     maintainer "Kevin Zou <kevinz@weghst.com>"
-    copyFile(jarName, jarName)
+    copyFile(jarName, "/app/$jarName".toString())
+    workingDir("/app")
+    volume("/app/logs")
     environmentVariable("JAVA_OPTS", "-server -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -Xloggc:logs/gc.log")
     exposePort(7777)
     entryPoint("java", "-jar", jarName, "\$JAVA_OPTS")
