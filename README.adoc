@@ -9,7 +9,7 @@
 |______.'  '.__.'_/[___]`.____ .'
 
 ```
-DuiC 统一配置管理, 可用于管理服务端(server), 终端(web/app)配置, 并且内置用户权限和`web`控制台
+DuiC 统一配置管理, 可用于管理服务端(server), 终端(web/app)配置, 并且内置用户权限和 `web` 控制台
 
 https://duic.zhudy.io/index.html[在线演示平台] +
 __登录信息__ +
@@ -33,6 +33,7 @@ IMPORTANT: samples 项目用于演示请不要随意修改其中的配置, 若�
 . 支持配置编辑语法高亮及格式校验
 . 配置权限管理
 . 兼容 `spring-cloud-config`
+. 支持热更新
 . 分布式配置管理
 
 === 配置示例
@@ -82,6 +83,8 @@ TIP: `name` 表示应用的名称 +
 
 
 === RESTful API
+https://app.swaggerhub.com/apis/kevinz70/duic/1.0.0[Open API 文档]
+
 . `/apps/states/{name}/{profile}` 获取指定配置状态
 +
 ====
@@ -180,7 +183,41 @@ IMPORTANT: 多个 `profile` 采用 `,` 分隔, `DuiC` 会按照顺序加载相�
   "multiple_lines":"sample\nsecond\nmultiple\nlines"
 }
 ```
-+
-IMPORTANT: 如果 `key` 是指向一个非 `object/array` 的对象, 将返回会如下返回
 
 === 部署
+
+.服务配置
+****
+----
+server:
+  port: 7777 # <1>
+
+spring:
+  jackson:
+    default_property_inclusion: non_default
+    date_format: yyyy-MM-dd'T'HH:mm:ss
+    joda_date_time_format: yyyy-MM-dd'T'HH:mm:ss
+    property_naming_strategy: CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES
+  data:
+    mongodb:
+      uri: mongodb://127.0.0.1:27017/duic # <2>
+
+duic:
+  root_email: kevinz@weghst.com # <3>
+  root_password: 123456 # <4>
+  jwt:
+    secret: U2FsdGVkX1/jO0KlWumac4yDM8rOgWPkaV0KrSHDynWOP6n8FMJB9uSc8EW/qM+VagrMBAXGpyw= # <5>
+    expires_in: 180 # <6>
+----
+
+<1> 应用服务端口
+<2> MongoDB 连接地址
+<3> 默认用户登录邮箱
+<4> 默认用户登录密码
+<5> JWT HMAC256 签名字符串
+<6> JWT 过期时间(单位:分钟)
+
+****
+
+. https://github.com/zhudyos/duic-docker-compose[docker-compose 部署]
+. docker 部署

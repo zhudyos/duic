@@ -1,0 +1,161 @@
+openapi: 3.0.0
+servers:
+  - description: DuiC Server
+    url: https://duic.zhudy.io/api/v1
+
+    # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/kevinz70/duic/1.0.0
+
+info:
+  description: DuiC 统一配置管理 API
+  version: 1.0.0
+  title: DuiC 统一配置管理 API
+  contact:
+    email: kevinz@weghst.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+  - name: apps
+    description: APP 配置应用 API
+  - name: spring-cloud
+    description: spring-cloud 配置 API
+paths:
+  /apps/states/{name}/{profile}:
+    get:
+      tags:
+        - apps
+      description: 检查应用状态
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+      responses:
+        200:
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - state
+                properties:
+                  state:
+                    type: string
+                    example: "45"
+  /apps/{name}/{profile}:
+    get:
+      tags:
+        - apps
+      description: 获取应用 profile 的全部配置
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+      responses:
+        200:
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+  /apps/{name}/{profile}/{key}:
+    get:
+      tags:
+        - apps
+      description: 获取应用 profile 指定键的配置
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+        - in: path
+          name: key
+          description: 配置键值
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /ssc/{name}/{profile}:
+    get:
+      tags:
+        - spring-cloud
+      description: 返回 spring-cloud-config 配置
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+      responses:
+        200:
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+                $ref: '#/components/schemas/SpringCloudRes'
+
+components:
+  parameters:
+    AppNamePath:
+      in: path
+      name: name
+      description: 应用名称
+      required: true
+      schema:
+        type: string
+    AppProfilePath:
+      in: path
+      name: profile
+      description: 多个 profile 使用英文逗号(,)分隔
+      required: true
+      schema:
+        type: string
+    ConfigTokenHeader:
+      in: header
+      name: X-Config-Token
+      description: 应用配置访问令牌
+      schema:
+        type: array
+        items:
+          type: string
+  schemas:
+    SpringCloudRes:
+      type: object
+      required:
+        - name
+        - profiles
+        - state
+        - propertySources
+      properties:
+        name:
+          type: string
+          example: test
+        profiles:
+          type: array
+          items:
+            type: string
+            example: ["test", "dev"]
+        state:
+          type: string
+        propertySources:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertySourceRes'
+    PropertySourceRes:
+      type: object
+      required:
+        - name
+        - source
+      properties:
+        name:
+          type: string
+          example: test_dev
+        source:
+          type: object
