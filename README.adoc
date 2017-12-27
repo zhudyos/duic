@@ -1,3 +1,5 @@
+:email: kevinz@weghst.com
+
 ```
  ______              _    ______
 |_   _ `.           (_) .' ___  |
@@ -7,3 +9,178 @@
 |______.'  '.__.'_/[___]`.____ .'
 
 ```
+DuiC 统一配置管理, 可用于管理服务端(server), 终端(web/app)配置, 并且内置用户权限和`web`控制台
+
+https://duic.zhudy.io/index.html[在线演示平台] +
+__登录信息__ +
+E-Mail: **{email}** +
+Password: **123456**
+
+IMPORTANT: samples 项目用于演示请不要随意修改其中的配置, 若想体验请增加 `app` 配置 +
+同时也请大家不要修改**默认帐户**的**密码**
+
+=== 设计目标
+. 统一配置管理
+. 标准配置管理规范
+. 管理更多的配置
+. 更灵活的配置管理
+. 为非技术人员使用
+
+=== 功能
+. 灵活的配置获取方式
+. 采用 `yaml` 文件格式管理配置
+. 支持数据结构及数据类型
+. 支持配置编辑语法高亮及格式校验
+. 配置权限管理
+. 兼容 `spring-cloud-config`
+. 分布式配置管理
+
+=== 配置示例
+**name:** `samples` +
+**profile:** `first`
+[source,yaml,linenums]
+----
+k1:
+  string: samples first k1 string
+  int: 11
+  array:
+    - 1
+    - 2
+    - 3
+  multiple_lines: |-
+    sample
+    first
+    multiple
+    lines
+k2:
+  string: samples first k2 string
+----
+
+**name:** `samples` +
+**profile:** `second`
+[source,yaml,linenums]
+----
+k1:
+  string: samples second k1 string
+  int: 22
+  array:
+    - 3
+    - 2
+    - 1
+  multiple_lines: |-
+    sample
+    second
+    multiple
+    lines
+k2:
+  string: samples second k2 string
+----
+
+TIP: `name` 表示应用的名称 +
+ `profile` 表示应用的环境 +
+ `name` 与 `profile` 组成一个配置坐标, 在配置系统中是**唯一**的, 相同 `name` 的配置可以**合并**
+
+
+=== RESTful API
+. `/apps/states/{name}/{profile}` 获取指定配置状态
++
+====
+当配置修改后服务器会更新配置状态, 该接口可用于检查配置的状态, 如果状态变化可重新向服务器拉取配置信息
+====
++
+请求::
++
+ $ curl https://duic.zhudy.io/api/v1/apps/states/samples/first
+响应::
++
+```json
+{
+  "state":"16"
+}
+```
+
+. `/apps/{name}/{profile}` 获取指定应用所有配置
++
+====
+返回所有配置, 如果 `profile` 有多个会合并返回结果
+====
+
+.. 一个 profile
++
+请求::
++
+ $ curl https://duic.zhudy.io/api/v1/apps/samples/first
+响应::
++
+```json
+{
+  "k1":{
+    "string":"samples first k1 string",
+    "int":11,
+    "array":[
+      1,
+      2,
+      3
+    ],
+    "multiple_lines":"sample\nfirst\nmultiple\nlines"
+  },
+  "k2":{
+    "string":"samples first k2 string"
+  }
+}
+```
+.. 多个 profile
++
+请求::
++
+ $ curl https://duic.zhudy.io/api/v1/apps/samples/first,second
+响应::
++
+```json
+{
+  "k1":{
+    "string":"samples second k1 string",
+    "int":22,
+    "array":[
+      3,
+      2,
+      1
+    ],
+    "multiple_lines":"sample\nsecond\nmultiple\nlines"
+  },
+  "k2":{
+    "string":"samples second k2 string"
+  }
+}
+```
++
+IMPORTANT: 多个 `profile` 采用 `,` 分隔, `DuiC` 会按照顺序加载相应的配置, 如果配置键
+`key` 相同, 后面的 `profile` 将会覆盖前面 `profile` 的值
+
+. `/apps/{name}/{profile}/{key}` 获取指定应用中某个 `key` 的配置
++
+====
+这里的 `profile` 也可以传入多个并按 `,` 分隔
+====
++
+请求::
++
+ $ curl https://duic.zhudy.io/api/v1/apps/samples/first,second/k1
+响应::
++
+```json
+{
+  "string":"samples second k1 string",
+  "int":22,
+  "array":[
+    3,
+    2,
+    1
+  ],
+  "multiple_lines":"sample\nsecond\nmultiple\nlines"
+}
+```
++
+IMPORTANT: 如果 `key` 是指向一个非 `object/array` 的对象, 将返回会如下返回
+
+=== 部署
