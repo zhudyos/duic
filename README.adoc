@@ -186,7 +186,7 @@ IMPORTANT: 多个 `profile` 采用 `,` 分隔, `DuiC` 会按照顺序加载相�
 
 === 部署
 
-.服务配置
+.服务配置 application.yml
 ****
 ----
 server:
@@ -219,5 +219,28 @@ duic:
 
 ****
 
+---
+
 . https://github.com/zhudyos/duic-docker-compose[docker-compose 部署]
 . docker 部署
+.. 安装 MongoDB
++
+https://www.mongodb.com/[https://www.mongodb.com/]
++
+.. 服务配置
++
+... 创建 `config` 文件夹
+... 在 `config` 文件夹中创建配置文件 `application.yml`
+... `application.yml` 配置文件将 `spring.data.mongodb.uri` 连接地址修改为安装服务的 MongoDB 连接地址
+.. 启用容器
++
+```shell
+$ docker run -d -p 7777:7777 -v $(pwd)/config:/app/config zhudyos/duic
+```
++
+TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到容器的 `/app/config` 目录中, DuiC 则会使用指定的配置
+
+=== 相关项目
+. https://projects.spring.io/spring-boot/[Spring Boot]
+. https://docs.spring.io/spring/docs/current/spring-framework-reference/web-reactive.html[Spring WebFlux]
+. https://github.com/iview/iview-admin[iView Admin]
