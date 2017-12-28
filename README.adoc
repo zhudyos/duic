@@ -32,7 +32,7 @@ IMPORTANT: samples 项目用于演示请不要随意修改其中的配置, 若�
 . 支持数据结构及数据类型
 . 支持配置编辑语法高亮及格式校验
 . 配置权限管理
-. 兼容 `spring-cloud-config`
+. 兼容 `spring-cloud-config-client` 并提供 https://github.com/zhudyos/duic-spring-cloud-config-client[duic-spring-cloud-config-client]
 . 支持热更新
 . 分布式配置管理
 
