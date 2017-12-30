@@ -67,6 +67,7 @@ dependencies {
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
     testCompile "io.projectreactor:reactor-test:3.1.2.RELEASE"
+    testCompile "io.projectreactor.ipc:reactor-netty:0.7.2.RELEASE"
     apt "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
 }
 

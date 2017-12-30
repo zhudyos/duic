@@ -28,3 +28,11 @@ after_success:
       docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
       docker push zhudyos/duic;
     fi
+
+deploy:
+  provider: releases
+  api_key: 73b429ba390a48aa65b2df17b9eb0b6289d3379a
+  file:
+    - /build/libs/duic-1.0.0.jar
+  on:
+    tags: true
