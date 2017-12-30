@@ -34,6 +34,7 @@ deploy:
   user: kevin70
   password:
     secure: "t6M1BlMhA2SeXfCRRxjrl/hgcjN+oKDi+iqkeq2DC/K3clmSsopji+DuokhUkcw1Wv8ITY49LDuheSiIe+4CALIN2SzGPtUxytDPLlFCtuUBnyoU6aWuUVXcu2SWQl7053XuXxeaSXQxzwmbn+kcwn2RvR95lX7r79jR6eLFPhKr1xroGxSkna3HYQC/zN31EJ2rWsZ8EpUI1huU/GQtHJZzz1+qdvI4rbJJ8hLHxRUQFspNb7YvtsGjSRDN6dn7vF0MSrWO1vNTLrDfNwU0ifJpI/QXrqP0Ufxn+zzTRaKk/9lCTHiJjIDcr1I9rTIBO/ay1c8318Xn+cz+VRm2ApH0bTLnBJYHHaYB8PNDmw8nGWqCbVef6vBNmhJFCooLCFKE9bEXrLfllz/cPj9pii7xZavxJJlSpdUgQWEDTucSfwQCsQKRcNsEmPobc/ockrZnRgv9B0PdsJIFUgh4XjoHjjYZgCFyLREVBmK3wnnUwGy4HnJYYc8Bf3hfRdxSDrQX9NdCQPhvRYibmt7XcnF39L5aj2vsAdnyeVHEo3IJE9kuI+7Aeu6RMchylGbJI5VBWkr/RpA51tDSlz6kZtJIyoCBvFWWk7OQhins3q4b0M2XtYSrISD2pTjYOgQFpjuS1UtaT4I+QvURKmEgNX6KXyHQ8y1etPtkV3kgGIQ="
+  file_glob: true
   file:
     - /build/libs/duic-$TRAVIS_TAG.jar
   skip_cleanup: true
