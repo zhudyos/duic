@@ -244,3 +244,6 @@ TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到�
 . https://projects.spring.io/spring-boot/[Spring Boot]
 . https://docs.spring.io/spring/docs/current/spring-framework-reference/web-reactive.html[Spring WebFlux]
 . https://github.com/iview/iview-admin[iView Admin]
+
+=== 联系/讨论
+QQ 群:: **540315111** (DuiC 统一配置管理)
