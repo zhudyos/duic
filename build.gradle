@@ -50,10 +50,12 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect"
 
     compile("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion") {
-        exclude module: "netty-transport-native-epoll"
+        exclude module: "spring-boot-starter-reactor-netty"
+        exclude module: "hibernate-validator"
+        exclude module: "nio-multipart-parser"
     }
     compile "org.springframework.boot:spring-boot-starter-data-mongodb-reactive:$springBootVersion"
-    compile "io.netty:netty-transport-native-epoll:4.1.17.Final:linux-x86_64"
+    compile "io.undertow:undertow-core:1.4.12.Final"
     // AbstractSubscription
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1"
@@ -138,7 +140,7 @@ task createDockerfile(type: Dockerfile, dependsOn: copyDockerJar) {
     copyFile(jarName, "/app/$jarName".toString())
     workingDir("/app")
     volume("/app/logs")
-    environmentVariable("JAVA_OPTS", "-server -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -Xloggc:logs/gc.log")
+    environmentVariable("JAVA_OPTS", "-server -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -Xloggc:logs/gc.log -Dspring.profiles.active=prod")
     exposePort(7777)
     entryPoint("java", "-jar", jarName, "\$JAVA_OPTS")
 }
