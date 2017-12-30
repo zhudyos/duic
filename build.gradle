@@ -151,3 +151,8 @@ task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) {
     inputDir = createDockerfile.destFile.parentFile
     tags = ["zhudyos/${project.name}:${project.version}".toString(), "zhudyos/${project.name}:latest".toString()]
 }
+
+task copyRelease(type: Copy) {
+    from jar.archivePath.path
+    into "${project.buildDir}/releases"
+}
