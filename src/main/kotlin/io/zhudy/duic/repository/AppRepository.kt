@@ -158,7 +158,7 @@ class AppRepository(
             AppContentHistory(
                     hid = it.getString("hid"),
                     revisedBy = it.getString("revised_by") ?: "",
-                    content = it.getString("content"),
+                    content = it.getString("content") ?: "",
                     updatedAt = it.getDate("updated_at")
             )
         }

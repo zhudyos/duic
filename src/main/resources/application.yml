@@ -9,7 +9,8 @@ spring:
     property_naming_strategy: CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES
   data:
     mongodb:
-      uri: mongodb://127.0.0.1:27017/duic
+      uri: mongodb://127.0.0.1:27017/
+      database: duic
 
 duic:
   root_email: kevinz@weghst.com
