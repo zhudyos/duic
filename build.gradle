@@ -137,9 +137,9 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
     copyFile(jarName, "/app/$jarName".toString())
     workingDir("/app")
     volume("/app/logs")
-    environmentVariable("I_JAVA_OPTS", "-server -XX:+UseG1GC -Xmx1G -Xms1G -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDetails -Xloggc:logs/gc.log -Dspring.profiles.active=prod")
+    environmentVariable("JAVA_OPTS", "-server -XX:+UseG1GC -Xmx1G -Xms1G -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDetails -Xloggc:logs/gc.log -Dspring.profiles.active=prod")
     exposePort(7777)
-    defaultCommand("java", "\${I_JAVA_OPTS}", "\${JAVA_OPTS}", "-jar", jarName)
+    defaultCommand("sh", "-c", "java \$JAVA_OPTS -jar $jarName")
 }
 
 task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: createDockerfile) {
