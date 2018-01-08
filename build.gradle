@@ -1,7 +1,3 @@
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-
 buildscript {
     ext {
         kotlinVersion = "1.2.0"
@@ -131,7 +127,7 @@ task copyDockerJar(type: Copy, dependsOn: build) {
     }
 }
 
-task createDockerfile(type: Dockerfile, dependsOn: copyDockerJar) {
+task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, dependsOn: copyDockerJar) {
     group = "docker"
     def jarName = "${project.name}.jar".toString()
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
@@ -141,12 +137,12 @@ task createDockerfile(type: Dockerfile, dependsOn: copyDockerJar) {
     copyFile(jarName, "/app/$jarName".toString())
     workingDir("/app")
     volume("/app/logs")
-    environmentVariable("JAVA_OPTS", "-server -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -Xloggc:logs/gc.log -Dspring.profiles.active=prod")
+    environmentVariable("I_JAVA_OPTS", "-server -XX:+UseG1GC -Xmx1G -Xms1G -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDetails -Xloggc:logs/gc.log -Dspring.profiles.active=prod")
     exposePort(7777)
-    entryPoint("java", "-jar", jarName, "\$JAVA_OPTS")
+    entryPoint("java", "\$I_JAVA_OPTS", "\$JAVA_OPTS", "-jar", jarName)
 }
 
-task buildImage(type: DockerBuildImage, dependsOn: createDockerfile) {
+task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: createDockerfile) {
     group = "docker"
     inputDir = createDockerfile.destFile.parentFile
     tags = ["zhudyos/${project.name}:${project.version}".toString(), "zhudyos/${project.name}:latest".toString()]
