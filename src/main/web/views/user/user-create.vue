@@ -47,6 +47,7 @@
             commit() {
                 axios.post(`/api/admins/users`, this.user).then(() => {
                     this.$Message.success('用户添加成功');
+                    this.$router.push({path: `/user`})
                 }).catch((err) => {
                     var d = err.response.data || {};
                     this.$Message.error(d.message || '用户添加失败');
