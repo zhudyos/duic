@@ -58,8 +58,9 @@ class AdminResource(
      * 保存用户.
      */
     fun insertUser(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(User::class.java)).flatMap {
-        userService.insert(it)
-        ok().build()
+        userService.insert(it).flatMap {
+            ok().build()
+        }
     }
 
     /**
