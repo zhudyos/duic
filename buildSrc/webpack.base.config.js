@@ -97,6 +97,7 @@ module.exports = {
         }
     },
     externals: {
-        ace: 'ace'
+        require: 'require',
+        monaco: 'monaco'
     }
 };
