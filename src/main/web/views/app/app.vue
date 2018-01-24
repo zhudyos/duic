@@ -1,4 +1,6 @@
 <style lang="less">
+    @import "../../styles/common";
+
     .toolbar {
         text-align: right;
     }
@@ -14,6 +16,18 @@
             </i-col>
             <i-col span="12" class="toolbar">
                 <i-button type="primary" @click="createApp()">创建</i-button>
+            </i-col>
+        </row>
+
+        <row class="margin-bottom-10">
+            <i-col span="12">
+                <div @keyup.enter="search()">
+                    <i-input v-model="q">
+                        <i-button slot="append" @click="search()">
+                            <i class="fa fa-search" aria-hidden="true"></i>
+                        </i-button>
+                    </i-input>
+                </div>
             </i-col>
         </row>
 
@@ -35,12 +49,33 @@
         name: 'app',
         data() {
             return {
+                q: '',
                 total: 0,
                 pageSize: 50,
                 appData: [],
                 appColumns: [
                     {title: '名称 (name)', key: 'name', sortable: true},
-                    {title: '环境 (profile)', key: 'profile', sortable: true},
+                    {
+                        title: '环境 (profile)',
+                        key: 'profile',
+                        sortable: true,
+                        render: (h, params) => {
+                            return h('a', {
+                                on: {
+                                    click: () => {
+                                        var r = params.row;
+                                        this.$router.push({
+                                            path: `/app-content-edit`,
+                                            query: {
+                                                name: r.name,
+                                                profile: r.profile
+                                            }
+                                        })
+                                    }
+                                }
+                            }, params.row.profile)
+                        }
+                    },
                     {title: '描述', key: 'description', width: 400},
                     {
                         title: '令牌',
@@ -67,31 +102,10 @@
                     {title: '更新时间', key: 'updated_at', sortable: true},
                     {
                         title: '操作',
-                        width: 220,
+                        width: 180,
                         align: 'center',
                         render: (h, params) => {
                             return h('div', [
-                                h('i-button', {
-                                    props: {
-                                        type: 'primary',
-                                        size: 'small'
-                                    },
-                                    style: {
-                                        marginRight: '5px'
-                                    },
-                                    on: {
-                                        click: () => {
-                                            var r = params.row;
-                                            this.$router.push({
-                                                path: `/app-content-edit`,
-                                                query: {
-                                                    name: r.name,
-                                                    profile: r.profile
-                                                }
-                                            })
-                                        }
-                                    }
-                                }, '配置'),
                                 h('i-button', {
                                     props: {
                                         type: 'info',
@@ -158,15 +172,23 @@
             };
         },
         mounted() {
+            var q = this.$route.query.q;
+            if (q) {
+                this.q = q;
+            }
             this.loadAppByUser()
         },
         methods: {
             loadAppByUser() {
                 var p = this.$refs.page;
-                axios.get(`/api/admins/apps/user?page=${p.currentPage}&size=${p.currentPageSize}`).then(resp => {
+                axios.get(`/api/admins/search/apps?page=${p.currentPage}&size=${p.currentPageSize}&q=${this.q}`).then(resp => {
                     this.appData = resp.data.items;
                     this.total = resp.data.total
                 })
+            },
+            search() {
+                this.$router.push({path: '/app', query: {q: this.q}});
+                this.loadAppByUser();
             },
             createApp() {
                 this.$router.push({path: '/app-create'})
