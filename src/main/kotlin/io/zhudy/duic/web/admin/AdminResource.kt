@@ -12,6 +12,7 @@ import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
 import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
+import io.zhudy.duic.web.queryTrimString
 import io.zhudy.duic.web.security.userContext
 import org.joda.time.DateTime
 import org.springframework.stereotype.Controller
@@ -175,6 +176,17 @@ class AdminResource(
     fun findAppByUser(request: ServerRequest): Mono<ServerResponse> {
         val page = WebUtils.getPage(request)
         return appService.findPageByUser(page, request.userContext()).flatMap {
+            ok().body(it)
+        }
+    }
+
+    /**
+     * 搜索配置。
+     */
+    fun searchAppByUser(request: ServerRequest): Mono<ServerResponse> {
+        val page = WebUtils.getPage(request)
+        val q = request.queryParam("q").orElse("").trim()
+        return appService.searchPageByUser(q, page, request.userContext()).flatMap {
             ok().body(it)
         }
     }

@@ -217,6 +217,15 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     }
 
     /**
+     * 全文检索配置。
+     */
+    fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext): Mono<Page<App>> = if (userContext.isRoot) {
+        appRepository.searchPage(q, pageable)
+    } else {
+        appRepository.searchPageByUser(q, pageable, userContext)
+    }
+
+    /**
      *
      */
     fun findLast50History(name: String, profile: String, userContext: UserContext)
