@@ -82,6 +82,16 @@ export const otherRouter = {
             }
         },
         {
+            path: '/app-content-diff',
+            name: 'app-content-diff',
+            meta: {
+                title: '编辑历史比较'
+            },
+            component: resolve => {
+                require(['@/views/app/app-content-diff.vue'], resolve);
+            }
+        },
+        {
             path: '/app-create',
             name: 'app-create',
             meta: {
