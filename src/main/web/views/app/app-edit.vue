@@ -5,7 +5,7 @@
         <breadcrumb class="ctn-breadcrumb-menu">
             <breadcrumb-item to="/">首页</breadcrumb-item>
             <breadcrumb-item to="/app">应用列表</breadcrumb-item>
-            <breadcrumb-item>创建应用</breadcrumb-item>
+            <breadcrumb-item>编辑应用(name: <label style="color: red">{{app.name}}</label>, profile: <label style="color: red">{{app.profile}}</label>)</breadcrumb-item>
         </breadcrumb>
         <card>
             <i-form :model="app" :rules="validation" label-position="right" :label-width="80">

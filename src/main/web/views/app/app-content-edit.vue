@@ -1,5 +1,5 @@
 <style type="less">
-    #editor {
+    .code-editor {
         position: absolute;
         top: 40px;
         right: 0;
@@ -19,9 +19,11 @@
         <breadcrumb class="ctn-breadcrumb-menu">
             <breadcrumb-item to="/">首页</breadcrumb-item>
             <breadcrumb-item to="/app">应用列表</breadcrumb-item>
-            <breadcrumb-item>编辑配置(name: {{app.name}}, profile: {{app.profile}})</breadcrumb-item>
+            <breadcrumb-item>编辑配置(name: <label style="color: red">{{app.name}}</label>, profile: <label
+                    style="color: red">{{app.profile}}</label>)
+            </breadcrumb-item>
         </breadcrumb>
-        <div id="editor"></div>
+        <div id="editor" class="code-editor"></div>
         <i-button ref="commitBtn" class="commit-btn" type="primary" @click="commit()" disabled>提交</i-button>
     </div>
 </template>
@@ -62,22 +64,17 @@
                 });
             },
             initEditor() {
-                var e = ace.edit('editor');
-                e.setOptions({
-                    printMarginColumn: 120
+                var that = this;
+                window.require.config({paths: {'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.10.1/min/vs'}});
+                window.require(['vs/editor/editor.main'], function () {
+                    var e = monaco.editor.create(document.getElementById('editor'), {
+                        value: that.app.content,
+                        language: 'yaml'
+                    });
+
+                    e.onDidChangeModelContent(that.changeContent);
+                    that.editor = e
                 });
-
-                var session = e.session;
-                session.setMode("ace/mode/yaml");
-                session.setTabSize(2);
-                session.setUseSoftTabs(true);
-
-                e.setValue(this.app.content || '', 1);
-                e.focus();
-                e.on('change', this.changeContent);
-                e.clearSelection();
-
-                this.editor = e;
             },
             changeContent() {
                 this.$refs.commitBtn.disabled = false;
