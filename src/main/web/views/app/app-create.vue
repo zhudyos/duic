@@ -37,6 +37,7 @@
 </template>
 <script>
     import axios from 'axios';
+    import Cookies from 'js-cookie';
 
     function _generateToken() {
         return ([1e7] + 1e3 + 4e3 + 8e3 + 1e11).replace(/[018]/g, c =>
@@ -77,7 +78,9 @@
             }).catch((err) => {
                 var d = err.response.data || {};
                 this.$Message.error(d.message || '获取用户邮箱失败');
-            })
+            });
+
+            this.app.users.push(Cookies.get('email'));
         },
         methods: {
             commit() {
