@@ -3,6 +3,7 @@ package io.zhudy.duic.domain
 import org.joda.time.DateTime
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.CompoundIndex
+import org.springframework.data.mongodb.core.index.CompoundIndexes
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
@@ -11,7 +12,10 @@ import org.springframework.data.mongodb.core.mapping.Field
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Document(collection = "app")
-@CompoundIndex(name = "name_profile", unique = true, def = """{"name":1, "profile":1}""")
+@CompoundIndexes(value = *[
+CompoundIndex(name = "name_profile", unique = true, def = """{"name":1, "profile":1}"""),
+CompoundIndex(name = "name_profile_content_text", def = """{"name":"text", "profile":"text", "content":"text"}""")
+])
 class App(
         @Id
         var id: String = "",
