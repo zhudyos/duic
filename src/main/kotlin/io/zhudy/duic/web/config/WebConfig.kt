@@ -84,6 +84,10 @@ class WebConfig(val objectMapper: ObjectMapper,
                 GET("/{name}/{profile}", adminResource::findOneApp)
                 GET("/{name}/{profile}/histories", adminResource::findAppContentHistory)
             }
+
+            path("/search").nest {
+                GET("/apps", adminResource::searchAppByUser)
+            }
         }
     }.filter(AuthorizedHandlerFilter())!!
 
