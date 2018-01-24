@@ -14,10 +14,8 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.mongodb.core.findOne
+import org.springframework.data.mongodb.core.query.*
 import org.springframework.data.mongodb.core.query.Criteria.where
-import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.Update
-import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -117,24 +115,26 @@ class AppRepository(
      *
      */
     fun findPage(pageable: Pageable): Mono<Page<App>> {
-        val q = Query().with(pageable)
-        return mongoOperations.find(q, App::class.java).collectList().flatMap { items ->
-            mongoOperations.count(q, App::class.java).map { total ->
-                PageImpl(items, pageable, total)
-            }
-        }
+        return findPage(Query(), pageable)
     }
 
     /**
      *
      */
     fun findPageByUser(pageable: Pageable, userContext: UserContext): Mono<Page<App>> {
-        val q = Query(where("users").elemMatch(where("\$eq").isEqualTo(userContext.email))).with(pageable)
-        return mongoOperations.find(q, App::class.java).collectList().flatMap { items ->
-            mongoOperations.count(q, App::class.java).map { total ->
-                PageImpl(items, pageable, total)
-            }
-        }
+        val q = Query(where("users").elemMatch(where("\$eq").isEqualTo(userContext.email)))
+        return findPage(q, pageable)
+    }
+
+    fun searchPage(q: String, pageable: Pageable): Mono<Page<App>> {
+        val query = if (q.isEmpty()) Query() else TextQuery(q)
+        return findPage(query, pageable)
+    }
+
+    fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext): Mono<Page<App>> {
+        val wh = where("users").elemMatch(where("\$eq").isEqualTo(userContext.email))
+        val query = if (q.isEmpty()) TextQuery(q).addCriteria(wh) else Query(wh)
+        return findPage(query, pageable)
     }
 
     /**
@@ -170,5 +170,13 @@ class AppRepository(
     fun findAppHistoryByCreatedAt(createdAt: Date): Flux<AppHistory> {
         val q = Query(where("created_at").gte(createdAt))
         return mongoOperations.find(q, AppHistory::class.java)
+    }
+
+    private fun findPage(q: Query, pageable: Pageable): Mono<Page<App>> {
+        return mongoOperations.find(q.with(pageable), App::class.java).collectList().flatMap { items ->
+            mongoOperations.count(q, App::class.java).map { total ->
+                PageImpl(items, pageable, total)
+            }
+        }
     }
 }
