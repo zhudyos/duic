@@ -133,7 +133,7 @@ class AppRepository(
 
     fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext): Mono<Page<App>> {
         val wh = where("users").elemMatch(where("\$eq").isEqualTo(userContext.email))
-        val query = if (q.isEmpty()) TextQuery(q).addCriteria(wh) else Query(wh)
+        val query = if (q.isEmpty()) Query(wh) else TextQuery(q).addCriteria(wh)
         return findPage(query, pageable)
     }
 
