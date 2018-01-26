@@ -52,6 +52,12 @@ export const otherRouter = {
     component: Main,
     children: [
         {
+            path: '',
+            component: resolve => {
+                require(['@/views/index.vue'], resolve);
+            }
+        },
+        {
             path: '/user-create',
             name: 'user-create',
             meta: {
