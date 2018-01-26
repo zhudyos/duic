@@ -28,7 +28,7 @@ class WebConfig(val objectMapper: ObjectMapper,
                 val adminResource: AdminResource) : WebFluxConfigurer {
 
     override fun addCorsMappings(registry: CorsRegistry) {
-        registry.addMapping("/api/v1")
+        registry.addMapping("/api/v1/**")
                 .allowedOrigins("*")
                 .allowedMethods("*")
                 .maxAge(TimeUnit.DAYS.toSeconds(7))
@@ -43,7 +43,7 @@ class WebConfig(val objectMapper: ObjectMapper,
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/public-web-resources/")
-                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS))
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
     }
 
     @Bean
