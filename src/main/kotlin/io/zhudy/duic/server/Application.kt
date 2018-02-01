@@ -70,7 +70,6 @@ class Application {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            Hooks.onOperatorDebug()
             SpringApplicationBuilder(Application::class.java)
                     .bannerMode(Banner.Mode.LOG)
                     .run(*args)

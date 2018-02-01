@@ -138,7 +138,7 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
     volume("/app/logs")
     environmentVariable("TZ", "Asia/Shanghai") // 默认时区设置为东8区
     environmentVariable("JAVA_OPTS", "-server -XX:+UseG1GC \$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDetails -Xloggc:logs/gc.log")
-    environmentVariable("DUIC_OPTS", "\$JAVA_OPTS -Dspring.profiles.active=prod")
+    environmentVariable("DUIC_OPTS", "\$JAVA_OPTS -Dreactor.trace.operatorStacktrace=true -Dspring.profiles.active=prod")
     exposePort(7777)
     defaultCommand("sh", "-c", "java \$DUIC_OPTS -jar $jarName")
 }
