@@ -13,6 +13,7 @@ import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
+import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -29,9 +30,10 @@ import java.util.*
 @Service
 class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
 
+    private val log = LoggerFactory.getLogger(AppService::class.java)
     private val cache = cacheManager.getCache("apps")
     private var lastUpdatedAt: Date? = null
-    private var lastAppHistoryCreatedAt: Date? = null
+    private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
 
     @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch.fixed_delay:5000}")
@@ -41,18 +43,31 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             findAll()
         } else {
             findByUpdatedAt(lastUpdatedAt!!)
+        }.sort { o1, o2 ->
+            // 按配置更新时间升序排列 updateAt
+            o1.updatedAt.compareTo(o2.updatedAt)
         }.toStream().forEach {
             cache.put(localKey(it.name, it.profile), it)
-        }
-        lastUpdatedAt = Date()
+            lastUpdatedAt = it.updatedAt.toDate()
 
-        // 清理已经删除的 APP
-        if (lastAppHistoryCreatedAt != null) {
-            appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt!!).toStream().forEach {
-                cache.evict(localKey(it.name, it.profile))
-            }
+            log.info("reload config: name={}, profile={}, version={}, content=\n{}", it.name, it.profile, it.v, it.content)
         }
-        lastAppHistoryCreatedAt = Date()
+        log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
+    }
+
+    @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch_deleted.fixed_delay:600000}")
+    protected fun watchDeletedApps() {
+        // 清理已经删除的 APP
+        appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt).sort { o1, o2 ->
+            // 按照配置删除的创建时间升序排列 createdAt
+            o1.createdAt?.compareTo(o2.createdAt) ?: 0
+        }.toStream().forEach {
+            cache.evict(localKey(it.name, it.profile))
+            lastAppHistoryCreatedAt = it.createdAt!!.toDate()
+
+            log.info("delete config: name={}, profile={}", it.name, it.profile)
+        }
+        log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
     }
 
     /**
