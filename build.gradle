@@ -46,12 +46,11 @@ dependencies {
     compile "org.jetbrains.kotlin:kotlin-reflect"
 
     compile("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion") {
-        exclude module: "spring-boot-starter-reactor-netty"
         exclude module: "hibernate-validator"
         exclude module: "nio-multipart-parser"
     }
+    compile "io.netty:netty-transport-native-epoll:4.1.20.Final:linux-x86_64"
     compile "org.springframework.boot:spring-boot-starter-data-mongodb-reactive:$springBootVersion"
-    compile "io.undertow:undertow-core:1.4.12.Final"
     // AbstractSubscription
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1"
@@ -137,6 +136,7 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
     copyFile(jarName, "/app/$jarName".toString())
     workingDir("/app")
     volume("/app/logs")
+    environmentVariable("TZ", "Asia/Shanghai") // 默认时区设置为东8区
     environmentVariable("JAVA_OPTS", "-server -XX:+UseG1GC \$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDetails -Xloggc:logs/gc.log")
     environmentVariable("DUIC_OPTS", "\$JAVA_OPTS -Dspring.profiles.active=prod")
     exposePort(7777)
