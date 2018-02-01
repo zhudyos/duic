@@ -141,7 +141,7 @@ class AppRepository(
      *
      */
     fun findByUpdatedAt(updateAt: Date): Flux<App> {
-        val q = Query(where("updated_at").gte(updateAt))
+        val q = Query(where("updated_at").gt(updateAt))
         return mongoOperations.find(q, App::class.java)
     }
 
@@ -168,7 +168,7 @@ class AppRepository(
      *
      */
     fun findAppHistoryByCreatedAt(createdAt: Date): Flux<AppHistory> {
-        val q = Query(where("created_at").gte(createdAt))
+        val q = Query(where("created_at").gt(createdAt))
         return mongoOperations.find(q, AppHistory::class.java)
     }
 
