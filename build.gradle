@@ -99,12 +99,12 @@ artifacts {
 }
 
 node {
-    version = "7.7.1"
-    npmVersion = "4.1.2"
+    version = "8.9.4"
+    yarnVersion = "1.3.2"
     download = true
 }
 
-task buildAdmin(type: NpmTask, dependsOn: npmInstall) {
+task buildAdmin(type: YarnTask, dependsOn: yarn) {
     group = "node"
     args = ["run", "build"]
 }

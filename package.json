@@ -14,8 +14,8 @@
     "type": "git",
     "url": "https://github.com/zhudyos/duic"
   },
-  "author": "",
-  "license": "MIT",
+  "author": "Kevin Zou",
+  "license": "Apache 2.0",
   "dependencies": {
     "axios": "^0.15.3",
     "deep-extend": "^0.5.0",
