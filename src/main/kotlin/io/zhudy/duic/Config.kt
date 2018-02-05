@@ -22,6 +22,6 @@ object Config {
 
     object Jwt {
         var secret: String = ""
-        var expiresIn: Int = 3 * 60 // 默认3小时过期
+        var expiresIn: Int = 12 * 60 // 默认12小时过期
     }
 }
