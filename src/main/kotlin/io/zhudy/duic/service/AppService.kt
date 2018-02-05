@@ -7,7 +7,6 @@ import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.AppHistory
 import io.zhudy.duic.domain.SingleValue
-import io.zhudy.duic.dto.AppDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
@@ -22,6 +21,7 @@ import org.springframework.stereotype.Service
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.Duration
 import java.util.*
 
 /**
@@ -36,6 +36,17 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
 
+    /**
+     * 缓存的 APP 实例。
+     */
+    private data class CachedApp(
+            val name: String,
+            val profile: String,
+            val token: String,
+            val v: Int,
+            val properties: Map<Any, Any>
+    )
+
     @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch.fixed_delay:5000}")
     protected fun watchApps() {
         // 更新 APP 配置信息
@@ -45,10 +56,13 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             findByUpdatedAt(lastUpdatedAt!!)
         }.sort { o1, o2 ->
             // 按配置更新时间升序排列 updateAt
-            o1.updatedAt.compareTo(o2.updatedAt)
+            o1.updatedAt!!.compareTo(o2.updatedAt)
         }.toStream().forEach {
-            cache.put(localKey(it.name, it.profile), it)
-            lastUpdatedAt = it.updatedAt.toDate()
+            cache.put(
+                    localKey(it.name, it.profile),
+                    mapToCachedApp(it)
+            )
+            lastUpdatedAt = it.updatedAt!!.toDate()
 
             log.info("reload config: name={}, profile={}, version={}, content=\n{}", it.name, it.profile, it.v, it.content)
         }
@@ -191,31 +205,17 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadOne(name: String, profile: String): Mono<AppDto> {
-        val dto = cache.get(localKey(name, profile), { findOneDto(name, profile).block() })
-                ?: throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
-        return Mono.just(dto)
-    }
-
-    /**
-     *
-     */
-    fun findOneDto(name: String, profile: String): Mono<AppDto> = appRepository.findOne(name, profile).map { mapToAppDto(it) }
-
-    /**
-     *
-     */
     fun findOne(name: String, profile: String) = appRepository.findOne(name, profile)
 
     /**
      *
      */
-    fun findAll(): Flux<AppDto> = appRepository.findAll().map { mapToAppDto(it) }
+    fun findAll(): Flux<App> = appRepository.findAll()
 
     /**
      *
      */
-    fun findByUpdatedAt(updateAt: Date): Flux<AppDto> = appRepository.findByUpdatedAt(updateAt).map { mapToAppDto(it) }
+    fun findByUpdatedAt(updateAt: Date): Flux<App> = appRepository.findByUpdatedAt(updateAt)
 
     /**
      *
@@ -271,7 +271,18 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }
     }).collectList()
 
-    private fun mergeProps(apps: List<AppDto>): Map<Any, Any> {
+    /**
+     *
+     */
+    private fun loadOne(name: String, profile: String): Mono<CachedApp> {
+        val app = cache.get(localKey(name, profile), {
+            val a = findOne(name, profile).block(Duration.ofSeconds(3))
+            mapToCachedApp(a)
+        }) ?: throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
+        return Mono.just(app)
+    }
+
+    private fun mergeProps(apps: List<CachedApp>): Map<Any, Any> {
         if (apps.size == 1) {
             return apps.first().properties
         }
@@ -345,25 +356,13 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }
     }
 
-    private fun mapToAppDto(app: App): AppDto {
-        val content = app.content
-        val properties = if (content.isNotEmpty()) {
-            yaml.load<Map<Any, Any>>(content)
-        } else {
-            emptyMap()
-        }
-
-        return AppDto(
-                name = app.name,
-                profile = app.profile,
-                token = app.token,
-                v = app.v,
-                createdAt = app.createdAt!!,
-                updatedAt = app.updatedAt!!,
-                content = content,
-                properties = properties
-        )
-    }
+    private fun mapToCachedApp(app: App) = CachedApp(
+            name = app.name,
+            profile = app.profile,
+            token = app.token,
+            v = app.v,
+            properties = if (!app.content.isEmpty()) yaml.load(app.content) else emptyMap()
+    )
 
     private fun localKey(name: String, profile: String) = "${name}_$profile"
 }
