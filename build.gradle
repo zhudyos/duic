@@ -66,7 +66,7 @@ dependencies {
     apt "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
 }
 
-[compileJava, compileTestJava]*.options*.encoding = "UTF-8"
+[compileJava, compileTestJava, javadoc]*.options*.encoding = "UTF-8"
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
