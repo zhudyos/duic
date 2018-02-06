@@ -12,7 +12,9 @@ import org.springframework.util.StringUtils
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
+import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
+import java.net.Inet4Address
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -87,7 +89,17 @@ class AppResource(val appService: AppService) {
     }
 
     private fun getClientIp(request: ServerRequest): String {
-        return request.headers().header(WebConstants.X_FORWARDED_FOR).firstOrNull()
-                ?: request.attribute(WebConstants.REMOTE_HOST_ATTR).orElse("") as String
+        val ip = request.headers().header(WebConstants.X_REAL_IP).firstOrNull()
+        if (ip != null) {
+            return ip
+        }
+
+        val swe = request.attribute(WebConstants.SERVER_WEB_EXCHANGE_ATTR) as ServerWebExchange
+        val address = swe.request.remoteAddress.address
+        if (address is Inet4Address) {
+            return address.hostAddress
+        }
+        // TODO: 后期将支持 IPv6
+        return ""
     }
 }

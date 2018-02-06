@@ -15,12 +15,12 @@ object WebConstants {
     const val X_CONFIG_TOKEN = "x-config-token"
 
     /**
-     * x-forwarded-for。
+     * x-real-ip。
      */
-    const val X_FORWARDED_FOR = "x-forwarded-for"
+    const val X_REAL_IP = "x-real-ip"
 
     /**
-     * remote host。
+     * ServerExchange。
      */
-    const val REMOTE_HOST_ATTR = "remote-host"
+    const val SERVER_WEB_EXCHANGE_ATTR = "server-exchange"
 }
