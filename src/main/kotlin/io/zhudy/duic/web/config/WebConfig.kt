@@ -1,6 +1,7 @@
 package io.zhudy.duic.web.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.zhudy.duic.web.WebConstants
 import io.zhudy.duic.web.admin.AdminResource
 import io.zhudy.duic.web.security.AuthorizedHandlerFilter
 import io.zhudy.duic.web.security.RootRoleHandler
@@ -16,6 +17,8 @@ import org.springframework.web.reactive.config.EnableWebFlux
 import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.router
+import org.springframework.web.server.WebFilter
+import java.net.Inet4Address
 import java.util.concurrent.TimeUnit
 
 /**
@@ -44,6 +47,15 @@ class WebConfig(val objectMapper: ObjectMapper,
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/public-web-resources/")
                 .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
+    }
+
+    @Bean
+    fun webFilter() = WebFilter { exchange, chain ->
+        val address = exchange.request.remoteAddress.address
+        if (address is Inet4Address) {
+            exchange.attributes.put(WebConstants.REMOTE_HOST_ATTR, exchange.request.remoteAddress.hostName)
+        }
+        chain.filter(exchange)
     }
 
     @Bean
