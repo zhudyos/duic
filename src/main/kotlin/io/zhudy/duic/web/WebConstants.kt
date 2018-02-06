@@ -22,5 +22,5 @@ object WebConstants {
     /**
      * ServerExchange。
      */
-    const val SERVER_WEB_EXCHANGE_ATTR = "server-exchange"
+    const val SERVER_WEB_EXCHANGE_ATTR = "server-web-exchange"
 }
