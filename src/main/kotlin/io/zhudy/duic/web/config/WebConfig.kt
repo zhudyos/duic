@@ -18,7 +18,6 @@ import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.router
 import org.springframework.web.server.WebFilter
-import java.net.Inet4Address
 import java.util.concurrent.TimeUnit
 
 /**
@@ -51,10 +50,7 @@ class WebConfig(val objectMapper: ObjectMapper,
 
     @Bean
     fun webFilter() = WebFilter { exchange, chain ->
-        val address = exchange.request.remoteAddress.address
-        if (address is Inet4Address) {
-            exchange.attributes.put(WebConstants.REMOTE_HOST_ATTR, exchange.request.remoteAddress.hostName)
-        }
+        exchange.attributes.put(WebConstants.SERVER_WEB_EXCHANGE_ATTR, exchange)
         chain.filter(exchange)
     }
 
