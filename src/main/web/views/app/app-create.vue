@@ -12,7 +12,7 @@
                 <form-item label="应用名称" prop="name">
                     <i-input v-model="app.name" placeholder="应用名称 name"></i-input>
                 </form-item>
-                <form-item label="应用环境" prop="profile">
+                <form-item label="配置名称" prop="profile">
                     <i-input v-model="app.profile" placeholder="应用环境 profile"></i-input>
                 </form-item>
                 <form-item label="应用描述" prop="description">
@@ -21,6 +21,11 @@
                 <form-item label="访问令牌" prop="token">
                     <i-input v-model="app.token" placeholder="访问令牌, 不填写该值则不进行令牌校验">
                         <i-button slot="append" @click="generateToken()">生成</i-button>
+                    </i-input>
+                </form-item>
+                <form-item label="IP 限制" prop="token">
+                    <i-input v-model="app.ip_limit" placeholder="127.0.0.1,192.168.1.1-192.168.1.255">
+                        <i-button slot="append" @click="localNetIps()">局域网</i-button>
                     </i-input>
                 </form-item>
                 <form-item label="所属用户">
@@ -67,6 +72,7 @@
                     profile: '',
                     description: '',
                     token: '',
+                    ip_limit: '',
                     users: []
                 },
                 users: []
@@ -104,6 +110,9 @@
             },
             generateToken() {
                 this.app.token = _generateToken()
+            },
+            localNetIps() {
+                this.app.ip_limit = "10.0.0.0-10.255.255.255,172.16.0.0-172.31.255.255,192.168.0.0-192.168.255.255"
             }
         }
     }

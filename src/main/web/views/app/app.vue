@@ -56,7 +56,7 @@
                 appColumns: [
                     {title: '名称 (name)', key: 'name', sortable: true},
                     {
-                        title: '环境 (profile)',
+                        title: '配置 (profile)',
                         key: 'profile',
                         sortable: true,
                         render: (h, params) => {
@@ -97,6 +97,24 @@
                             }
                         },
                         width: 64
+                    },
+                    {
+                        title: 'IP 限制',
+                        render: (h, params) => {
+                            var ipLimit = params.row.ip_limit;
+                            if (ipLimit) {
+                                return h('tooltip', [
+                                    h('div', '显示'),
+                                    h('div', {
+                                        slot: 'content',
+                                        style: {
+                                            whiteSpace: 'normal'
+                                        }
+                                    }, ipLimit)
+                                ])
+                            }
+                        },
+                        width: 80
                     },
                     {title: '创建时间', key: 'created_at', sortable: true},
                     {title: '更新时间', key: 'updated_at', sortable: true},
