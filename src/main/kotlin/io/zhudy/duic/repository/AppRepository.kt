@@ -63,7 +63,11 @@ class AppRepository(
     fun update(app: App, userContext: UserContext): Mono<Int> {
         val updatedAt = Date()
         val q = Query(where("name").isEqualTo(app.name).and("profile").isEqualTo(app.profile).and("v").isEqualTo(app.v))
-        val u = Update().set("token", app.token).set("description", app.description).set("users", app.users)
+        val u = Update()
+                .set("token", app.token)
+                .set("ip_limit", app.ipLimit)
+                .set("description", app.description)
+                .set("users", app.users)
                 .set("updated_at", updatedAt)
                 .push("histories").atPosition(0).value(mapOf(
                 "hid" to hashids.encode(app.id.hashCode().toLong(), System.currentTimeMillis(), app.v.toLong()),
@@ -86,7 +90,10 @@ class AppRepository(
         return findOne(app.name, app.profile).flatMap { old ->
             val updatedAt = Date()
             val q = Query(where("name").isEqualTo(app.name).and("profile").isEqualTo(app.profile).and("v").isEqualTo(app.v))
-            val u = Update().set("content", app.content).set("updated_at", updatedAt).inc("v", 1)
+            val u = Update()
+                    .set("content", app.content)
+                    .set("updated_at", updatedAt)
+                    .inc("v", 1)
                     .push("histories").atPosition(0).value(mapOf(
                     "hid" to hashids.encode(app.id.hashCode().toLong(), System.currentTimeMillis(), app.v.toLong()),
                     "content" to old.content,

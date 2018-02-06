@@ -2,6 +2,7 @@ package io.zhudy.duic.web.v1
 
 import io.zhudy.duic.BizCode
 import io.zhudy.duic.BizCodeException
+import io.zhudy.duic.vo.RequestConfigVo
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.web.WebConstants
 import io.zhudy.duic.web.body
@@ -23,10 +24,8 @@ class AppResource(val appService: AppService) {
      *
      */
     fun getConfigState(request: ServerRequest): Mono<ServerResponse> {
-        val name = request.pathString("name")
-        val profiles = getProfiles(request)
-        val configTokens = getConfigToken(request)
-        return appService.getConfigState(name, profiles, configTokens).flatMap {
+        val vo = getRequestConfigVo(request)
+        return appService.getConfigState(vo).flatMap {
             ok().body(mapOf("state" to it))
         }
     }
@@ -35,10 +34,8 @@ class AppResource(val appService: AppService) {
      *
      */
     fun getSpringCloudConfig(request: ServerRequest): Mono<ServerResponse> {
-        val name = request.pathString("name")
-        val profiles = getProfiles(request)
-        val configTokens = getConfigToken(request)
-        return appService.loadSpringCloudConfig(name, profiles, configTokens).flatMap {
+        val vo = getRequestConfigVo(request)
+        return appService.loadSpringCloudConfig(vo).flatMap {
             ok().body(it)
         }
     }
@@ -47,10 +44,8 @@ class AppResource(val appService: AppService) {
      *
      */
     fun getConfigByNameProfile(request: ServerRequest): Mono<ServerResponse> {
-        val name = request.pathString("name")
-        val profiles = getProfiles(request)
-        val configTokens = getConfigToken(request)
-        return appService.loadConfigByNameProfile(name, profiles, configTokens).flatMap {
+        val vo = getRequestConfigVo(request)
+        return appService.loadConfigByNameProfile(vo).flatMap {
             ok().body(it)
         }
     }
@@ -59,13 +54,20 @@ class AppResource(val appService: AppService) {
      *
      */
     fun getConfigByNameProfileKey(request: ServerRequest): Mono<ServerResponse> {
-        val name = request.pathString("name")
-        val profiles = getProfiles(request)
-        val configTokens = getConfigToken(request)
-        val key = request.pathString("key")
-        return appService.loadConfigByNameProfileKey(name, profiles, configTokens, key).flatMap {
+        val vo = getRequestConfigVo(request)
+        vo.key = request.pathString("key")
+        return appService.loadConfigByNameProfileKey(vo).flatMap {
             ok().body(it)
         }
+    }
+
+    private fun getRequestConfigVo(request: ServerRequest): RequestConfigVo {
+        return RequestConfigVo(
+                name = request.pathString("name"),
+                profiles = getProfiles(request),
+                configTokens = getConfigToken(request),
+                clientIpv4 = getClientIp(request)
+        )
     }
 
     private fun getProfiles(request: ServerRequest): List<String> {
@@ -76,11 +78,16 @@ class AppResource(val appService: AppService) {
         return profiles
     }
 
-    private fun getConfigToken(request: ServerRequest): Array<String> {
+    private fun getConfigToken(request: ServerRequest): List<String> {
         val s = request.headers().header(WebConstants.X_CONFIG_TOKEN).firstOrNull()
         if (s.isNullOrEmpty()) {
-            return emptyArray()
+            return emptyList()
         }
-        return StringUtils.commaDelimitedListToStringArray(s)
+        return StringUtils.commaDelimitedListToStringArray(s).toList()
+    }
+
+    private fun getClientIp(request: ServerRequest): String {
+        return request.headers().header(WebConstants.X_FORWARDED_FOR).firstOrNull()
+                ?: request.attribute(WebConstants.REMOTE_HOST_ATTR).orElse("") as String
     }
 }

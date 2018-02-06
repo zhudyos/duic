@@ -10,6 +10,10 @@ import io.zhudy.duic.domain.SingleValue
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
+import io.zhudy.duic.service.ip.SingleIpChecker
+import io.zhudy.duic.service.ip.SectionIpChecker
+import io.zhudy.duic.utils.IpUtils
+import io.zhudy.duic.vo.RequestConfigVo
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
@@ -43,6 +47,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             val name: String,
             val profile: String,
             val token: String,
+            val ipLimit: List<IpChecker> = emptyList(),
             val v: Int,
             val properties: Map<Any, Any>
     )
@@ -141,8 +146,8 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun getConfigState(name: String, profiles: List<String>, configTokens: Array<String>): Mono<String> {
-        return loadAndCheckApps(name, profiles, configTokens).map { apps ->
+    fun getConfigState(vo: RequestConfigVo): Mono<String> {
+        return loadAndCheckApps(vo).map { apps ->
             val state = StringBuilder()
             apps.forEach {
                 state.append(it.v)
@@ -154,23 +159,23 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadSpringCloudConfig(name: String, profiles: List<String>, configTokens: Array<String>): Mono<SpringCloudResponseDto> {
-        return loadAndCheckApps(name, profiles, configTokens).map { apps ->
+    fun loadSpringCloudConfig(vo: RequestConfigVo): Mono<SpringCloudResponseDto> {
+        return loadAndCheckApps(vo).map { apps ->
             val ps = arrayListOf<SpringCloudPropertySource>()
             val state = StringBuilder()
             apps.forEach {
                 ps.add(SpringCloudPropertySource(localKey(it.name, it.profile), flattenedMap(it.properties)))
                 state.append(it.v)
             }
-            SpringCloudResponseDto(name = name, profiles = profiles, state = state.toString(), propertySources = ps)
+            SpringCloudResponseDto(name = vo.name, profiles = vo.profiles, state = state.toString(), propertySources = ps)
         }
     }
 
     /**
      *
      */
-    fun loadConfigByNameProfile(name: String, profiles: List<String>, configTokens: Array<String>): Mono<Map<Any, Any>> {
-        return loadAndCheckApps(name, profiles, configTokens).map {
+    fun loadConfigByNameProfile(vo: RequestConfigVo): Mono<Map<Any, Any>> {
+        return loadAndCheckApps(vo).map {
             mergeProps(it)
         }
     }
@@ -178,11 +183,11 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadConfigByNameProfileKey(name: String, profiles: List<String>, configTokens: Array<String>, key: String): Mono<Any> {
-        return loadConfigByNameProfile(name, profiles, configTokens).map {
+    fun loadConfigByNameProfileKey(vo: RequestConfigVo): Mono<Any> {
+        return loadConfigByNameProfile(vo).map {
             var props = it
             var v: Any? = null
-            for (k in key.split(".")) {
+            for (k in vo.key.split(".")) {
                 v = props[k]
                 if (v == null) {
                     break
@@ -263,9 +268,29 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }
     }
 
-    private fun loadAndCheckApps(name: String, profiles: List<String>, configTokens: Array<String>) = Flux.merge(profiles.map {
-        loadOne(name, it).doOnNext {
-            if (it.token.isNotEmpty() && !configTokens.contains(it.token)) {
+    private fun loadAndCheckApps(vo: RequestConfigVo) = Flux.merge(vo.profiles.map {
+        loadOne(vo.name, it).doOnNext {
+            if (it.ipLimit.isNotEmpty()) {
+                // 校验访问 IP
+                if (vo.clientIpv4.isEmpty()) {
+                    throw BizCodeException(BizCode.Classic.C_403, "${it.name}/${it.profile} 禁止访问")
+                }
+
+                val ipl = IpUtils.ipv4ToLong(vo.clientIpv4)
+                var r = false
+                for (limit in it.ipLimit) {
+                    r = limit.check(ipl)
+                    if (r) {
+                        break
+                    }
+                }
+
+                if (!r) {
+                    throw BizCodeException(BizCode.Classic.C_403, "${it.name}/${it.profile} 禁止 ${vo.clientIpv4} 访问")
+                }
+            }
+
+            if (it.token.isNotEmpty() && !vo.configTokens.contains(it.token)) {
                 throw BizCodeException(BizCode.Classic.C_401, "${it.name}/${it.profile} 认证失败")
             }
         }
@@ -356,13 +381,33 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }
     }
 
-    private fun mapToCachedApp(app: App) = CachedApp(
-            name = app.name,
-            profile = app.profile,
-            token = app.token,
-            v = app.v,
-            properties = if (!app.content.isEmpty()) yaml.load(app.content) else emptyMap()
-    )
+    private fun mapToCachedApp(app: App): CachedApp {
+        val ipLimit = if (app.ipLimit.isNullOrEmpty()) {
+            emptyList<IpChecker>()
+        } else {
+            val list = arrayListOf<IpChecker>()
+            app.ipLimit.split(",").forEach {
+                if (it.contains("-")) {
+                    val a = it.split("-")
+                    val from = IpUtils.ipv4ToLong(a.first())
+                    val to = IpUtils.ipv4ToLong(a.last())
+                    list.add(SectionIpChecker(from, to))
+                } else {
+                    list.add(SingleIpChecker(IpUtils.ipv4ToLong(it)))
+                }
+            }
+            list
+        }
+
+        return CachedApp(
+                name = app.name,
+                profile = app.profile,
+                token = app.token,
+                v = app.v,
+                ipLimit = ipLimit,
+                properties = if (!app.content.isEmpty()) yaml.load(app.content) else emptyMap()
+        )
+    }
 
     private fun localKey(name: String, profile: String) = "${name}_$profile"
 }

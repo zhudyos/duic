@@ -25,6 +25,8 @@ class App(
         var profile: String = "",
         @Field
         var token: String = "",
+        @Field("ip_limit")
+        var ipLimit: String = "",
         @Field
         var description: String = "",
         @Field
