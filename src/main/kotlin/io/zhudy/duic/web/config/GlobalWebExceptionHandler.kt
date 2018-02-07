@@ -76,9 +76,12 @@ class GlobalWebExceptionHandler(
             }
         }
 
-        response.statusCode = HttpStatus.resolve(status)
-        response.headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
-        val buffer = response.bufferFactory().wrap(objectMapper.writeValueAsBytes(body))
-        return response.writeWith(Flux.just(buffer))
+        if (!response.isCommitted) {
+            response.statusCode = HttpStatus.resolve(status)
+            response.headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_UTF8_VALUE)
+            val buffer = response.bufferFactory().wrap(objectMapper.writeValueAsBytes(body))
+            return response.writeWith(Flux.just(buffer))
+        }
+        return Mono.empty()
     }
 }
