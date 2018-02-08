@@ -17,13 +17,15 @@ import reactor.core.publisher.Mono
 import java.net.Inet4Address
 
 /**
+ * `/api/v1/apps`。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Controller
 class AppResource(val appService: AppService) {
 
     /**
-     *
+     * 返回配置状态。
      */
     fun getConfigState(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
@@ -33,7 +35,7 @@ class AppResource(val appService: AppService) {
     }
 
     /**
-     *
+     * 返回适配 spring-cloud-config 的数据配置。
      */
     fun getSpringCloudConfig(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
@@ -43,7 +45,10 @@ class AppResource(val appService: AppService) {
     }
 
     /**
+     * 根据应用名称与配置名称返回数据。
      *
+     * 示例：
+     * `curl https://{base_uri}/api/v1/apps/{name}/{profile}`
      */
     fun getConfigByNameProfile(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
@@ -53,7 +58,10 @@ class AppResource(val appService: AppService) {
     }
 
     /**
+     * 根据应用名称、配置名称与配置键返回数据。
      *
+     * 示例：
+     * `curl https://{base_uri}/api/v1/apps/{name}/{profile}/{key}`
      */
     fun getConfigByNameProfileKey(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)

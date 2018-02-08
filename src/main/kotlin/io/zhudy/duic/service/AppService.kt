@@ -53,7 +53,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     )
 
     @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch.fixed_delay:5000}")
-    protected fun watchApps() {
+    fun watchApps() {
         // 更新 APP 配置信息
         if (lastUpdatedAt == null) {
             findAll()
@@ -75,7 +75,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     }
 
     @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch_deleted.fixed_delay:600000}")
-    protected fun watchDeletedApps() {
+    fun watchDeletedApps() {
         // 清理已经删除的 APP
         appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt).sort { o1, o2 ->
             // 按照配置删除的创建时间升序排列 createdAt
