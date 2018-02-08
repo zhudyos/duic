@@ -4,30 +4,31 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.zhudy.duic.Config
 import io.zhudy.duic.server.Application
 import org.bson.Document
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.junit4.SpringRunner
+import org.springframework.test.context.TestExecutionListeners
+import org.springframework.test.context.testng.AbstractTestNGSpringContextTests
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeMethod
+import org.testng.annotations.Test
 import reactor.core.publisher.Mono
 import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@RunWith(SpringRunner::class)
 @ActiveProfiles("test")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class AdminResourceTests {
+@TestExecutionListeners(MockitoTestExecutionListener::class)
+class AdminResourceTests : AbstractTestNGSpringContextTests(){
 
     @SpyBean
     lateinit var mongoOperations: ReactiveMongoOperations
@@ -40,7 +41,7 @@ class AdminResourceTests {
 
     var token: String = ""
 
-    @Before
+    @BeforeMethod
     fun beforeLogin() {
         webTestClient.post()
                 .uri("/api/admins/login")
@@ -57,7 +58,7 @@ class AdminResourceTests {
                 }
     }
 
-    @After
+    @AfterMethod
     fun afterMethod() {
         Mockito.reset(mongoOperations)
     }
