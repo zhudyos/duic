@@ -1,13 +1,12 @@
 buildscript {
     ext {
         kotlinVersion = "1.2.21"
-        springBootVersion = "2.0.0.RC1"
+        springBootVersion = "2.0.0.RELEASE"
     }
 
     repositories {
         mavenLocal()
         mavenCentral()
-        maven { url "https://repo.spring.io/libs-milestone" }
     }
 
     dependencies {
@@ -38,7 +37,6 @@ group "io.zhudy.duic"
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url "https://repo.spring.io/libs-milestone" }
 }
 
 dependencies {
