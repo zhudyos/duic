@@ -1,5 +1,9 @@
 :email: kevinz@weghst.com
 
+image:https://img.shields.io/travis/zhudyos/duic.svg["Travis",link="https://travis-ci.org/zhudyos/duic"]
+image:https://img.shields.io/docker/pulls/zhudyos/duic.svg["Docker Pulls",link="https://hub.docker.com/r/zhudyos/duic/"]
+image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",link="https://github.com/zhudyos/duic/blob/master/LICENSE"]
+
 ```
  ______              _    ______
 |_   _ `.           (_) .' ___  |
