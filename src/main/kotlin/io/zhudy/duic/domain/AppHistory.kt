@@ -21,7 +21,6 @@ class AppHistory(
         var description: String = "",
         @Field
         var v: Int = 1,
-        @Indexed
         @Field("created_at")
         var createdAt: DateTime? = null,
         @Field
