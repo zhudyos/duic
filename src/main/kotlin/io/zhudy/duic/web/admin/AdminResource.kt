@@ -2,6 +2,9 @@ package io.zhudy.duic.web.admin
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import io.zhudy.duic.BizCode
+import io.zhudy.duic.BizCodeException
+import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.AppContentHistory
@@ -12,7 +15,6 @@ import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
 import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
-import io.zhudy.duic.web.queryTrimString
 import io.zhudy.duic.web.security.userContext
 import org.joda.time.DateTime
 import org.springframework.stereotype.Controller
@@ -59,6 +61,13 @@ class AdminResource(
      * 保存用户.
      */
     fun insertUser(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(User::class.java)).flatMap {
+        if (it.email.isEmpty()) {
+            throw BizCodeException(BizCode.Classic.C_999, "email 不能为空")
+        }
+        if (it.password.isEmpty()) {
+            throw BizCodeException(BizCode.Classic.C_999, "密码不能为空")
+        }
+
         userService.insert(it).flatMap {
             ok().build()
         }
@@ -119,6 +128,13 @@ class AdminResource(
      */
     fun insertApp(request: ServerRequest): Mono<ServerResponse> {
         return request.bodyToMono(App::class.java).flatMap {
+            if (it.name.isEmpty()) {
+                throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
+            }
+            if (it.profile.isEmpty()) {
+                throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
+            }
+
             appService.insert(it).flatMap {
                 ok().build()
             }
@@ -130,6 +146,13 @@ class AdminResource(
      */
     fun updateApp(request: ServerRequest): Mono<ServerResponse> {
         return request.bodyToMono(App::class.java).flatMap {
+            if (it.name.isEmpty()) {
+                throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
+            }
+            if (it.profile.isEmpty()) {
+                throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
+            }
+
             appService.update(it, request.userContext()).flatMap {
                 ok().body(mapOf("v" to it))
             }
