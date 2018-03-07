@@ -77,7 +77,6 @@ class WebConfig(val objectMapper: ObjectMapper,
                 POST("/", adminResource::insertUser)
                 GET("/", adminResource::findPageUser)
                 GET("/emails", adminResource::findAllEmail)
-                DELETE("/{email}", adminResource::deleteUser)
                 DELETE("/{email}", RootRoleHandler(adminResource::deleteUser))
                 PUT("/password", adminResource::updateUserPassword)
                 PATCH("/password", RootRoleHandler(adminResource::resetUserPassword))
