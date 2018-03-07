@@ -8,14 +8,16 @@ import io.zhudy.duic.domain.AppContentHistory
 import io.zhudy.duic.domain.AppHistory
 import org.bson.Document
 import org.hashids.Hashids
-import org.joda.time.DateTime
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.mongodb.core.findOne
-import org.springframework.data.mongodb.core.query.*
 import org.springframework.data.mongodb.core.query.Criteria.where
+import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.TextQuery
+import org.springframework.data.mongodb.core.query.Update
+import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -39,13 +41,12 @@ class AppRepository(
     /**
      *
      */
-    fun delete(app: App, appHistory: AppHistory): Mono<Unit> {
+    fun delete(app: App, appHistory: AppHistory): Mono<Long> {
         val q = Query(where("name").isEqualTo(app.name).and("profile").isEqualTo(app.profile))
-        return mongoOperations.findAndRemove(q, App::class.java).flatMap {
-            it.createdAt = DateTime.now()
-            it.updatedAt = DateTime.now()
-
-            mongoOperations.insert(appHistory).map { Unit }
+        return mongoOperations.remove(q, App::class.java).flatMap { rs ->
+            mongoOperations.insert(appHistory).map {
+                rs.deletedCount
+            }
         }
     }
 
