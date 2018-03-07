@@ -136,11 +136,12 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
     def jarName = "${project.name}.jar".toString()
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
 
-    from "openjdk:8-jdk-alpine"
+    from "openjdk:8u151-jdk-alpine3.7"
     maintainer "Kevin Zou <kevinz@weghst.com>"
     copyFile(jarName, "/app/$jarName".toString())
     workingDir("/app")
     volume("/app/logs")
+    runCommand("apk add --no-cache tzdata")
     environmentVariable("TZ", "Asia/Shanghai") // 默认时区设置为东8区
     environmentVariable([
             JVM_OPTS : "-Xms1g -Xmx1g -XX:MetaspaceSize=128m",
