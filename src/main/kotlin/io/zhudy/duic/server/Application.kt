@@ -5,14 +5,13 @@ import io.zhudy.duic.Config
 import org.springframework.boot.Banner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
-import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration
-import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.runApplication
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
@@ -24,7 +23,6 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import reactor.core.publisher.Hooks
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -70,9 +68,9 @@ class Application {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            SpringApplicationBuilder(Application::class.java)
-                    .bannerMode(Banner.Mode.LOG)
-                    .run(*args)
+            runApplication<Application>(*args) {
+                setBannerMode(Banner.Mode.LOG)
+            }
         }
     }
 }
