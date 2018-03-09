@@ -15,9 +15,19 @@
                 </breadcrumb>
             </i-col>
             <i-col span="12" class="toolbar">
-                <i-button type="primary" @click="createApp()">创建</i-button>
+                <button-group>
+                    <i-button type="primary" @click="createApp()">创建</i-button>
+                    <i-button type="primary" @click="cloneApp()">克隆</i-button>
+                </button-group>
+
             </i-col>
         </row>
+
+        <modal title="克隆应用" v-model="clone.modal" width="800">
+            <p>Content of dialog</p>
+            <p>Content of dialog</p>
+            <p>Content of dialog</p>
+        </modal>
 
         <row class="margin-bottom-10">
             <i-col span="12">
@@ -50,6 +60,9 @@
         data() {
             return {
                 q: '',
+                clone: {
+                    modal: false
+                },
                 total: 0,
                 pageSize: 50,
                 appData: [],
@@ -219,6 +232,9 @@
                     var d = error.response.data || {};
                     this.$Notice.error({title: '删除失败', desc: d.message});
                 })
+            },
+            cloneApp() {
+                this.clone.modal = true;
             }
         }
     };
