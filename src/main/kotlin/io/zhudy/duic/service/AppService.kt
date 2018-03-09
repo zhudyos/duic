@@ -68,8 +68,6 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
                     mapToCachedApp(it)
             )
             lastUpdatedAt = it.updatedAt!!.toDate()
-
-            log.info("reload config: name={}, profile={}, version={}, content=\n{}", it.name, it.profile, it.v, it.content)
         }
         log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
     }
@@ -83,8 +81,6 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }.toStream().forEach {
             cache.evict(localKey(it.name, it.profile))
             lastAppHistoryCreatedAt = it.createdAt!!.toDate()
-
-            log.info("delete config: name={}, profile={}", it.name, it.profile)
         }
         log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
     }
