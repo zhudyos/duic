@@ -48,7 +48,6 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
     @Autowired
     lateinit var objectMapper: ObjectMapper
 
-    private val testngEmail = "testng@testng.com"
     private var _token: String = ""
     val token: String
         get() {
@@ -88,10 +87,12 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
 
     @Test
     fun insertUser() {
+        val email = UUID.randomUUID().toString() + "@testng.com"
+
         webTestClient.post()
                 .uri("/api/admins/users")
                 .syncBody(mapOf(
-                        "email" to testngEmail,
+                        "email" to email,
                         "password" to "123456"
                 ))
                 .cookie("token", token)
@@ -99,15 +100,17 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
                 .expectStatus().isOk
 
         // clean
-        userRepository.delete(testngEmail).subscribe()
+        userRepository.delete(email).subscribe()
     }
 
     @Test
     fun deleteUser() {
-        userRepository.insert(User(email = testngEmail, password = "123456")).subscribe()
+        val email = UUID.randomUUID().toString() + "@testng.com"
+
+        userRepository.insert(User(email = email, password = "123456")).subscribe()
 
         webTestClient.delete()
-                .uri("/api/admins/users/{email}", testngEmail)
+                .uri("/api/admins/users/{email}", email)
                 .cookie("token", token)
                 .exchange()
                 .expectStatus().isNoContent
@@ -115,10 +118,12 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
 
     @Test
     fun updateUserPassword() {
+        val email = UUID.randomUUID().toString() + "@testng.com"
+
         webTestClient.post()
                 .uri("/api/admins/users")
                 .syncBody(mapOf(
-                        "email" to testngEmail,
+                        "email" to email,
                         "password" to "123456"
                 ))
                 .cookie("token", token)
@@ -129,7 +134,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
         webTestClient.post()
                 .uri("/api/admins/login")
                 .syncBody(mapOf(
-                        "email" to testngEmail,
+                        "email" to email,
                         "password" to "123456"
                 ))
                 .exchange()
@@ -151,17 +156,19 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
                 .expectStatus().isNoContent
 
         // clean
-        userRepository.delete(testngEmail).subscribe()
+        userRepository.delete(email).subscribe()
     }
 
     @Test
     fun resetUserPassword() {
-        userRepository.insert(User(email = testngEmail, password = "123456")).subscribe()
+        val email = UUID.randomUUID().toString() + "@testng.com"
+
+        userRepository.insert(User(email = email, password = "123456")).subscribe()
 
         webTestClient.patch()
                 .uri("/api/admins/users/password")
                 .syncBody(mapOf(
-                        "email" to testngEmail,
+                        "email" to email,
                         "password" to "123456"
                 ))
                 .cookie("token", token)
@@ -169,7 +176,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
                 .expectStatus().isNoContent
 
         // clean
-        userRepository.delete(testngEmail).subscribe()
+        userRepository.delete(email).subscribe()
     }
 
     @Test
