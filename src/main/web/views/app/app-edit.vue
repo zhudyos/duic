@@ -45,7 +45,7 @@
     }
 
     export default {
-        name: 'app-create',
+        name: 'main-create',
         data() {
             return {
                 validation: {

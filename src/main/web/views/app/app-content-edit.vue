@@ -31,7 +31,7 @@
     import axios from 'axios';
 
     export default {
-        name: 'app-edit',
+        name: 'main-edit',
         data() {
             return {
                 editor: null,

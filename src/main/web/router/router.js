@@ -78,53 +78,53 @@ export const otherRouter = {
             }
         },
         {
-            path: '/app-content-edit',
-            name: 'app-content-edit',
+            path: '/main-content-edit',
+            name: 'main-content-edit',
             meta: {
                 title: '编辑配置'
             },
             component: resolve => {
-                require(['@/views/app/app-content-edit.vue'], resolve);
+                require(['@/views/main/main-content-edit.vue'], resolve);
             }
         },
         {
-            path: '/app-content-diff',
-            name: 'app-content-diff',
+            path: '/main-content-diff',
+            name: 'main-content-diff',
             meta: {
                 title: '编辑历史比较'
             },
             component: resolve => {
-                require(['@/views/app/app-content-diff.vue'], resolve);
+                require(['@/views/main/main-content-diff.vue'], resolve);
             }
         },
         {
-            path: '/app-create',
-            name: 'app-create',
+            path: '/main-create',
+            name: 'main-create',
             meta: {
                 title: '创建应用'
             },
             component: resolve => {
-                require(['@/views/app/app-create.vue'], resolve);
+                require(['@/views/main/main-create.vue'], resolve);
             }
         },
         {
-            path: '/app-edit',
-            name: 'app-edit',
+            path: '/main-edit',
+            name: 'main-edit',
             meta: {
                 title: '编辑应用'
             },
             component: resolve => {
-                require(['@/views/app/app-edit.vue'], resolve);
+                require(['@/views/main/main-edit.vue'], resolve);
             }
         },
         {
-            path: '/app-history',
-            name: 'app-history',
+            path: '/main-history',
+            name: 'main-history',
             meta: {
                 title: '修改历史'
             },
             component: resolve => {
-                require(['@/views/app/app-history.vue'], resolve);
+                require(['@/views/main/main-history.vue'], resolve);
             }
         }
     ]
@@ -133,9 +133,9 @@ export const otherRouter = {
 // 作为Main组件的子页面展示并且在左侧菜单显示的路由写在appRouter里
 export const appRouter = [
     {
-        path: '/app',
+        path: '/main',
         icon: 'fa fa-fire',
-        name: 'app-parent',
+        name: 'main-parent',
         title: '应用管理',
         component: Main,
         children: [
@@ -147,7 +147,7 @@ export const appRouter = [
                     title: '应用管理'
                 },
                 component: resolve => {
-                    require(['@/views/app/app.vue'], resolve);
+                    require(['@/views/main/main.vue'], resolve);
                 }
             }
         ]

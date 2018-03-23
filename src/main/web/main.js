@@ -10,7 +10,7 @@ Vue.use(iView);
 Vue.use(VueClipboard);
 
 new Vue({
-    el: '#app',
+    el: '#main',
     router: router,
     store: store,
     render: h => h(App),

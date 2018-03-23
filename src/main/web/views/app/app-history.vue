@@ -17,7 +17,7 @@
     import axios from 'axios';
 
     export default {
-        name: 'app-history',
+        name: 'main-history',
         data() {
             return {
                 items: [],

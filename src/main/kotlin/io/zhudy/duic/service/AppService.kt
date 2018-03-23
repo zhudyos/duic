@@ -52,7 +52,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             val properties: Map<Any, Any>
     )
 
-    @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch.fixed_delay:5000}")
+    @Scheduled(initialDelay = 0, fixedDelayString = "\${main.watch.fixed_delay:5000}")
     fun watchApps() {
         // 更新 APP 配置信息
         if (lastUpdatedAt == null) {
@@ -72,7 +72,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
     }
 
-    @Scheduled(initialDelay = 0, fixedDelayString = "\${app.watch_deleted.fixed_delay:600000}")
+    @Scheduled(initialDelay = 0, fixedDelayString = "\${main.watch_deleted.fixed_delay:600000}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
         appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt).sort { o1, o2 ->

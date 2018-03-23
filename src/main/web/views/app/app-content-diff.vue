@@ -67,7 +67,7 @@
         },
         mounted() {
             var query = this.$route.query;
-            // 加载 app 最新信息
+            // 加载 main 最新信息
             axios.get(`/api/admins/apps/${query.name}/${query.profile}`).then((resp) => {
                 this.app = resp.data;
                 this.left.versions.push("HEAD");

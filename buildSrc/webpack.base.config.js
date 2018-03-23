@@ -1,23 +1,29 @@
-const path = require('path');
-const os = require('os');
-const webpack = require('webpack');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const HappyPack = require('happypack');
-var happyThreadPool = HappyPack.ThreadPool({size: os.cpus().length});
+const path = require('path')
+const os = require('os')
+const webpack = require('webpack')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const HappyPack = require('happypack')
+var happyThreadPool = HappyPack.ThreadPool({size: os.cpus().length})
+const package = require('../package.json')
+const vuetifyCSS = new ExtractTextPlugin('vertify.[hash].css')
 
 function resolve(dir) {
-    return path.join(__dirname, dir);
+    return path.join(__dirname, dir)
 }
 
 module.exports = {
     entry: {
-        main: '@/main',
-        'vender-base': '@/vendors/vendors.base.js',
-        'vender-exten': '@/vendors/vendors.exten.js'
+        main: '@/index',
+        'vue-stack': '@/vendors/vue.stack.js',
+        'common-libs': '@/vendors/common.libs.js'
     },
     output: {
-        path: path.resolve(__dirname, '../dist/dist')
+        path: path.resolve(__dirname, '../dist/dist'),
+        publicPath: '/',
+        filename: '[name].[hash].js',
+        chunkFilename: '[name].chunk.[hash].js'
     },
     module: {
         rules: [
@@ -26,20 +32,12 @@ module.exports = {
                 loader: 'vue-loader',
                 options: {
                     loaders: {
-                        less: ExtractTextPlugin.extract({
-                            use: ['css-loader?minimize', 'autoprefixer-loader', 'less-loader'],
-                            fallback: 'vue-style-loader'
-                        }),
-                        css: ExtractTextPlugin.extract({
-                            use: ['css-loader', 'autoprefixer-loader'],
+                        stylus: ExtractTextPlugin.extract({
+                            use: ['css-loader', 'stylus-loader'],
                             fallback: 'vue-style-loader'
                         })
                     }
                 }
-            },
-            {
-                test: /iview\/.*?js$/,
-                loader: 'babel-loader'
             },
             {
                 test: /\.js$/,
@@ -53,27 +51,12 @@ module.exports = {
                 loader: 'happypack/loader?id=happybabel'
             },
             {
-                test: /\.css$/,
-                use: ExtractTextPlugin.extract({
-                    use: ['css-loader?minimize', 'autoprefixer-loader'],
-                    fallback: 'style-loader'
-                })
+                test: /vuetify\.css$/,
+                use: vuetifyCSS.extract(['css-loader?minimize=true'])
             },
-            {
-                test: /\.less$/,
-                use: ExtractTextPlugin.extract({
-                    use: ['css-hot-loader', 'autoprefixer-loader', 'less-loader'],
-                    fallback: 'style-loader'
-                }),
-            },
-
             {
                 test: /\.(gif|jpg|png|woff|svg|eot|ttf)\??.*$/,
                 loader: 'url-loader?limit=1024'
-            },
-            {
-                test: /\.(html|tpl)$/,
-                loader: 'html-loader'
             }
         ]
     },
@@ -85,19 +68,34 @@ module.exports = {
             cache: true,
             verbose: true
         }),
+        new webpack.optimize.CommonsChunkPlugin({
+            name: ['vue-stack', 'common-libs'],
+            minChunks: Infinity
+        }),
+        new HtmlWebpackPlugin({
+            title: 'DuiC Admin v' + package.version,
+            favicon: './src/main/web2/images/favicon.ico',
+            filename: './index.html',
+            template: './src/main/web2/templates/index.html',
+        }),
         new CopyWebpackPlugin([{
-            from: 'src/main/web/images/favicon.ico',
-        }])
+            from: './node_modules/monaco-editor/min',
+            to: 'monaco-editor/0.11.1/min'
+        }, {
+            from: './node_modules/monaco-editor/min-maps',
+            to: 'monaco-editor/0.11.1/min-maps'
+        }]),
+        vuetifyCSS
     ],
     resolve: {
-        extensions: ['.js', '.vue'],
+        extensions: ['.js', '.vue', '.styl', '.css'],
         alias: {
             'vue': 'vue/dist/vue.esm.js',
-            '@': resolve('../src/main/web'),
+            '@': resolve('../src/main/web2'),
         }
     },
     externals: {
         require: 'require',
         monaco: 'monaco'
     }
-};
+}

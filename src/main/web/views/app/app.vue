@@ -187,7 +187,7 @@
                                         click: () => {
                                             var r = params.row;
                                             this.$router.push({
-                                                path: '/app-history',
+                                                path: '/main-history',
                                                 query: {
                                                     name: r.name,
                                                     profile: r.profile
@@ -218,11 +218,11 @@
                 })
             },
             search() {
-                this.$router.push({path: '/app', query: {q: this.q}});
+                this.$router.push({path: '/main', query: {q: this.q}});
                 this.loadAppByUser();
             },
             createApp() {
-                this.$router.push({path: '/app-create'})
+                this.$router.push({path: '/main-create'})
             },
             deleteApp(name, profile) {
                 axios.delete(`/api/admins/apps/${name}/${profile}`).then(() => {
