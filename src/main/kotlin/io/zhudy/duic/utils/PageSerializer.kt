@@ -13,8 +13,11 @@ object PageSerializer : StdSerializer<Page<*>>(Page::class.java, false) {
     override fun serialize(value: Page<*>, gen: JsonGenerator, provider: SerializerProvider) {
         gen.writeStartObject()
 
-        gen.writeFieldName("total")
+        gen.writeFieldName("total_items")
         gen.writeRawValue(value.totalElements.toString())
+
+        gen.writeFieldName("total_pages")
+        gen.writeRawValue(value.totalPages.toString())
 
         gen.writeFieldName("items")
         gen.writeObject(value.content)

@@ -1,23 +1,18 @@
 package io.zhudy.duic.web.v1
 
 import io.zhudy.duic.domain.App
-import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.server.Application
 import org.joda.time.DateTime
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.eq
-import org.mockito.BDDMockito.*
+import org.mockito.BDDMockito.doAnswer
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
-import org.springframework.data.mongodb.core.query.Criteria.where
 import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.TestExecutionListeners
