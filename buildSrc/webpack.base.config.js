@@ -74,9 +74,9 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             title: 'DuiC Admin v' + package.version,
-            favicon: './src/main/web2/images/favicon.ico',
+            favicon: './src/main/web/images/favicon.ico',
             filename: './index.html',
-            template: './src/main/web2/templates/index.html',
+            template: './src/main/web/templates/index.html',
         }),
         new CopyWebpackPlugin([{
             from: './node_modules/monaco-editor/min',
@@ -91,7 +91,7 @@ module.exports = {
         extensions: ['.js', '.vue', '.styl', '.css'],
         alias: {
             'vue': 'vue/dist/vue.esm.js',
-            '@': resolve('../src/main/web2'),
+            '@': resolve('../src/main/web'),
         }
     },
     externals: {
