@@ -14,12 +14,7 @@
             <v-flex xs12 sm8>
                 <v-container fluid>
                     <v-layout row wrap class="mt-5 pt-5">
-                        <v-flex xs12 sm6>
-                            项目描述
-                        </v-flex>
-
                         <v-spacer></v-spacer>
-
                         <v-flex xs12 sm4>
                             <v-card>
                                 <v-card-title primary-title class="title">欢迎登录</v-card-title>
@@ -45,7 +40,18 @@
                                 <v-card-actions>
                                     <v-btn color="info" block @click="login">登 录</v-btn>
                                 </v-card-actions>
-                                <v-card-text class="body-1">
+                                <v-card-actions>
+                                    <v-btn icon large href="https://github.com/zhudyos/duic" target="_blank">
+                                        <v-icon large>fab fa-github</v-icon>
+                                    </v-btn>
+                                    <v-btn icon large href="https://hub.docker.com/r/zhudyos/duic" target="_blank">
+                                        <v-icon large>fab fa-docker</v-icon>
+                                    </v-btn>
+                                    <v-btn icon large href="mailto:kevinz@weghst.com" target="_blank">
+                                        <v-icon large>fas fa-envelope</v-icon>
+                                    </v-btn>
+                                </v-card-actions>
+                                <v-card-text class="body-1" v-if="isSample">
                                     <div>默认登录邮箱帐户密码</div>
                                     <div>kevinz@weghst.com</div>
                                     <div>123456</div>
@@ -77,6 +83,12 @@
                 ]
             }
         }),
+        computed: {
+            isSample() {
+                let href = location.href
+                return href.indexOf('duic.zhudy.io') >= 0 || href.indexOf('localhost') >= 0
+            }
+        },
         methods: {
             login() {
                 if (!this.$refs.form.validate()) {
