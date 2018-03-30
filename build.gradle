@@ -118,7 +118,7 @@ task buildAdmin(type: YarnTask, dependsOn: yarn) {
 task copyAdminFiles(type: Copy, dependsOn: buildAdmin) {
     group = "node"
     from "dist/dist"
-    include "*"
+    include "**/**"
     into "${project.buildDir}/resources/main/public-web-resources"
 }
 jar.dependsOn copyAdminFiles
