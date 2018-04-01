@@ -4,11 +4,13 @@
             <v-btn flat @click.stop="creationDialog = !creationDialog">创建</v-btn>
             <v-btn flat :disabled="selectedRowIndex === -1" @click.stop="openDuplicateDialog()">克隆</v-btn>
             <v-spacer></v-spacer>
-            <v-flex md3>
+            <v-flex md3 @keydown.enter="search">
                 <v-text-field
                         append-icon="search"
+                        :append-icon-cb="search"
                         label="搜索"
                         single-line
+                        clearable
                         hide-details
                         v-model="q"></v-text-field>
             </v-flex>
@@ -155,16 +157,52 @@
             selectedRow: {}
         }),
         mounted() {
-            this.loadAppByUser()
+            this.$_loadAppByUser()
+        },
+        watch: {
+            q() {
+                if (!this.q) {
+                    this.search()
+                }
+            }
         },
         methods: {
-            loadAppByUser() {
+            $_loadAppByUser() {
                 let p = this.pagination
-                axios.get(`/api/admins/search/apps?page=${p.page}&size=${p.rowsPerPage}&q=${this.q}`).then(response => {
+                let query = this.$route.query
+
+                // 初始化 query 参数
+                if (query.page) {
+                    p.page = parseInt(query.page)
+                }
+                if (query.size) {
+                    p.rowsPerPage = parseInt(query.size)
+                }
+                if (query.q) {
+                    this.q = query.q
+                }
+
+                axios.get(`/api/admins/search/apps?page=${p.page}&size=${p.rowsPerPage}&q=${this.q || ''}`).then(response => {
                     this.items = response.data.items
                     p.totalItems = response.data.total_items
                     p.totalPages = response.data.total_pages
                 })
+            },
+            search() {
+                let p = this.pagination
+                this.$router.push({
+                    path: "/apps",
+                    query: {page: 1, size: p.rowsPerPage, q: this.q || ''}
+                })
+                this.$_loadAppByUser()
+            },
+            loadAppByUser() {
+                let p = this.pagination
+                this.$router.push({
+                    path: "/apps",
+                    query: {page: p.page, size: p.rowsPerPage, q: this.q}
+                })
+                this.$_loadAppByUser()
             },
             inputPage(v) {
                 this.pagination.page = v
