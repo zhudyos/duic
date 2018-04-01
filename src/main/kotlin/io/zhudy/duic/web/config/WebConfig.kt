@@ -90,6 +90,7 @@ class WebConfig(val objectMapper: ObjectMapper,
                 DELETE("/{name}/{profile}", adminResource::deleteApp)
                 GET("/{name}/{profile}", adminResource::findOneApp)
                 GET("/{name}/{profile}/histories", adminResource::findAppContentHistory)
+                POST("/duplicates/{name}/{profile}", adminResource::insertAppForApp)
             }
 
             path("/search").nest {

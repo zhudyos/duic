@@ -34,7 +34,7 @@ import java.util.*
 @ActiveProfiles("test")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestExecutionListeners(MockitoTestExecutionListener::class)
-class AdminResourceTests : AbstractTestNGSpringContextTests(){
+class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
     @SpyBean
     lateinit var mongoOperations: ReactiveMongoOperations
@@ -218,6 +218,39 @@ class AdminResourceTests : AbstractTestNGSpringContextTests(){
 
         // clean
         val q = Query(where("name").isEqualTo(name).and("profile").isEqualTo(profile))
+        mongoOperations.remove(q, App::class.java).subscribe()
+    }
+
+    @Test
+    fun insertAppForApp() {
+        val name = UUID.randomUUID().toString()
+        val profile = UUID.randomUUID().toString()
+
+        webTestClient.post()
+                .uri("/api/admins/apps")
+                .cookie("token", token)
+                .syncBody(mapOf(
+                        "name" to name,
+                        "profile" to profile
+                ))
+                .exchange()
+                .expectStatus().isOk
+
+        // =================================================================================
+        val profile2 = UUID.randomUUID().toString()
+        webTestClient.post()
+                .uri("/api/admins/apps/duplicates/{name}/{profile}", name, profile)
+                .cookie("token", token)
+                .syncBody(mapOf(
+                        "name" to name,
+                        "profile" to profile2,
+                        "description" to "insertAppForApp -- test"
+                ))
+                .exchange()
+                .expectStatus().isOk
+
+        // clean
+        val q = Query(where("name").isEqualTo(name))
         mongoOperations.remove(q, App::class.java).subscribe()
     }
 

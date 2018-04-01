@@ -4,7 +4,6 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.zhudy.duic.BizCode
 import io.zhudy.duic.BizCodeException
-import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.AppContentHistory
@@ -137,6 +136,21 @@ class AdminResource(
 
             appService.insert(it).flatMap {
                 ok().build()
+            }
+        }
+    }
+
+    /**
+     * 从已经存在的应用信息中插入一个应用。
+     */
+    fun insertAppForApp(request: ServerRequest): Mono<ServerResponse> {
+        return request.bodyToMono(App::class.java).flatMap { newApp ->
+            appService.findOne(request.pathString("name"), request.pathString("profile")).flatMap {
+                newApp.content = it.content
+
+                appService.insert(newApp).flatMap {
+                    ok().build()
+                }
             }
         }
     }

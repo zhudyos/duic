@@ -2,7 +2,7 @@
     <v-card>
         <v-card-actions>
             <v-btn flat @click.stop="creationDialog = !creationDialog">创建</v-btn>
-            <v-btn flat>克隆</v-btn>
+            <v-btn flat :disabled="selectedRowIndex === -1" @click.stop="openDuplicateDialog()">克隆</v-btn>
             <v-spacer></v-spacer>
             <v-flex md3>
                 <v-text-field
@@ -20,28 +20,31 @@
                 no-data-text="没有数据"
                 hide-actions>
             <template slot="items" slot-scope="props">
-                <td>{{props.item.name}}</td>
-                <td>
-                    <a @click="updateContentApp(props.item.name, props.item.profile)">{{props.item.profile}}</a>
-                </td>
-                <td>{{props.item.description}}</td>
-                <td>
-                    <a v-if="props.item.token" v-clipboard:copy="props.item.token">复制</a>
-                </td>
-                <td>{{props.item.ip_limit}}</td>
-                <td>{{props.item.created_at}}</td>
-                <td>{{props.item.updated_at}}</td>
-                <td align="center">
-                    <a @click="updateApp(props.item.name, props.item.profile)">
-                        <v-icon color="blue">fas fa-edit</v-icon>
-                    </a>
-                    <a @click="deleteApp(props.item.name, props.item.profile)">
-                        <v-icon color="red">fas fa-trash-alt</v-icon>
-                    </a>
-                    <a @click="$router.push(`/app-histories?name=${props.item.name}&profile=${props.item.profile}`)">
-                        <v-icon>fas fa-history</v-icon>
-                    </a>
-                </td>
+                <tr @click="selectRow(props.index, props.item)"
+                    :class="selectedRowIndex === props.index ?'grey lighten-2':''">
+                    <td>{{props.item.name}}</td>
+                    <td>
+                        <a @click="updateContentApp(props.item.name, props.item.profile)">{{props.item.profile}}</a>
+                    </td>
+                    <td>{{props.item.description}}</td>
+                    <td>
+                        <a v-if="props.item.token" v-clipboard:copy="props.item.token">复制</a>
+                    </td>
+                    <td>{{props.item.ip_limit}}</td>
+                    <td>{{props.item.created_at}}</td>
+                    <td>{{props.item.updated_at}}</td>
+                    <td align="center">
+                        <a @click="updateApp(props.item.name, props.item.profile)">
+                            <v-icon color="blue">fas fa-edit</v-icon>
+                        </a>
+                        <a @click="deleteApp(props.item.name, props.item.profile)">
+                            <v-icon color="red">fas fa-trash-alt</v-icon>
+                        </a>
+                        <a @click="$router.push(`/app-histories?name=${props.item.name}&profile=${props.item.profile}`)">
+                            <v-icon>fas fa-history</v-icon>
+                        </a>
+                    </td>
+                </tr>
             </template>
         </v-data-table>
         <div class="text-xs-right pt-2">
@@ -59,9 +62,15 @@
             <d-update-app @updated="updateDialog = false; loadAppByUser()" v-bind="standbyApp"></d-update-app>
         </v-dialog>
 
+        <v-dialog v-if="duplicateDialog" v-model="duplicateDialog" max-width="800px">
+            <d-duplicate-app :name="selectedRow.name" :profile="selectedRow.profile"
+                             @input="duplicateDialog = false; loadAppByUser()"></d-duplicate-app>
+        </v-dialog>
+
         <v-dialog v-if="updateContentDialog" v-model="updateContentDialog" fullscreen>
             <d-update-content-app v-bind="standbyApp" @input="updateContentDialog = false"></d-update-content-app>
         </v-dialog>
+
     </v-card>
 </template>
 <script>
@@ -73,9 +82,11 @@
     import DCreationApp from '../../components/apps/DCreationApp.vue'
     import DUpdateApp from "../../components/apps/DUpdateApp.vue";
     import DUpdateContentApp from "../../components/apps/DUpdateContentApp.vue";
+    import DDuplicateApp from "../../components/apps/DDuplicateApp.vue";
 
     export default {
         components: {
+            DDuplicateApp,
             DUpdateContentApp,
             DUpdateApp,
             DCreationApp: DCreationApp
@@ -134,11 +145,14 @@
             q: '',
             creationDialog: false,
             updateDialog: false,
+            duplicateDialog: false,
             updateContentDialog: false,
             standbyApp: {
                 name: '',
                 profile: ''
-            }
+            },
+            selectedRowIndex: -1,
+            selectedRow: {}
         }),
         mounted() {
             this.loadAppByUser()
@@ -173,6 +187,18 @@
                         this.$notice('删除失败')
                     })
                 })
+            },
+            openDuplicateDialog() {
+                this.duplicateDialog = !this.duplicateDialog
+            },
+            selectRow(index, item) {
+                if (this.selectedRowIndex === index) {
+                    this.selectedRowIndex = -1
+                    this.selectedRow = {}
+                } else {
+                    this.selectedRowIndex = index
+                    this.selectedRow = item
+                }
             }
         }
     }
