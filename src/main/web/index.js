@@ -27,9 +27,13 @@ axios.interceptors.response.use((response) => {
     return response
 }, (error) => {
     // 未认证
-    if (error.response.status === 401) {
-        store.commit('loginState', false)
-        Cookies.remove('token')
+    if (error.response) {
+        if (error.response.status === 401) {
+            store.commit('loginState', false)
+            Cookies.remove('token')
+        }
+    } else {
+        alert('服务不可用')
     }
     return Promise.reject(error)
 })
