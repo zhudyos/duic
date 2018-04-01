@@ -121,7 +121,7 @@ task copyAdminFiles(type: Copy, dependsOn: buildAdmin) {
     include "**/**"
     into "${project.buildDir}/resources/main/public-web-resources"
 }
-jar.dependsOn copyAdminFiles
+processResources.dependsOn copyAdminFiles
 
 task copyDockerJar(type: Copy, dependsOn: build) {
     group = "docker"
