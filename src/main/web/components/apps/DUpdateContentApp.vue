@@ -12,6 +12,7 @@
             <v-btn icon @click="$emit('input')" dark>
                 <v-icon>close</v-icon>
             </v-btn>
+            <v-toolbar-title>{{name}}/{{profile}}</v-toolbar-title>
             <v-spacer></v-spacer>
             <v-toolbar-items>
                 <v-btn dark flat :disabled="submitBtnDisabled" @click="submit"> 保 存 </v-btn>

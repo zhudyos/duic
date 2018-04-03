@@ -12,6 +12,7 @@
             <v-btn icon @click="$emit('input')" dark>
                 <v-icon>close</v-icon>
             </v-btn>
+            <v-toolbar-title>{{name}}/{{profile}}</v-toolbar-title>
         </v-toolbar>
         <v-card-text>
             <v-layout row>
