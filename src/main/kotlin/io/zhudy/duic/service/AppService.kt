@@ -297,7 +297,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
      */
     private fun loadOne(name: String, profile: String): Mono<CachedApp> {
         val app = cache.get(localKey(name, profile), {
-            val a = findOne(name, profile).block(Duration.ofSeconds(3))
+            val a = findOne(name, profile).block(Duration.ofSeconds(3)) ?: return@get null
             mapToCachedApp(a)
         }) ?: throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
         return Mono.just(app)

@@ -21,6 +21,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.Test
 import reactor.core.publisher.Mono
+import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -95,6 +96,18 @@ array:
                 .expectStatus().isOk
                 .expectBody()
                 .jsonPath("state", firstTestApp.v)
+                .exists()
+    }
+
+    @Test(description = "获取不存在的配置状态，预期返回错误码 1000")
+    fun getConfigStateExpectedCode1000() {
+        webTestClient.get()
+                .uri("/api/v1/apps/states/{name}/{profile}", UUID.randomUUID().toString(), UUID.randomUUID().toString())
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isBadRequest
+                .expectBody()
+                .jsonPath("code", 1000)
                 .exists()
     }
 
