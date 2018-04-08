@@ -6,6 +6,7 @@ import org.springframework.boot.Banner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
@@ -15,14 +16,16 @@ import org.springframework.boot.runApplication
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
+import org.springframework.data.convert.CustomConversions
 import org.springframework.data.mongodb.MongoDbFactory
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver
 import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+import java.util.*
+
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -40,19 +43,18 @@ ValidationAutoConfiguration::class])
 class Application {
 
     @Bean
-    fun mongoConverter(factory: MongoDbFactory): MappingMongoConverter {
-        val dbRefResolver = DefaultDbRefResolver(factory)
-        val conversions = MongoCustomConversions(emptyList<Any>())
-
-        val mappingContext = MongoMappingContext()
-        mappingContext.setSimpleTypeHolder(conversions.simpleTypeHolder)
-        mappingContext.afterPropertiesSet()
-
-        val converter = MappingMongoConverter(dbRefResolver, mappingContext)
+    fun mongoConverter(factory: MongoDbFactory, conversions: CustomConversions,
+                       mappingContext: MongoMappingContext): MappingMongoConverter {
+        val converter = MappingMongoConverter(DefaultDbRefResolver(factory), mappingContext)
         converter.setCustomConversions(conversions)
         converter.typeMapper = DefaultMongoTypeMapper(null)
         converter.afterPropertiesSet()
         return converter
+    }
+
+    @Bean
+    fun jacksonObjectMapperCustomization() = Jackson2ObjectMapperBuilderCustomizer {
+        it.timeZone(TimeZone.getDefault())
     }
 
     @Bean
