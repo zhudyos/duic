@@ -6,13 +6,13 @@ import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.AppContentHistory
 import io.zhudy.duic.domain.AppHistory
-import org.bson.Document
-import org.hashids.Hashids
+import org.bson.types.ObjectId
+import org.joda.time.DateTime
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
-import org.springframework.data.mongodb.core.findOne
 import org.springframework.data.mongodb.core.query.Criteria.where
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.TextQuery
@@ -31,8 +31,6 @@ class AppRepository(
         private val mongoOperations: ReactiveMongoOperations
 ) {
 
-    private val hashids = Hashids()
-
     /**
      *
      */
@@ -41,11 +39,13 @@ class AppRepository(
     /**
      *
      */
-    fun delete(app: App, appHistory: AppHistory): Mono<Long> {
+    fun delete(app: App, userContext: UserContext): Mono<Long> {
         val q = Query(where("name").isEqualTo(app.name).and("profile").isEqualTo(app.profile))
-        return mongoOperations.remove(q, App::class.java).flatMap { rs ->
-            mongoOperations.insert(appHistory).map {
-                rs.deletedCount
+        return findOne(app.name, app.profile).flatMap { old ->
+            mongoOperations.remove(q, App::class.java).flatMap { rs ->
+                insertHistory(old, true, userContext).map {
+                    rs.deletedCount
+                }
             }
         }
     }
@@ -70,17 +70,17 @@ class AppRepository(
                 .set("description", app.description)
                 .set("users", app.users)
                 .set("updated_at", updatedAt)
-                .push("histories").atPosition(0).value(mapOf(
-                "hid" to hashids.encode(app.id.hashCode().toLong(), System.currentTimeMillis(), app.v.toLong()),
-                "token" to app.token,
-                "revised_by" to userContext.email,
-                "updated_at" to updatedAt
-        ))
-        return mongoOperations.updateFirst(q, u, App::class.java).map {
-            if (it.modifiedCount < 1) {
-                throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+
+        return findOne(app.name, app.profile).flatMap { old ->
+            mongoOperations.updateFirst(q, u, App::class.java).flatMap { m ->
+                if (m.modifiedCount < 1) {
+                    throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+                }
+
+                insertHistory(old, false, userContext).map {
+                    m.modifiedCount.toInt()
+                }
             }
-            it.modifiedCount.toInt()
         }
     }
 
@@ -95,21 +95,18 @@ class AppRepository(
                     .set("content", app.content)
                     .set("updated_at", updatedAt)
                     .inc("v", 1)
-                    .push("histories").atPosition(0).value(mapOf(
-                    "hid" to hashids.encode(app.id.hashCode().toLong(), System.currentTimeMillis(), app.v.toLong()),
-                    "content" to old.content,
-                    "revised_by" to userContext.email,
-                    "updated_at" to updatedAt
-            ))
 
-            mongoOperations.updateFirst(q, u, App::class.java).map {
+            mongoOperations.updateFirst(q, u, App::class.java).flatMap {
                 if (it.modifiedCount < 1) {
                     if (app.v != old.v) {
                         throw BizCodeException(BizCodes.C_1004)
                     }
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 }
-                app.v + 1
+
+                insertHistory(old, false, userContext).map {
+                    app.v + 1
+                }
             }
         }
     }
@@ -158,16 +155,13 @@ class AppRepository(
      */
     fun findLast50History(name: String, profile: String): Flux<AppContentHistory> {
         val q = Query(where("name").isEqualTo(name).and("profile").isEqualTo(profile))
-        q.fields().slice("histories", 50)
-
-        return mongoOperations.findOne<Document>(q, "app").flatMapIterable {
-            it["histories"] as List<Document>
-        }.map {
+        q.with(Sort.by(Sort.Direction.DESC, "created_at"))
+        return mongoOperations.find(q, AppHistory::class.java).map {
             AppContentHistory(
-                    hid = it.getString("hid"),
-                    revisedBy = it.getString("revised_by") ?: "",
-                    content = it.getString("content") ?: "",
-                    updatedAt = it.getDate("updated_at")
+                    hid = it.id,
+                    updatedBy = it.updatedBy,
+                    content = it.content,
+                    updatedAt = it.createdAt?.toDate() ?: Date()
             )
         }
     }
@@ -186,5 +180,21 @@ class AppRepository(
                 PageImpl(items, pageable, total)
             }
         }
+    }
+
+    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext): Mono<AppHistory> {
+        val appHis = AppHistory(
+                id = ObjectId().toString(),
+                name = app.name,
+                profile = app.profile,
+                description = app.description,
+                v = app.v,
+                createdAt = DateTime.now(),
+                content = app.content,
+                users = app.users
+        )
+        if (delete) appHis.deletedBy = userContext.email else appHis.updatedBy = userContext.email
+
+        return mongoOperations.insert(appHis)
     }
 }

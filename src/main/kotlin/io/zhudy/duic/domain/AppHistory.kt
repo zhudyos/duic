@@ -14,19 +14,27 @@ class AppHistory(
         @Id
         var id: String = "",
         @Field
+        @Indexed
         var name: String = "",
         @Field
+        @Indexed
         var profile: String = "",
         @Field
         var description: String = "",
         @Field
+        var content: String = "",
+        @Field
+        var token: String = "",
+        @Field("ip_limit")
+        var ipLimit: String = "",
+        @Field
         var v: Int = 1,
         @Field("created_at")
         var createdAt: DateTime? = null,
-        @Field
+        @Field("updated_by")
+        var updatedBy: String = "",
+        @Field("deleted_by")
         var deletedBy: String = "",
-        @Field
-        var content: String = "",
         @Field
         var users: List<String> = emptyList()
 )

@@ -5,13 +5,12 @@ import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.App
-import io.zhudy.duic.domain.AppHistory
 import io.zhudy.duic.domain.SingleValue
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
-import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.service.ip.SectionIpChecker
+import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
 import io.zhudy.duic.vo.RequestConfigVo
 import org.bson.types.ObjectId
@@ -99,30 +98,15 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
      *
      */
     fun delete(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
-        appRepository.findOne(app.name, app.profile).flatMap {
-            val ah = AppHistory(
-                    id = it.id,
-                    name = it.name,
-                    profile = it.profile,
-                    description = it.profile,
-                    v = it.v,
-                    createdAt = DateTime.now(),
-                    deletedBy = userContext.email,
-                    content = it.content,
-                    users = it.users
-            )
-            appRepository.delete(app, ah)
-        }
+        appRepository.delete(app, userContext)
     }!!
 
     /**
      *
      */
-    fun update(app: App, userContext: UserContext): Mono<Int> {
-        return checkPermission(app.name, app.profile, userContext).flatMap {
-            appRepository.update(app, userContext)
-        }
-    }
+    fun update(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
+        appRepository.update(app, userContext)
+    }!!
 
     /**
      *

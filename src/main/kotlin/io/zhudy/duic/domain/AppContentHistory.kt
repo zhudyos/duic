@@ -10,7 +10,7 @@ class AppContentHistory(
         @Field
         var hid: String = "",
         @Field("revised_by")
-        var revisedBy: String = "",
+        var updatedBy: String = "",
         @Field
         var content: String = "",
         @Field("updated_at")
