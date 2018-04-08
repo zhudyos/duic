@@ -38,12 +38,12 @@
             </v-layout>
             <v-layout row>
                 <v-flex xs3>
-                    <span v-show="left.revisedBy">修改者：<span class="red--text">{{left.revisedBy}}</span></span>
+                    <span v-show="left.updatedBy">修改者：<span class="red--text">{{left.updatedBy}}</span></span>
                     <span v-show="left.updatedAt">修改时间：<span class="red--text">{{left.updatedAt}}</span></span>
                 </v-flex>
                 <v-spacer></v-spacer>
                 <v-flex xs3>
-                    <span v-show="right.revisedBy">修改者：<span class="red--text">{{right.revisedBy}}</span></span>
+                    <span v-show="right.updatedBy">修改者：<span class="red--text">{{right.updatedBy}}</span></span>
                     <span v-show="right.updatedAt">修改时间：<span class="red--text">{{right.updatedAt}}</span></span>
                 </v-flex>
             </v-layout>
@@ -61,13 +61,13 @@
             left: {
                 version: 'HEAD',
                 versions: [],
-                revisedBy: '',
+                updatedBy: '',
                 updatedAt: ''
             },
             right: {
                 version: 'HEAD',
                 versions: [],
-                revisedBy: '',
+                updatedBy: '',
                 updatedAt: ''
             },
             app: {},
@@ -117,10 +117,10 @@
                 let leftItem = this.historyItems[left.versions.indexOf(left.version)]
                 let rightItem = this.historyItems[right.versions.indexOf(right.version)]
 
-                left.revisedBy = leftItem.revised_by
+                left.updatedBy = leftItem.updated_by
                 left.updatedAt = leftItem.updated_at
 
-                right.revisedBy = rightItem.revised_by
+                right.updatedBy = rightItem.updated_by
                 right.updatedAt = rightItem.updated_at
 
                 this.editor.setModel({

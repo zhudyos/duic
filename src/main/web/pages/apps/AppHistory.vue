@@ -13,7 +13,7 @@
                 <td>
                     <a @click="standbyHid = props.item.hid; diffDialog = true">{{props.item.hid}}</a>
                 </td>
-                <td>{{props.item.revised_by}}</td>
+                <td>{{props.item.updated_by}}</td>
                 <td>{{props.item.updated_at}}</td>
             </template>
         </v-data-table>
@@ -44,7 +44,7 @@
                 },
                 {
                     text: '修改人',
-                    value: 'revised_by',
+                    value: 'updated_by',
                     sortable: false
                 },
                 {
