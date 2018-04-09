@@ -1,31 +1,24 @@
 package io.zhudy.duic.web.admin
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Filters.and
+import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.Config
-import io.zhudy.duic.domain.App
-import io.zhudy.duic.domain.AppHistory
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.server.Application
-import org.bson.Document
-import org.mockito.ArgumentMatchers.*
-import org.mockito.Mockito
-import org.mockito.Mockito.doReturn
+import io.zhudy.duic.server.BeansInitializer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
-import org.springframework.boot.test.mock.mockito.SpyBean
-import org.springframework.data.mongodb.core.ReactiveMongoOperations
-import org.springframework.data.mongodb.core.query.Criteria.where
-import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestExecutionListeners
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.testng.annotations.AfterMethod
 import org.testng.annotations.Test
-import reactor.core.publisher.Mono
+import reactor.core.publisher.toMono
 import java.util.*
 
 /**
@@ -33,12 +26,12 @@ import java.util.*
  */
 @ActiveProfiles("test")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ContextConfiguration(initializers = [BeansInitializer::class])
 @TestExecutionListeners(MockitoTestExecutionListener::class)
 class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
-    @SpyBean
-    lateinit var mongoOperations: ReactiveMongoOperations
-
+    @Autowired
+    lateinit var mongoDatabase: MongoDatabase
     @Autowired
     lateinit var userRepository: UserRepository
 
@@ -68,11 +61,6 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
             }
             return _token
         }
-
-    @AfterMethod
-    fun afterMethod() {
-        Mockito.reset(mongoOperations)
-    }
 
     @Test
     fun rootUser() {
@@ -217,8 +205,9 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectStatus().isOk
 
         // clean
-        val q = Query(where("name").isEqualTo(name).and("profile").isEqualTo(profile))
-        mongoOperations.remove(q, App::class.java).subscribe()
+        mongoDatabase.getCollection("app").deleteMany(and(Filters.eq("name", name), Filters.eq("profile", profile)))
+                .toMono()
+                .subscribe()
     }
 
     @Test
@@ -250,8 +239,9 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectStatus().isOk
 
         // clean
-        val q = Query(where("name").isEqualTo(name))
-        mongoOperations.remove(q, App::class.java).subscribe()
+        mongoDatabase.getCollection("app").deleteMany(Filters.eq("name", name))
+                .toMono()
+                .subscribe()
     }
 
     @Test
@@ -283,8 +273,9 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .jsonPath("v").isNumber
 
         // clean
-        val q = Query(where("name").isEqualTo(name).and("profile").isEqualTo(profile))
-        mongoOperations.remove(q, App::class.java).subscribe()
+        mongoDatabase.getCollection("app").deleteMany(and(Filters.eq("name", name), Filters.eq("profile", profile)))
+                .toMono()
+                .subscribe()
     }
 
     @Test
@@ -312,8 +303,9 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectStatus().isOk
 
         // clean
-        val q = Query(where("name").isEqualTo(name).and("profile").isEqualTo(profile))
-        mongoOperations.remove(q, App::class.java).subscribe()
+        mongoDatabase.getCollection("app").deleteMany(and(Filters.eq("name", name), Filters.eq("profile", profile)))
+                .toMono()
+                .subscribe()
     }
 
     @Test
@@ -338,7 +330,9 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectStatus().isNoContent
 
         // clean
-        mongoOperations.remove(Query(where("name").isEqualTo(name).and("profile").isEqualTo(profile)), AppHistory::class.java).subscribe()
+        mongoDatabase.getCollection("app_history").deleteMany(and(Filters.eq("name", name), Filters.eq("profile", profile)))
+                .toMono()
+                .subscribe()
     }
 
     @Test
@@ -364,8 +358,11 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectBody()
                 .jsonPath("name", name).exists()
                 .jsonPath("profile", profile).exists()
+
         // clean
-        mongoOperations.remove(Query(where("name").isEqualTo(name).and("profile").isEqualTo(profile)), App::class.java).subscribe()
+        mongoDatabase.getCollection("app").deleteMany(and(Filters.eq("name", name), Filters.eq("profile", profile)))
+                .toMono()
+                .subscribe()
     }
 
     @Test
@@ -388,22 +385,22 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
     @Test
     fun findAppContentHistory() {
-        val doc = Document()
-        doc["histories"] = listOf(
-                Document(mapOf(
-                        "hid" to Random().nextInt().toString(),
-                        "revised_by" to Config.rootEmail,
-                        "updated_at" to Date()
-                )),
-                Document(mapOf(
-                        "hid" to Random().nextInt().toString(),
-                        "content" to "hello: world",
-                        "revised_by" to Config.rootEmail,
-                        "updated_at" to Date()
-                ))
-        )
-
-        doReturn(Mono.just(doc)).`when`(mongoOperations).findOne(any(), eq(Document::class.java), anyString())
+//        val doc = Document()
+//        doc["histories"] = listOf(
+//                Document(mapOf(
+//                        "hid" to Random().nextInt().toString(),
+//                        "revised_by" to Config.rootEmail,
+//                        "updated_at" to Date()
+//                )),
+//                Document(mapOf(
+//                        "hid" to Random().nextInt().toString(),
+//                        "content" to "hello: world",
+//                        "revised_by" to Config.rootEmail,
+//                        "updated_at" to Date()
+//                ))
+//        )
+//
+//        doReturn(Mono.just(doc)).`when`(mongoOperations).findOne(any(), eq(Document::class.java), anyString())
 
         webTestClient.get()
                 .uri("/api/admins/apps/{name}/{profile}/histories", "test", "test")

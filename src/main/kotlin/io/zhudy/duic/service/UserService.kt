@@ -3,13 +3,12 @@ package io.zhudy.duic.service
 import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
+import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.repository.UserRepository
-import org.joda.time.DateTime
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
-import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -53,9 +52,8 @@ class UserService(val userRepository: UserRepository,
     /**
      * 保存用户.
      */
-    fun insert(user: User): Mono<User> {
+    fun insert(user: User): Mono<*> {
         user.password = passwordEncoder.encode(user.password)
-        user.createdAt = DateTime.now()
         return userRepository.insert(user)
     }
 

@@ -40,7 +40,7 @@ class AdminResource(
     /**
      * 登录.
      */
-    fun login(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
+    fun login(request: ServerRequest) = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
         userService.login(it.email, it.password).flatMap {
             val token = JWT.create().withJWTId(it.email)
                     .withExpiresAt(DateTime.now().plusMinutes(Config.Jwt.expiresIn).toDate())
@@ -54,12 +54,12 @@ class AdminResource(
     /**
      * 返回 `root` 用户登录名.
      */
-    fun rootUser(request: ServerRequest): Mono<ServerResponse> = ok().body(mapOf("root" to Config.rootEmail))
+    fun rootUser(request: ServerRequest) = ok().body(mapOf("root" to Config.rootEmail))
 
     /**
      * 保存用户.
      */
-    fun insertUser(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(User::class.java)).flatMap {
+    fun insertUser(request: ServerRequest) = request.body(BodyExtractors.toMono(User::class.java)).flatMap {
         if (it.email.isEmpty()) {
             throw BizCodeException(BizCode.Classic.C_999, "email 不能为空")
         }
@@ -75,38 +75,32 @@ class AdminResource(
     /**
      * 删除用户.
      */
-    fun deleteUser(request: ServerRequest): Mono<ServerResponse> {
-        val email = request.pathString("email")
-        return userService.delete(email).flatMap {
-            noContent().build()
-        }
+    fun deleteUser(request: ServerRequest) = userService.delete(request.pathString("email")).flatMap {
+        noContent().build()
     }
 
     /**
      *
      */
-    fun updateUserPassword(request: ServerRequest): Mono<ServerResponse> {
-        return request.bodyToMono(UpdatePassword::class.java).flatMap {
-            val userContext = request.userContext()
-            userService.updatePassword(userContext.email, it.oldPassword, it.newPassword).flatMap {
-                noContent().build()
-            }
+    fun updateUserPassword(request: ServerRequest) = request.bodyToMono(UpdatePassword::class.java).flatMap {
+        val userContext = request.userContext()
+        userService.updatePassword(userContext.email, it.oldPassword, it.newPassword).flatMap {
+            noContent().build()
         }
     }
 
     /**
      * 重置用户密码.
      */
-    fun resetUserPassword(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(ResetPasswordDto::class.java).flatMap {
+    fun resetUserPassword(request: ServerRequest) = request.bodyToMono(ResetPasswordDto::class.java).flatMap {
         userService.resetPassword(it).flatMap {
             noContent().build()
         }
     }
 
     /**
-     *
      */
-    fun findPageUser(request: ServerRequest): Mono<ServerResponse> = userService.findPage(WebUtils.getPage(request)).flatMap {
+    fun findPageUser(request: ServerRequest) = userService.findPage(WebUtils.getPage(request)).flatMap {
         ok().body(it)
     }
 
@@ -114,7 +108,7 @@ class AdminResource(
     /**
      *
      */
-    fun findAllEmail(request: ServerRequest): Mono<ServerResponse> = userService.findAllEmail().collectList().flatMap {
+    fun findAllEmail(request: ServerRequest) = userService.findAllEmail().collectList().flatMap {
         ok().body(it)
     }
     // ======================================= USER ====================================================== //
@@ -125,32 +119,28 @@ class AdminResource(
     /**
      * 保存应用.
      */
-    fun insertApp(request: ServerRequest): Mono<ServerResponse> {
-        return request.bodyToMono(App::class.java).flatMap {
-            if (it.name.isEmpty()) {
-                throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
-            }
-            if (it.profile.isEmpty()) {
-                throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
-            }
+    fun insertApp(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap {
+        if (it.name.isEmpty()) {
+            throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
+        }
+        if (it.profile.isEmpty()) {
+            throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
+        }
 
-            appService.insert(it).flatMap {
-                ok().build()
-            }
+        appService.insert(it).flatMap {
+            ok().build()
         }
     }
 
     /**
      * 从已经存在的应用信息中插入一个应用。
      */
-    fun insertAppForApp(request: ServerRequest): Mono<ServerResponse> {
-        return request.bodyToMono(App::class.java).flatMap { newApp ->
-            appService.findOne(request.pathString("name"), request.pathString("profile")).flatMap {
-                newApp.content = it.content
+    fun insertAppForApp(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap { newApp ->
+        appService.findOne(request.pathString("name"), request.pathString("profile")).flatMap {
+            newApp.content = it.content
 
-                appService.insert(newApp).flatMap {
-                    ok().build()
-                }
+            appService.insert(newApp).flatMap {
+                ok().build()
             }
         }
     }
@@ -158,29 +148,25 @@ class AdminResource(
     /**
      *
      */
-    fun updateApp(request: ServerRequest): Mono<ServerResponse> {
-        return request.bodyToMono(App::class.java).flatMap {
-            if (it.name.isEmpty()) {
-                throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
-            }
-            if (it.profile.isEmpty()) {
-                throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
-            }
+    fun updateApp(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap {
+        if (it.name.isEmpty()) {
+            throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
+        }
+        if (it.profile.isEmpty()) {
+            throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
+        }
 
-            appService.update(it, request.userContext()).flatMap {
-                ok().body(mapOf("v" to it))
-            }
+        appService.update(it, request.userContext()).flatMap {
+            ok().body(mapOf("v" to it))
         }
     }
 
     /**
      *
      */
-    fun updateAppContent(request: ServerRequest): Mono<ServerResponse> {
-        return request.bodyToMono(App::class.java).flatMap {
-            appService.updateContent(it, request.userContext()).flatMap {
-                ok().body(mapOf("v" to it))
-            }
+    fun updateAppContent(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap {
+        appService.updateContent(it, request.userContext()).flatMap {
+            ok().body(mapOf("v" to it))
         }
     }
 

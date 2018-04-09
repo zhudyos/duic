@@ -1,13 +1,13 @@
 package io.zhudy.duic.web.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.mongodb.DuplicateKeyException
 import io.zhudy.duic.BizCode
 import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.web.MissingRequestParameterException
 import io.zhudy.duic.web.RequestParameterFormatException
 import org.slf4j.LoggerFactory
 import org.springframework.core.NestedRuntimeException
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -34,7 +34,7 @@ class GlobalWebExceptionHandler(
         val body = when (e) {
             is DuplicateKeyException -> mapOf(
                     "code" to BizCode.Classic.C_995.code,
-                    "message" to e.rootCause.message
+                    "message" to e.message
             )
             is MissingRequestParameterException -> mapOf(
                     "code" to BizCode.Classic.C_999.code,

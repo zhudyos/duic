@@ -2,6 +2,9 @@ server:
   port: 7777
 
 spring:
+  reactor:
+    stacktrace_mode:
+      enabled: true
   jackson:
     default_property_inclusion: non_default
     date_format: yyyy-MM-dd'T'HH:mm:ss

@@ -1,17 +1,22 @@
 package io.zhudy.duic.repository
 
+import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.IndexModel
+import com.mongodb.client.model.IndexOptions
+import com.mongodb.client.model.Projections.exclude
+import com.mongodb.client.model.Projections.include
+import com.mongodb.client.model.Updates.combine
+import com.mongodb.client.model.Updates.set
+import com.mongodb.reactivestreams.client.MongoDatabase
+import io.zhudy.duic.domain.Page
+import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageImpl
-import org.springframework.data.domain.Pageable
-import org.springframework.data.mongodb.core.ReactiveMongoOperations
-import org.springframework.data.mongodb.core.query.Criteria.where
-import org.springframework.data.mongodb.core.query.Query
-import org.springframework.data.mongodb.core.query.Update
-import org.springframework.data.mongodb.core.query.isEqualTo
+import org.bson.Document
+import org.bson.types.ObjectId
 import org.springframework.stereotype.Repository
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toFlux
+import reactor.core.publisher.toMono
 import java.util.*
 
 /**
@@ -19,53 +24,87 @@ import java.util.*
  */
 @Repository
 class UserRepository(
-        val mongoOperations: ReactiveMongoOperations
+        mongoDatabase: MongoDatabase
 ) {
 
-    /**
-     *
-     */
-    fun insert(user: User): Mono<User> = mongoOperations.insert(user)
+    val userColl = mongoDatabase.getCollection("user")
 
-    /**
-     *
-     */
-    fun delete(email: String): Mono<Int> = mongoOperations.remove(Query(where("email").isEqualTo(email)),
-            User::class.java).map { it.deletedCount.toInt() }
-
-    /**
-     *
-     */
-    fun updatePassword(email: String, password: String): Mono<Int> {
-        val q = Query(where("email").isEqualTo(email))
-        val u = Update().set("password", password).set("updated_at", Date())
-        return mongoOperations.updateFirst(q, u, User::class.java).map { it.modifiedCount.toInt() }
+    init {
+        userColl.createIndexes(listOf(
+                IndexModel(Document("email", 1), IndexOptions().background(true).unique(true))
+        )).toMono().subscribe()
     }
 
     /**
      *
      */
-    fun findByEmail(email: String): Mono<User?> = mongoOperations.findOne(Query(where("email").isEqualTo(email)), User::class.java)
+    fun insert(user: User) = userColl.insertOne(Document(
+            mapOf(
+                    "_id" to ObjectId().toString(),
+                    "email" to user.email,
+                    "password" to user.password,
+                    "created_at" to Date(),
+                    "updated_at" to Date()
+            )
+    )).toMono()
 
     /**
      *
      */
-    fun findPage(pageable: Pageable): Mono<Page<User>> {
-        val q = Query().with(pageable)
-        q.fields().exclude("password")
-        return mongoOperations.find(q, User::class.java).collectList().flatMap { items ->
-            mongoOperations.count(q, User::class.java).map { total ->
-                PageImpl<User>(items, pageable, total)
+    fun delete(email: String) = userColl.deleteOne(eq("email", email)).toMono().map { it.deletedCount.toInt() }
+
+    /**
+     *
+     */
+    fun updatePassword(email: String, password: String) = userColl.updateOne(
+            eq("email", email),
+            combine(
+                    set("password", password),
+                    set("updated_at", Date())
+            ))
+            .toMono()
+            .map { it.modifiedCount.toInt() }
+
+    /**
+     *
+     */
+    fun findByEmail(email: String): Mono<User> = userColl.find(eq("email", email))
+            .first()
+            .toMono()
+            .map {
+                User(
+                        email = it.getString("email"),
+                        password = it.getString("password")
+                )
             }
-        }
-    }
 
     /**
      *
      */
-    fun findAllEmail(): Flux<String> {
-        val q = Query()
-        q.fields().include("email")
-        return mongoOperations.find(q, User::class.java).map { it.email }
-    }
+    fun findPage(pageable: Pageable) = userColl.find()
+            .projection(exclude("password"))
+            .skip(pageable.offset)
+            .limit(pageable.size)
+            .toFlux()
+            .map {
+                User(
+                        email = it.getString("email"),
+                        createdAt = it.getDate("created_at"),
+                        updatedAt = it.getDate("updated_at")
+                )
+            }
+            .collectList()
+            .flatMap { items ->
+                userColl.count().toMono().map { total ->
+                    Page(items, total.toInt(), pageable)
+                }
+            }
+
+    /**
+     *
+     */
+    fun findAllEmail() = userColl.find()
+            .projection(include("email"))
+            .toFlux()
+            .map { it.getString("email") }
 }

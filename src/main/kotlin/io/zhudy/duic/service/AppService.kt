@@ -5,6 +5,8 @@ import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.App
+import io.zhudy.duic.domain.Page
+import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.SingleValue
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
@@ -17,14 +19,11 @@ import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.time.Duration
 import java.util.*
 
 /**
@@ -87,7 +86,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun insert(app: App): Mono<App> {
+    fun insert(app: App): Mono<*> {
         app.id = ObjectId().toHexString()
         app.createdAt = DateTime.now()
         app.updatedAt = DateTime.now()
@@ -190,7 +189,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun findOne(name: String, profile: String) = appRepository.findOne(name, profile)
+    fun findOne(name: String, profile: String) = appRepository.findOne<Any>(name, profile)
 
     /**
      *
@@ -238,7 +237,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             return Mono.just(Unit)
         }
 
-        return appRepository.findOne(name, profile).flatMap {
+        return appRepository.findOne<Any>(name, profile).flatMap {
             if (!it.users.contains(userContext.email)) {
                 // 用户没有修改该 APP 的权限
                 throw BizCodeException(BizCode.Classic.C_403)
@@ -280,11 +279,18 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
      *
      */
     private fun loadOne(name: String, profile: String): Mono<CachedApp> {
-        val app = cache.get(localKey(name, profile), {
-            val a = findOne(name, profile).block(Duration.ofSeconds(3)) ?: return@get null
-            mapToCachedApp(a)
-        }) ?: throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
-        return Mono.just(app)
+        val k = localKey(name, profile)
+        return Mono.justOrEmpty(cache.get(k, CachedApp::class.java))
+                .switchIfEmpty(
+                        findOne(name, profile).map {
+                            val ca = mapToCachedApp(it)
+                            cache.put(k, ca)
+                            ca
+                        }.switchIfEmpty(Mono.create {
+                            it.error(BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile"))
+                        })
+                )
+
     }
 
     private fun mergeProps(apps: List<CachedApp>): Map<Any, Any> {
