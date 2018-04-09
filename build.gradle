@@ -47,8 +47,8 @@ dependencies {
         exclude module: "hibernate-validator"
         exclude module: "nio-multipart-parser"
     }
-    compile "org.mongodb:mongodb-driver-reactivestreams:1.7.1"
     compile "io.netty:netty-transport-native-epoll:4.1.22.Final:linux-x86_64"
+    compile "org.mongodb:mongodb-driver-reactivestreams:1.7.1"
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.5"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.5"
