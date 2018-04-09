@@ -17,7 +17,7 @@
     </appender>
 
     <logger name="org.springframework" level="INFO"/>
-    <logger name="org.eclipse.jetty" level="INFO"/>
+    <logger name="io.netty.util.internal.NativeLibraryLoader" level="INFO"/>
 
     <root level="INFO">
         <appender-ref ref="FILE"/>
