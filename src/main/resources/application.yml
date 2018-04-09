@@ -12,8 +12,7 @@ spring:
     property_naming_strategy: SNAKE_CASE
   data:
     mongodb:
-      uri: mongodb://127.0.0.1:27017/
-      database: duic
+      uri: mongodb://127.0.0.1:27017/duic
 
 duic:
   root_email: kevinz@weghst.com

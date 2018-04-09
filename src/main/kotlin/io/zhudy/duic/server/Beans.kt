@@ -1,6 +1,7 @@
 package io.zhudy.duic.server
 
 import com.auth0.jwt.algorithms.Algorithm
+import com.mongodb.ConnectionString
 import com.mongodb.reactivestreams.client.MongoClient
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.Config
@@ -27,7 +28,9 @@ fun beans() = beans {
     }
 
     bean<MongoDatabase>("duicMongoDatabase") {
-        ref<MongoClient>().getDatabase(ref<MongoProperties>().database)
+        val props = ref<MongoProperties>()
+        val database = if (props.database != null) props.database else ConnectionString(props.uri).database
+        ref<MongoClient>().getDatabase(database)
     }
 
     bean<BCryptPasswordEncoder>()
