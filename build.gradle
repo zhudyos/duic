@@ -147,7 +147,7 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
             JVM_OPTS : "-Xms1g -Xmx1g -XX:MetaspaceSize=128m",
             JAVA_OPTS: "-server -XX:+UseG1GC \$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDateStamps -verbose:gc -XX:+PrintGCDetails -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -Xloggc:logs/gc.log"
     ])
-    environmentVariable("DUIC_OPTS", "\$JAVA_OPTS -Dreactor.trace.operatorStacktrace=true -Dspring.profiles.active=prod")
+    environmentVariable("DUIC_OPTS", "\$JAVA_OPTS -Dspring.profiles.active=prod")
     exposePort(7777)
     defaultCommand("sh", "-c", "java \$DUIC_OPTS -jar $jarName")
 }
