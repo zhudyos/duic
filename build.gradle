@@ -1,7 +1,7 @@
 buildscript {
     ext {
-        kotlinVersion = "1.2.21"
-        springBootVersion = "2.0.0.RELEASE"
+        kotlinVersion = "1.2.31"
+        springBootVersion = "2.0.1.RELEASE"
     }
 
     repositories {
@@ -47,22 +47,22 @@ dependencies {
         exclude module: "hibernate-validator"
         exclude module: "nio-multipart-parser"
     }
-    compile "io.netty:netty-transport-native-epoll:4.1.20.Final:linux-x86_64"
-    compile "org.springframework.boot:spring-boot-starter-data-mongodb-reactive:$springBootVersion"
-    // AbstractSubscription
+    compile "org.mongodb:mongodb-driver-reactivestreams:1.7.1"
+    compile "io.netty:netty-transport-native-epoll:4.1.22.Final:linux-x86_64"
 
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.1"
-    compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.1"
+    compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.5"
+    compile "com.fasterxml.jackson.datatype:jackson-datatype-joda:2.9.5"
     compile "joda-time:joda-time:2.9.9"
     compile "com.auth0:java-jwt:3.3.0"
-    compile "org.springframework.security:spring-security-crypto:5.0.0.RELEASE"
+    compile "org.springframework.security:spring-security-crypto:5.0.4.RELEASE"
 
     testCompile "org.testng:testng:6.10"
     testCompile("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
         exclude module: "junit"
     }
-    testCompile "io.projectreactor:reactor-test:3.1.2.RELEASE"
-    testCompile "io.projectreactor.ipc:reactor-netty:0.7.2.RELEASE"
+    testCompile "io.projectreactor:reactor-test:3.1.6.RELEASE"
+    testCompile "io.projectreactor.ipc:reactor-netty:0.7.6.RELEASE"
+
     apt "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
 }
 
@@ -120,7 +120,7 @@ task copyAdminFiles(type: Copy, dependsOn: buildAdmin) {
     include "**/**"
     into "${project.buildDir}/resources/main/public-web-resources"
 }
-processResources.dependsOn copyAdminFiles
+bootJar.dependsOn copyAdminFiles
 
 task copyDockerJar(type: Copy, dependsOn: build) {
     group = "docker"
