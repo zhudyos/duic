@@ -19,7 +19,7 @@ image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",li
 在往常时一般会采用配置文件的方式, 但是在这分布式集群时代采用传统的配置管理方式显得有点力不从心. 
 同时在我们的 app/web 终端我们也时常需要各种配置, 在面对大量的终端配置获取请求我们的配置中心需要高性能, 高稳定性. 
 
-duic 的诞生并不仅仅只是为了解决服务器应用的配置
+**duic 的诞生并不仅仅只是为了解决服务器应用的配置**
 
 == 简介
 duic 是采用 spring-webflux 开发, 通过 RESTful 方式拉取配置, 支持配置合并, 内置 web 控制台修改配置, 
