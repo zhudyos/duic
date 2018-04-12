@@ -13,183 +13,117 @@ image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",li
 |______.'  '.__.'_/[___]`.____ .'
 
 ```
-DuiC 统一配置管理, 可用于管理服务端(server), 终端(web/app)配置, 并且内置用户权限和 `web` 控制台
 
-https://duic.zhudy.io/index.html[在线演示平台] +
-__登录信息__ +
-E-Mail: **{email}** +
-Password: **123456**
+= duic 配置中心
+在软件开发中随着业务的需要, 需求的变更, 程序的灵活我们时常需要在项目中设置各种开关或者配置项. 
+在往常时一般会采用配置文件的方式, 但是在这分布式集群时代采用传统的配置管理方式显得有点力不从心. 
+同时在我们的 app/web 终端我们也时常需要各种配置, 在面对大量的终端配置获取请求我们的配置中心需要高性能, 高稳定性. 
+duic 并不仅仅只是为了解决服务器应用的配置管理而生
 
-IMPORTANT: samples 项目用于演示请不要随意修改其中的配置, 若想体验请增加 `app` 配置 +
-同时也请大家不要修改**默认帐户**的**密码**
+== 简介
+duic 是采用 spring-webflux 开发, 通过 RESTful 方式拉取配置, 支持配置合并, 内置 web 控制台修改配置, 
+支持配置用户权限设置, 支持配置访问 IP 限制, 支持 token 限制, 支持多应用多环境变量, 支持 docker, 支持集群
 
-=== 设计目标
-. 统一配置管理
-. 标准配置管理规范
-. 管理更多的配置
-. 更灵活的配置管理
-. 为非技术人员使用
-
-=== 功能
-. 灵活的配置获取方式
-. 采用 `yaml` 文件格式管理配置
-. 支持数据结构及数据类型
-. 支持配置编辑语法高亮及格式校验
-. 配置权限管理
-. 兼容 `spring-cloud-config-client` 并提供 https://github.com/zhudyos/duic-spring-cloud-config-client[duic-spring-cloud-config-client]
-. 支持热更新
-. 分布式配置管理
-
-=== 配置示例
-**name:** `samples` +
-**profile:** `first`
-[source,yaml,linenums]
-----
-k1:
-  string: samples first k1 string
-  int: 11
-  array:
-    - 1
-    - 2
-    - 3
-  multiple_lines: |-
-    sample
-    first
-    multiple
-    lines
-k2:
-  string: samples first k2 string
-----
-
-**name:** `samples` +
-**profile:** `second`
-[source,yaml,linenums]
-----
-k1:
-  string: samples second k1 string
-  int: 22
-  array:
-    - 3
-    - 2
-    - 1
-  multiple_lines: |-
-    sample
-    second
-    multiple
-    lines
-k2:
-  string: samples second k2 string
-----
-
-TIP: `name` 表示应用的名称 +
- `profile` 表示应用的环境 +
- `name` 与 `profile` 组成一个配置坐标, 在配置系统中是**唯一**的, 相同 `name` 的配置可以**合并**
-
-
-=== RESTful API
-https://app.swaggerhub.com/apis/kevinz70/duic/1.0.0[Open API 文档]
-
-. `/apps/states/{name}/{profile}` 获取指定配置状态
+== 特性
+* **集中配置管理, 多应用多环境配置**
 +
+在 web 控制台中你可以创建多个配置, 相同应用不同环境的配置可以使用(**profile**)区分, 同一个应用下多个(**profile**)配置可以合并 https://duic.zhudy.io/index.html[https://duic.zhudy.io/index.html]
+* **配置数据类型/数据格式**
++
+duic 采用 yaml 文件格式管理配置, 天生支持数据类型及数据格式
+* **HTTP 方式拉取配置**
++
+duic 采用 HTTP 的方式拉取配置, 所以你可以在任何应用中使用 duic 配置管理
+* **配置状态检查**
++
+支持配置状态检查, 如果配置发生变动该状态也会相应变量, 使用方可根据状态的变化重载配置
++
+`GET {base_uri}/apps/states/{name}/{profile}`
+* **多配置合并**
++
+相同应用(**name**)下的多个配置(**profile**)可以合并配置, 相同 **key** 的配置将以深度合并的方式返回
++
+`GET {base_uri}/apps/{name}/{profile},{profile2},{profile3}`
++
+合并方式按照请求 **URL** 中 **profile** 顺序, 后者覆盖前者
+* **按需取获取配置**
++
+你有时可能需要获取某个 **key** 的配置而不是整个 **profile** 的配置
++
+`GET {base_uri}/apps/{name}/{profile}/{key}`
++
+**key** 支持按 `.` 分隔, **父 `key` 可以获取子项的所有配置**
++
+[IMPORTANT]
 ====
-当配置修改后服务器会更新配置状态, 该接口可用于检查配置的状态, 如果状态变化可重新向服务器拉取配置信息
-====
+* **获取 `k1` 项的配置**
 +
-请求::
+request::
+`$ curl https://duic.zhudy.io/api/v1/apps/sample/first/k1`
+response::
 +
- $ curl https://duic.zhudy.io/api/v1/apps/states/samples/first
-响应::
-+
-```json
-{
-  "state":"16"
-}
 ```
-
-. `/apps/{name}/{profile}` 获取指定应用所有配置
-+
-====
-返回所有配置, 如果 `profile` 有多个会合并返回结果
-====
-
-.. 一个 profile
-+
-请求::
-+
- $ curl https://duic.zhudy.io/api/v1/apps/samples/first
-响应::
-+
-```json
 {
-  "k1":{
-    "string":"samples first k1 string",
-    "int":11,
-    "array":[
-      1,
-      2,
-      3
-    ],
-    "multiple_lines":"sample\nfirst\nmultiple\nlines"
-  },
-  "k2":{
-    "string":"samples first k2 string"
-  }
-}
-```
-.. 多个 profile
-+
-请求::
-+
- $ curl https://duic.zhudy.io/api/v1/apps/samples/first,second
-响应::
-+
-```json
-{
-  "k1":{
-    "string":"samples second k1 string",
-    "int":22,
-    "array":[
-      3,
-      2,
-      1
-    ],
-    "multiple_lines":"sample\nsecond\nmultiple\nlines"
-  },
-  "k2":{
-    "string":"samples second k2 string"
-  }
-}
-```
-+
-IMPORTANT: 多个 `profile` 采用 `,` 分隔, `DuiC` 会按照顺序加载相应的配置, 如果配置键
-`key` 相同, 后面的 `profile` 将会覆盖前面 `profile` 的值
-
-. `/apps/{name}/{profile}/{key}` 获取指定应用中某个 `key` 的配置
-+
-====
-这里的 `profile` 也可以传入多个并按 `,` 分隔
-====
-+
-请求::
-+
- $ curl https://duic.zhudy.io/api/v1/apps/samples/first,second/k1
-响应::
-+
-```json
-{
-  "string":"samples second k1 string",
-  "int":22,
+  "string":"samples first k1 string",
+  "int":11,
   "array":[
-    3,
+    1,
     2,
-    1
+    3
   ],
-  "multiple_lines":"sample\nsecond\nmultiple\nlines"
+  "multiple_lines":"sample\nfirst\nmultiple\nlines"
 }
 ```
+* **获取 `k1.string` 项的配置**
++
+request::
+`$ curl https://duic.zhudy.io/api/v1/apps/sample/first/k1.string`
+response::
++
+```
+{
+  "value":"samples first k1 string"
+}
+```
+====
+* **完美支持 spring-boot**
++
+duic 不仅可以管理你的业务配置, 同时还可以管理 spring-boot 自身的任何配置, 你可以像在 `application.yaml` 文件中编辑配置一样的编辑它,
+同时我们还提供了 https://github.com/zhudyos/duic-spring-cloud-config-client[duic-spring-cloud-config-client], 该库支持 `@ConfigurationProperties` `@Value`
+注解, 同时还支持配置热加载
+* **配置权限管理**
++
+支持配置权限管理, 用户只可以修改自身拥有权限的配置
+* **配置支持 IP 访问限制**
++
+每个 **profile** 的配置都可以设置 IP 访问控制, 不在访问限制内的 IP 将无法获取配置信息
+* **配置支持 TOKEN 校验**
++
+访问有 TOKEN 校验的配置必须在请求中带上 TOKEN, TOKEN 校验失败将无法获取配置信息
+* **支持 docker 部署**
++
+https://hub.docker.com/r/zhudyos/duic[https://hub.docker.com/r/zhudyos/duic]
+* **部署简单**
++
+duic 部署只依赖于 https://www.mongodb.com[mongodb], 集群部署也只需要直接启动多个实例即可, 不需要其它任何中间件或者服务
+* **高性能**
++
+duic 是采用 spring-webflux 开发, 能最大化利用机器的硬件资源, 同时 duic 是直接将所有可用的配置直接加载在内存中, 在拉取配置时
+直接从内存中返回配置信息, 对于数据库没有任何压力
 
-=== 部署
+== 资源
+* **https://github.com/zhudyos/duic/blob/master/src/main/doc/duic-open-api.yml[duic openapi-3.0 接口文档]**
+* **https://github.com/zhudyos/duic-java-client[duic-java-client]**
++
+java 版本客户端程序::
+** 支持 java
+** 支持 spring
+* **https://github.com/zhudyos/duic-spring-cloud-config-client[duic-spring-cloud-config-client]**
++
+spring-boot 配置客户端程序
+* **https://github.com/zhudyos/duic-examples[duic-examples 示例程序]**
 
+== 部署
 .服务配置 application.yml
 ****
 ----
@@ -242,7 +176,7 @@ https://www.mongodb.com/[https://www.mongodb.com/]
 $ docker run -d -p 7777:7777 -v $(pwd)/config:/app/config zhudyos/duic
 ```
 +
-TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到容器的 `/app/config` 目录中, DuiC 则会使用指定的配置
+TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到容器的 `/app/config` 目录中, duic 则会使用指定的配置
 
 === 相关项目
 . https://projects.spring.io/spring-boot/[Spring Boot]
