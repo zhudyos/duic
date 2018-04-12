@@ -171,7 +171,7 @@ class AppRepository(
     }
 
     fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext): Mono<Page<App>> {
-        val wh = elemMatch("users", eq(userContext.email))
+        val wh = elemMatch("users", Document("\$eq", userContext.email))
         val query = if (q.isEmpty()) wh else and(text(q), wh)
         return findPage(query, pageable)
     }
@@ -208,7 +208,7 @@ class AppRepository(
             .map(::mapToApp)
             .collectList()
             .flatMap { items ->
-                Mono.from(appColl.count())
+                Mono.from(appColl.count(q))
                         .map { total ->
                             Page(items, total.toInt(), pageable)
                         }
