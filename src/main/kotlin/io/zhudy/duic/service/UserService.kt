@@ -97,7 +97,12 @@ class UserService(val userRepository: UserRepository,
     /**
      * 重置密码.
      */
-    fun resetPassword(dto: ResetPasswordDto) = userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
+    fun resetPassword(dto: ResetPasswordDto): Mono<*> {
+        if (dto.email == Config.rootEmail) {
+            throw BizCodeException(BizCodes.C_2003)
+        }
+        return userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
+    }
 
     /**
      *
