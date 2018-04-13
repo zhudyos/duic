@@ -47,7 +47,7 @@ duic 采用 HTTP 的方式拉取配置, 所以你可以在任何应用中使用 
 `GET {base_uri}/apps/{name}/{profile},{profile2},{profile3}`
 +
 合并方式按照请求 **URL** 中 **profile** 顺序, 后者覆盖前者
-* **按需取获取配置**
+* **按需获取配置**
 +
 你有时可能需要获取某个 **key** 的配置而不是整个 **profile** 的配置
 +
