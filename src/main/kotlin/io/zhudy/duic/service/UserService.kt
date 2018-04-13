@@ -87,7 +87,12 @@ class UserService(val userRepository: UserRepository,
     /**
      *
      */
-    fun delete(email: String) = userRepository.delete(email)
+    fun delete(email: String): Mono<*> {
+        if (email == Config.rootEmail) {
+            throw BizCodeException(BizCodes.C_2002)
+        }
+        return userRepository.delete(email)
+    }
 
     /**
      * 重置密码.

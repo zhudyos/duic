@@ -20,10 +20,14 @@ Vue.use(Vuex)
 
 export const store = new Vuex.Store({
     state: {
+        rootEmail: '',
         loginState: false,
         loginEmail: ''
     },
     mutations: {
+        rootEmail(state, v) {
+            state.rootEmail = v
+        },
         loginState(state, v) {
             state.loginState = v
         },

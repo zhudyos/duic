@@ -65,6 +65,7 @@
         },
         mounted() {
             axios.get(`/api/admins/user/root`).then(response => {
+                this.$store.commit('rootEmail', response.data.root)
                 this.isRoot = (response.data.root === this.$store.state.loginEmail)
             })
         }

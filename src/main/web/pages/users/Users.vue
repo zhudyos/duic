@@ -30,7 +30,7 @@
                 <td>{{props.item.email}}</td>
                 <td>{{props.item.created_at}}</td>
                 <td>{{props.item.updated_at}}</td>
-                <td align="center">
+                <td align="center" v-if="$store.state.rootEmail !== props.item.email">
                     <a @click="resetPwdDialog = true; standbyEmail = props.item.email">
                         <v-icon color="warning">fas fa-redo-alt</v-icon>
                     </a>
@@ -38,6 +38,7 @@
                         <v-icon color="red">fas fa-trash-alt</v-icon>
                     </a>
                 </td>
+                <td v-else></td>
             </template>
         </v-data-table>
 
