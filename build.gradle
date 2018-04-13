@@ -21,6 +21,7 @@ plugins {
     id "net.researchgate.release" version "2.6.0"
     id "com.moowork.node" version "1.2.0"
     id "net.ltgt.apt" version "0.10"
+    id "com.github.hierynomus.license" version "0.14.0"
 }
 
 apply plugin: "java"
@@ -30,6 +31,7 @@ apply plugin: "jacoco"
 apply plugin: "kotlin"
 apply plugin: "kotlin-spring"
 apply plugin: "org.springframework.boot"
+apply plugin: "com.github.hierynomus.license"
 apply plugin: "com.bmuschko.docker-remote-api"
 
 group "io.zhudy.duic"
@@ -76,6 +78,30 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 compileJava.dependsOn(processResources)
+
+license {
+    headerURI = com.hierynomus.gradle.license.LicenseBasePlugin.class.getClassLoader().getResource("headers/Apache-2.0").toURI()
+    mapping([
+            "vue": "XML_STYLE"
+    ])
+    ext {
+        year = "2017-${Calendar.getInstance().get(Calendar.YEAR)}"
+        author = "the original author or authors"
+    }
+}
+
+task licenseFormatWeb(type: com.hierynomus.gradle.license.tasks.LicenseFormat) {
+    group = "license"
+    source = fileTree([
+            dir: "src/main/web",
+            dir: "buildSrc"
+    ]).include("**/*.vue", "**/*.html", "**/*.js")
+}
+licenseFormat.dependsOn licenseFormatWeb
+
+tasks.withType(com.hierynomus.gradle.license.tasks.LicenseCheck) {
+    it.enabled = false
+}
 
 jacoco {
     toolVersion = '0.7.9'
