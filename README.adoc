@@ -179,7 +179,16 @@ $ docker run -d -p 7777:7777 -v $(pwd)/config:/app/config zhudyos/duic
 +
 TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到容器的 `/app/config` 目录中, duic 则会使用指定的配置
 
-=== 相关项目
+== 已知用户
+[TIP]
+====
+按登记顺序展示
+
+如果你正在使用 duic, 欢迎在 https://github.com/zhudyos/duic/issues/3[https://github.com/zhudyos/duic/issues/3] 登记. 仅作为开源参考, 不作其它用途
+====
+image::doc/images/know-users/2339.png[么么直播]
+
+== 相关项目
 . https://projects.spring.io/spring-boot/[Spring Boot]
 . https://docs.spring.io/spring/docs/current/spring-framework-reference/web-reactive.html[Spring WebFlux]
 . https://vuetifyjs.com[Vuetify]
