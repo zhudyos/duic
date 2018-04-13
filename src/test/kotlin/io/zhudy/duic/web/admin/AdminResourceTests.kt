@@ -120,6 +120,17 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
     }
 
     @Test
+    fun deleteUser2002() {
+        webTestClient.delete()
+                .uri("/api/admins/users/{email}", Config.rootEmail)
+                .cookie("token", token)
+                .exchange()
+                .expectStatus().isBadRequest
+                .expectBody()
+                .jsonPath("code").isEqualTo(2002)
+    }
+
+    @Test
     fun updateUserPassword() {
         val email = UUID.randomUUID().toString() + "@testng.com"
 
@@ -180,6 +191,21 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
         // clean
         userRepository.delete(email).subscribe()
+    }
+
+    @Test
+    fun resetUserPassword2003() {
+        webTestClient.patch()
+                .uri("/api/admins/users/password")
+                .syncBody(mapOf(
+                        "email" to Config.rootEmail,
+                        "password" to "123456"
+                ))
+                .cookie("token", token)
+                .exchange()
+                .expectStatus().isBadRequest
+                .expectBody()
+                .jsonPath("code").isEqualTo(2003)
     }
 
     @Test
