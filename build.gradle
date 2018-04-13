@@ -92,10 +92,12 @@ license {
 
 task licenseFormatWeb(type: com.hierynomus.gradle.license.tasks.LicenseFormat) {
     group = "license"
-    source = fileTree([
-            dir: "src/main/web",
-            dir: "buildSrc"
-    ]).include("**/*.vue", "**/*.html", "**/*.js")
+    source = fileTree(project.projectDir).include(
+            "buildSrc/*.js",
+            "src/main/web/**/*.vue",
+            "src/main/web/**/*.html",
+            "src/main/web/**/*.js"
+    )
 }
 licenseFormat.dependsOn licenseFormatWeb
 
