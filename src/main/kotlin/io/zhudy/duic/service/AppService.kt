@@ -33,7 +33,10 @@ import io.zhudy.duic.vo.RequestConfigVo
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
+import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.yaml.snakeyaml.Yaml
@@ -65,7 +68,8 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             val properties: Map<Any, Any>
     )
 
-    @Scheduled(initialDelay = 0, fixedDelayString = "\${main.watch.fixed_delay:5000}")
+    @Scheduled(initialDelay = 0,
+            fixedDelayString = "%{duic.app.watch.updated.fixed_delay:%{duic.app.watch.updated.fixed-delay:%{duic.app.watch.updated.fixedDelay:5000}}}")
     fun watchApps() {
         // 更新 APP 配置信息
         if (lastUpdatedAt == null) {
@@ -85,7 +89,8 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
     }
 
-    @Scheduled(initialDelay = 0, fixedDelayString = "\${main.watch_deleted.fixed_delay:600000}")
+    @Scheduled(initialDelay = 0,
+            fixedDelayString = "%{duic.app.watch.deleted.fixed_delay:%{duic.app.watch.deleted.fixed-delay:%{duic.app.watch.deleted.fixedDelay:600000}}}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
         appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt).sort { o1, o2 ->
