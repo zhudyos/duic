@@ -23,6 +23,7 @@ import io.zhudy.duic.Config
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
 import org.springframework.boot.autoconfigure.mongo.MongoProperties
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer
 import org.springframework.context.support.beans
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import java.util.*
@@ -31,6 +32,14 @@ import java.util.*
  * @author Kevin Zou (kevinz@weghst.com)
  */
 fun beans() = beans {
+
+    bean("kotlinPropertyConfigurer") {
+        PropertySourcesPlaceholderConfigurer().apply {
+            setPlaceholderPrefix("%{")
+            setTrimValues(true)
+            setIgnoreUnresolvablePlaceholders(true)
+        }
+    }
 
     bean<Algorithm> {
         Algorithm.HMAC256(ref<Config>().jwt.secret)
