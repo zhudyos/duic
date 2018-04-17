@@ -15,38 +15,34 @@ image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",li
 ```
 
 = duic 配置中心
-在软件开发中随着业务的需要, 需求的变更, 程序的灵活我们时常需要在项目中设置各种开关或者配置项. 
-在往常时一般会采用配置文件的方式, 但是在这分布式集群时代采用传统的配置管理方式显得有点力不从心. 
-同时在我们的 app/web 终端我们也时常需要各种配置, 在面对大量的终端配置获取请求我们的配置中心需要高性能, 高稳定性. 
-
-**duic 的诞生并不仅仅只是为了解决服务器应用的配置**
+**duic 配置中心的设计目标是统一不同应用的配置管理方式，创造更人性化的配置编辑方式，提供更灵活的配置获取方式**
 
 == 简介
-duic 是采用 spring-webflux 开发, 通过 RESTful 方式拉取配置, 支持配置合并, 内置 web 控制台修改配置, 
-支持配置用户权限设置, 支持配置访问 IP 限制, 支持 token 限制, 支持多应用多环境变量, 支持 docker, 支持集群
+duic 是采用 spring-webflux 开发，通过 RESTful 方式拉取配置，支持配置合并，内置 web 控制台修改配置，
+支持配置用户权限设置，支持配置访问 IP 限制，支持 token 限制，支持多应用多环境变量，支持 docker，支持集群。
 
 == 特性
 * **集中配置管理, 多应用多环境配置**
 +
-在 web 控制台中你可以创建多个配置, 相同应用不同环境的配置可以使用(**profile**)区分, 同一个应用下多个(**profile**)配置可以合并 https://duic.zhudy.io/index.html[https://duic.zhudy.io/index.html]
+在 web 控制台中你可以创建多个配置，相同应用不同环境的配置可以使用(**profile**)区分，同一个应用下多个(**profile**)配置可以合并 https://duic.zhudy.io/index.html[https://duic.zhudy.io/index.html]
 * **配置数据类型/数据格式**
 +
-duic 采用 yaml 文件格式管理配置, 天生支持数据类型及数据格式
+duic 采用 yaml 文件格式管理配置，天生支持数据类型及数据格式
 * **HTTP 方式拉取配置**
 +
-duic 采用 HTTP 的方式拉取配置, 所以你可以在任何应用中使用 duic 配置管理
+duic 采用 HTTP 的方式拉取配置，所以你可以在任何应用中使用 duic 配置管理
 * **配置状态检查**
 +
-支持配置状态检查, 如果配置发生变动该状态也会相应变化, 使用方可根据状态的变化重载配置
+支持配置状态检查，如果配置发生变动该状态也会相应变化，使用方可根据状态的变化重载配置
 +
-`GET {base_uri}/apps/states/{name}/{profile}`
+`GET {base_uri}/apps/states/{name}/{profiles}`
 * **多配置合并**
 +
-相同应用(**name**)下的多个配置(**profile**)可以合并配置, 相同 **key** 的配置将以深度合并的方式返回
+相同应用(**name**)下的多个配置(**profile**)可以合并配置，相同 **key** 的配置将以深度合并的方式返回
 +
 `GET {base_uri}/apps/{name}/{profile},{profile2},{profile3}`
 +
-合并方式按照请求 **URL** 中 **profile** 顺序, 后者覆盖前者
+合并方式按照请求 **URL** 中 **profile** 顺序，后者覆盖前者
 * **按需获取配置**
 +
 你有时可能需要获取某个 **key** 的配置而不是整个 **profile** 的配置
@@ -89,28 +85,28 @@ response::
 ====
 * **完美支持 spring-boot**
 +
-duic 不仅可以管理你的业务配置, 同时还可以管理 spring-boot 自身的任何配置, 你可以像在 `application.yaml` 文件中编辑配置一样的编辑它,
-同时我们还提供了 https://github.com/zhudyos/duic-spring-cloud-config-client[duic-spring-cloud-config-client], 该库支持 `@ConfigurationProperties` `@Value`
-注解, 同时还支持配置热加载
+duic 不仅可以管理你的业务配置，同时还可以管理 spring-boot 自身的任何配置，你可以像在 `application.yaml` 文件中编辑配置一样的编辑它，
+同时我们还提供了 https://github.com/zhudyos/duic-spring-cloud-config-client[duic-spring-cloud-config-client]，该库支持 `@ConfigurationProperties` `@Value`
+注解，同时还支持配置热加载
 * **配置权限管理**
 +
-支持配置权限管理, 用户只可以修改自身拥有权限的配置
+支持配置权限管理，用户只可以修改自身拥有权限的配置
 * **配置支持 IP 访问限制**
 +
-每个 **profile** 的配置都可以设置 IP 访问控制, 不在访问限制内的 IP 将无法获取配置信息
+每个 **profile** 的配置都可以设置 IP 访问控制，不在访问限制内的 IP 将无法获取配置信息
 * **配置支持 TOKEN 校验**
 +
-访问有 TOKEN 校验的配置必须在请求中带上 TOKEN, TOKEN 校验失败将无法获取配置信息
+访问有 TOKEN 校验的配置必须在请求中带上 TOKEN，TOKEN 校验失败将无法获取配置信息
 * **支持 docker 部署**
 +
 https://hub.docker.com/r/zhudyos/duic[https://hub.docker.com/r/zhudyos/duic]
 * **部署简单**
 +
-duic 部署只依赖于 https://www.mongodb.com[mongodb], 集群部署也只需要直接启动多个实例即可, 不需要其它任何中间件或者服务
+duic 部署只依赖于 https://www.mongodb.com[mongodb]，集群部署也只需要直接启动多个实例即可，不需要其它任何中间件或者服务
 * **高性能**
 +
-duic 是采用 spring-webflux 开发, 能最大化利用机器的硬件资源, 同时 duic 是直接将所有可用的配置直接加载在内存中, 在拉取配置时
-直接从内存中返回配置信息, 对于数据库没有任何压力
+duic 是采用 spring-webflux 开发，能最大化利用机器的硬件资源，同时 duic 是直接将所有可用的配置直接加载在内存中，在拉取配置时
+直接从内存中返回配置信息，对于数据库没有任何压力
 
 == 资源
 * **https://github.com/zhudyos/duic/blob/master/src/main/doc/duic-open-api.yml[duic openapi-3.0 接口文档]**
@@ -177,14 +173,14 @@ https://www.mongodb.com/[https://www.mongodb.com/]
 $ docker run -d -p 7777:7777 -v $(pwd)/config:/app/config zhudyos/duic
 ```
 +
-TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到容器的 `/app/config` 目录中, duic 则会使用指定的配置
+TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到容器的 `/app/config` 目录中，duic 则会使用指定的配置
 
 == 已知用户
 [TIP]
 ====
 按登记顺序展示
 
-如果你正在使用 duic, 欢迎在 https://github.com/zhudyos/duic/issues/3[https://github.com/zhudyos/duic/issues/3] 登记. 仅作为开源参考, 不作其它用途
+如果你正在使用 duic，欢迎在 https://github.com/zhudyos/duic/issues/3[https://github.com/zhudyos/duic/issues/3] 登记。仅作为开源参考，不作其它用途
 ====
 image::doc/images/know-users/2339.png[么么直播]
 
