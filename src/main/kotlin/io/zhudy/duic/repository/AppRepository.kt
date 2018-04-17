@@ -18,6 +18,8 @@ package io.zhudy.duic.repository
 import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.IndexModel
 import com.mongodb.client.model.IndexOptions
+import com.mongodb.client.model.Sorts
+import com.mongodb.client.model.Sorts.ascending
 import com.mongodb.client.model.Sorts.descending
 import com.mongodb.client.model.Updates.*
 import com.mongodb.reactivestreams.client.MongoDatabase
@@ -170,7 +172,7 @@ class AppRepository(
     /**
      *
      */
-    fun findAll() = appColl.find().toFlux().map(::mapToApp)
+    fun findAll() = appColl.find().sort(ascending("updated_at")).toFlux().map(::mapToApp)
 
     fun findPage(pageable: Pageable): Mono<Page<App>> {
         return findPage(Document(), pageable)
@@ -191,7 +193,7 @@ class AppRepository(
         return findPage(query, pageable)
     }
 
-    fun findByUpdatedAt(updateAt: Date) = appColl.find(gt("updated_at", updateAt)).toFlux().map(::mapToApp)
+    fun findByUpdatedAt(updateAt: Date) = appColl.find(gt("updated_at", updateAt)).sort(ascending("updated_at")).toFlux().map(::mapToApp)
 
     /**
      *
@@ -214,6 +216,7 @@ class AppRepository(
      */
     fun findAppHistoryByCreatedAt(createdAt: Date) = appHisColl
             .find(and(gt("created_at", createdAt), ne("deleted_by", "")))
+            .sort(ascending("created_at"))
             .toFlux()
             .map(::mapToAppHistory)
 
