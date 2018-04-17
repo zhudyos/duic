@@ -16,7 +16,6 @@
 package io.zhudy.duic.server
 
 import io.zhudy.duic.Config
-import org.springframework.boot.Banner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
@@ -26,7 +25,6 @@ import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfigu
 import org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 
 
@@ -49,8 +47,8 @@ class Application {
         @JvmStatic
         fun main(args: Array<String>) {
             runApplication<Application>(*args) {
+                setBanner(DuicBanner())
                 addInitializers(BeansInitializer())
-                setBannerMode(Banner.Mode.LOG)
             }
         }
     }
