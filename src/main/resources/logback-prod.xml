@@ -17,6 +17,13 @@
 
 -->
 <configuration>
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d%X{requestId} %-5level %logger{35} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/duic.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -35,6 +42,15 @@
 
     <logger name="org.springframework" level="INFO"/>
     <logger name="io.netty.util.internal.NativeLibraryLoader" level="INFO"/>
+    <logger name="io.zhudy.duic.server.Application" level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="reactor.ipc.netty" level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.springframework.boot.web.embedded.netty" level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
 
     <root level="INFO">
         <appender-ref ref="FILE"/>
