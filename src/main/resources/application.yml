@@ -19,7 +19,7 @@ server:
 
 spring:
   reactor:
-    stacktrace_mode:
+    stacktrace-mode:
       enabled: true
   jackson:
     default-property-inclusion: non_default
@@ -36,14 +36,10 @@ duic:
   root-password: 123456
   jwt:
     secret: U2FsdGVkX1/jO0KlWumac4yDM8rOgWPkaV0KrSHDynWOP6n8FMJB9uSc8EW/qM+VagrMBAXGpyw=
-    expires_in: 720
-
-###
-### 监控配置修改周期
-###
-  #app:
-  #  watch:
-  #    updated:
-  #      fixed-delay: 5000
-  #    deleted:
-  #      fixed-delay: 600000
+    expires-in: 720
+  app:
+    watch:
+      updated:
+        fixed-delay: 5000
+      deleted:
+        fixed-delay: 600000
