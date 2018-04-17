@@ -120,60 +120,7 @@ java 版本客户端程序::
 spring-boot 配置客户端程序
 * **https://github.com/zhudyos/duic-examples[duic-examples 示例程序]**
 
-== 部署
-.服务配置 application.yml
-****
-----
-server:
-  port: 7777 # <1>
-
-spring:
-  jackson:
-    default_property_inclusion: non_default
-    date_format: yyyy-MM-dd'T'HH:mm:ss
-    joda_date_time_format: yyyy-MM-dd'T'HH:mm:ss
-    property_naming_strategy: CAMEL_CASE_TO_LOWER_CASE_WITH_UNDERSCORES
-  data:
-    mongodb:
-      uri: mongodb://127.0.0.1:27017/duic # <2>
-
-duic:
-  root_email: kevinz@weghst.com # <3>
-  root_password: 123456 # <4>
-  jwt:
-    secret: U2FsdGVkX1/jO0KlWumac4yDM8rOgWPkaV0KrSHDynWOP6n8FMJB9uSc8EW/qM+VagrMBAXGpyw= # <5>
-    expires_in: 180 # <6>
-----
-
-<1> 应用服务端口
-<2> MongoDB 连接地址
-<3> 默认用户登录邮箱
-<4> 默认用户登录密码
-<5> JWT HMAC256 签名字符串
-<6> JWT 过期时间(单位:分钟)
-
-****
-
----
-
-. https://github.com/zhudyos/duic-docker-compose[docker-compose 部署]
-. docker 部署
-.. 安装 MongoDB
-+
-https://www.mongodb.com/[https://www.mongodb.com/]
-+
-.. 服务配置
-+
-... 创建 `config` 文件夹
-... 在 `config` 文件夹中创建配置文件 `application.yml`
-... `application.yml` 配置文件将 `spring.data.mongodb.uri` 连接地址修改为安装服务的 MongoDB 连接地址
-.. 启用容器
-+
-```shell
-$ docker run -d -p 7777:7777 -v $(pwd)/config:/app/config zhudyos/duic
-```
-+
-TIP: 将 `application.yml` 配置文件放置在 `config` 目录中并挂载到容器的 `/app/config` 目录中，duic 则会使用指定的配置
+== https://github.com/zhudyos/duic/wiki[文档]
 
 == 已知用户
 [TIP]
