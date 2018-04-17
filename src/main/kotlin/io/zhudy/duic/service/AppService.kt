@@ -33,10 +33,7 @@ import io.zhudy.duic.vo.RequestConfigVo
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
-import org.springframework.core.env.Environment
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.yaml.snakeyaml.Yaml
@@ -76,27 +73,22 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             findAll()
         } else {
             findByUpdatedAt(lastUpdatedAt!!)
-        }.sort { o1, o2 ->
-            // 按配置更新时间升序排列 updateAt
-            o1.updatedAt!!.compareTo(o2.updatedAt)
-        }.toStream().forEach {
+        }.doOnComplete {
+            log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
+        }.subscribe {
             cache.put(
                     localKey(it.name, it.profile),
                     mapToCachedApp(it)
             )
             lastUpdatedAt = it.updatedAt!!.toDate()
         }
-        log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
     }
 
     @Scheduled(initialDelay = 0,
             fixedDelayString = "%{duic.app.watch.deleted.fixed_delay:%{duic.app.watch.deleted.fixed-delay:%{duic.app.watch.deleted.fixedDelay:600000}}}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
-        appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt).sort { o1, o2 ->
-            // 按照配置删除的创建时间升序排列 createdAt
-            o1.createdAt?.compareTo(o2.createdAt) ?: 0
-        }.toStream().forEach {
+        appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt).subscribe {
             cache.evict(localKey(it.name, it.profile))
             lastAppHistoryCreatedAt = it.createdAt!!.toDate()
         }
