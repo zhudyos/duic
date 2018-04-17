@@ -79,6 +79,12 @@ compileTestKotlin {
 }
 compileJava.dependsOn(processResources)
 
+bootJar {
+    manifest {
+        attributes "Implementation-Title": "duic", "Implementation-Version": project.version
+    }
+}
+
 license {
     headerURI = com.hierynomus.gradle.license.LicenseBasePlugin.class.getClassLoader().getResource("headers/Apache-2.0").toURI()
     mapping([
