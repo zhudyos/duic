@@ -39,13 +39,15 @@ import java.util.*
  */
 @Repository
 class UserRepository(
-        mongoDatabase: MongoDatabase
+        private val mongo: MongoDatabase
 ) {
 
-    val userColl = mongoDatabase.getCollection("user")
+    companion object {
+        private val USER_COLL_NAME = "user"
+    }
 
     init {
-        userColl.createIndexes(listOf(
+        mongo.getCollection(USER_COLL_NAME).createIndexes(listOf(
                 IndexModel(Document("email", 1), IndexOptions().background(true).unique(true))
         )).toMono().subscribe()
     }
@@ -53,7 +55,7 @@ class UserRepository(
     /**
      *
      */
-    fun insert(user: User) = userColl.insertOne(Document(
+    fun insert(user: User) = mongo.getCollection(USER_COLL_NAME).insertOne(Document(
             mapOf(
                     "_id" to ObjectId().toString(),
                     "email" to user.email,
@@ -66,12 +68,14 @@ class UserRepository(
     /**
      *
      */
-    fun delete(email: String) = userColl.deleteOne(eq("email", email)).toMono().map { it.deletedCount.toInt() }
+    fun delete(email: String) = mongo.getCollection(USER_COLL_NAME).deleteOne(eq("email", email))
+            .toMono()
+            .map { it.deletedCount.toInt() }
 
     /**
      *
      */
-    fun updatePassword(email: String, password: String) = userColl.updateOne(
+    fun updatePassword(email: String, password: String) = mongo.getCollection(USER_COLL_NAME).updateOne(
             eq("email", email),
             combine(
                     set("password", password),
@@ -83,7 +87,7 @@ class UserRepository(
     /**
      *
      */
-    fun findByEmail(email: String): Mono<User> = userColl.find(eq("email", email))
+    fun findByEmail(email: String): Mono<User> = mongo.getCollection(USER_COLL_NAME).find(eq("email", email))
             .first()
             .toMono()
             .map {
@@ -96,7 +100,7 @@ class UserRepository(
     /**
      *
      */
-    fun findPage(pageable: Pageable) = userColl.find()
+    fun findPage(pageable: Pageable) = mongo.getCollection(USER_COLL_NAME).find()
             .projection(exclude("password"))
             .skip(pageable.offset)
             .limit(pageable.size)
@@ -110,7 +114,7 @@ class UserRepository(
             }
             .collectList()
             .flatMap { items ->
-                userColl.count().toMono().map { total ->
+                mongo.getCollection(USER_COLL_NAME).count().toMono().map { total ->
                     Page(items, total.toInt(), pageable)
                 }
             }
@@ -118,7 +122,7 @@ class UserRepository(
     /**
      *
      */
-    fun findAllEmail() = userColl.find()
+    fun findAllEmail() = mongo.getCollection(USER_COLL_NAME).find()
             .projection(include("email"))
             .toFlux()
             .map { it.getString("email") }
