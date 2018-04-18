@@ -108,6 +108,11 @@ class WebConfig(val objectMapper: ObjectMapper,
                 POST("/duplicates/{name}/{profile}", adminResource::insertAppForApp)
             }
 
+            path("/tests").nest {
+                GET("/apps/names", adminResource::findAllNames)
+                GET("/apps/{name}/profiles", adminResource::findProfilesByName)
+            }
+
             path("/search").nest {
                 GET("/apps", adminResource::searchAppByUser)
             }

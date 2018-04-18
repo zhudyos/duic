@@ -38,6 +38,7 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.noContent
 import org.springframework.web.reactive.function.server.ServerResponse.ok
+import org.springframework.web.reactive.function.server.body
 import reactor.core.publisher.Mono
 
 /**
@@ -258,5 +259,16 @@ class AdminResource(
         return ok().body(appService.findLast50History(name, profile, request.userContext()),
                 AppContentHistory::class.java)
     }
+
+    fun findAllNames(request: ServerRequest) = appService.findAllNames().collectList().flatMap {
+        ok().body(it)
+    }
+
+    fun findProfilesByName(request: ServerRequest) = appService.findProfilesByName(request.pathString("name"))
+            .collectList()
+            .flatMap {
+                ok().body(it)
+            }
     // ======================================= APP ======================================================= //
+
 }

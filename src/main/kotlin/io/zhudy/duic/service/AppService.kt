@@ -244,6 +244,16 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         appRepository.findLast50History(name, profile)
     }!!
 
+    /**
+     *
+     */
+    fun findAllNames() = appRepository.findAllNames()
+
+    /**
+     *
+     */
+    fun findProfilesByName(name: String) = appRepository.findProfilesByName(name)
+
     private fun checkPermission(name: String, profile: String, userContext: UserContext): Mono<Unit> {
         if (userContext.isRoot) {
             return Mono.just(Unit)
