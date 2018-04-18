@@ -34,6 +34,7 @@
                             <v-text-field required
                                           label="应用环境"
                                           v-model="app.profile"
+                                          :rules="rules.profile"
                                           autofocus></v-text-field>
                         </v-flex>
                     </v-layout>

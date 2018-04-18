@@ -31,6 +31,7 @@ import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
 import io.zhudy.duic.web.security.userContext
 import org.joda.time.DateTime
+import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.BodyExtractors
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -60,7 +61,19 @@ class AdminResource(
             val token = JWT.create().withJWTId(it.email)
                     .withExpiresAt(DateTime.now().plusMinutes(Config.Jwt.expiresIn).toDate())
                     .sign(jwtAlgorithm)
-            ok().body(mapOf("token" to token))
+
+            ok().cookie(
+                    ResponseCookie.from("token", token)
+                            .maxAge(Config.Jwt.expiresIn.toLong())
+                            .httpOnly(true)
+                            .path("/")
+                            .build()
+            ).cookie(
+                    ResponseCookie.from("email", it.email)
+                            .maxAge(Config.Jwt.expiresIn.toLong())
+                            .path("/")
+                            .build()
+            ).build()
         }
     }
 
@@ -139,7 +152,7 @@ class AdminResource(
             throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
         }
         if (it.profile.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
+            throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
         }
 
         appService.insert(it).flatMap {
@@ -152,6 +165,12 @@ class AdminResource(
      */
     fun insertAppForApp(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap { newApp ->
         appService.findOne(request.pathString("name"), request.pathString("profile")).flatMap {
+            if (newApp.name.isEmpty()) {
+                throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
+            }
+            if (newApp.profile.isEmpty()) {
+                throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
+            }
             newApp.content = it.content
 
             appService.insert(newApp).flatMap {
@@ -168,7 +187,7 @@ class AdminResource(
             throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
         }
         if (it.profile.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "应用配置不能为空")
+            throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
         }
 
         appService.update(it, request.userContext()).flatMap {
