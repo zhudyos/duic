@@ -99,6 +99,9 @@ module.exports = {
         }, {
             from: './node_modules/monaco-editor/min-maps',
             to: 'monaco-editor/0.11.1/min-maps'
+        }, {
+            from: './src/main/web/statics/fontawesome-free-5.0.10',
+            to: 'fontawesome-free-5.0.10/'
         }]),
         vuetifyCSS
     ],
