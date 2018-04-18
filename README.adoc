@@ -15,7 +15,7 @@ image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",li
 ```
 
 = duic 配置中心
-**duic 配置中心的设计目标是统一不同应用的配置管理方式，创造更人性化的配置编辑方式，提供更灵活的配置获取方式**
+**duic 配置中心的设计目标是统一不同应用的配置管理方式，打造更人性化的配置编辑方式，提供更灵活的配置获取方式**
 
 == 简介
 duic 是采用 spring-webflux 开发，通过 RESTful 方式拉取配置，支持配置合并，内置 web 控制台修改配置，
