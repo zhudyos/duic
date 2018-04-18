@@ -31,12 +31,16 @@ const routes = [
                 component: (r) => require(['@/pages/apps/Apps.vue'], r)
             },
             {
-                path: "/app-histories", meta: {title: "配置列表"},
+                path: "/app-histories", meta: {title: "配置修改历史记录"},
                 component: (r) => require(['@/pages/apps/AppHistory.vue'], r)
             },
             {
                 path: "/users", meta: {title: "用户列表"},
                 component: (r) => require(['@/pages/users/Users.vue'], r)
+            },
+            {
+                path: "/api-test", meta: {title: "配置 API 测试"},
+                component: (r) => require(['@/pages/ApiTest.vue'], r)
             }
         ]
     }

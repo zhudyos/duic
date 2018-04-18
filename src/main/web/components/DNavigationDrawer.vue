@@ -49,6 +49,14 @@
                     <v-list-tile-title>用户管理</v-list-tile-title>
                 </v-list-tile-content>
             </v-list-tile>
+            <v-list-tile to="/api-test">
+                <v-list-tile-action>
+                    <v-icon>fas fa-hands-helping</v-icon>
+                </v-list-tile-action>
+                <v-list-tile-content>
+                    <v-list-tile-title>API 测试</v-list-tile-title>
+                </v-list-tile-content>
+            </v-list-tile>
         </v-list>
     </v-navigation-drawer>
 </template>

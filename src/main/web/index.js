@@ -43,9 +43,8 @@ axios.interceptors.response.use((response) => {
 }, (error) => {
     // 未认证
     if (error.response) {
-        if (error.response.status === 401) {
+        if (!error.config.apiTest && error.response.status === 401) {
             store.commit('loginState', false)
-            Cookies.remove('token')
         }
     } else {
         alert('服务不可用')
