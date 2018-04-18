@@ -113,8 +113,6 @@
                 }
 
                 axios.post('/api/admins/login', {email: this.email, password: this.password}).then((response) => {
-                    Cookies.set('token', response.data.token)
-                    Cookies.set('email', this.email)
                     this.$router.push("/")
                 }).catch((error) => {
                     var d = error.response.data || {}

@@ -67,7 +67,7 @@
             }
         },
         created() {
-            let state = !!Cookies.get('token')
+            let state = !!Cookies.get('email')
             if (state) {
                 let email = Cookies.get('email')
                 this.$store.commit('loginState', state)
