@@ -70,8 +70,8 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                         .expectStatus().isOk
                         .expectBody()
                         .consumeWith {
-                            val rs = objectMapper.readValue(it.responseBody, Map::class.java)
-                            _token = rs["token"] as String
+                            val cookie = it.responseCookies.getFirst("token")
+                            _token = cookie.value
                         }
             }
             return _token
@@ -155,8 +155,8 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectStatus().isOk
                 .expectBody()
                 .consumeWith {
-                    val rs = objectMapper.readValue(it.responseBody, Map::class.java)
-                    llToken = rs["token"] as String
+                    val cookie = it.responseCookies.getFirst("token")
+                    llToken = cookie.value
                 }
 
         webTestClient.put()
