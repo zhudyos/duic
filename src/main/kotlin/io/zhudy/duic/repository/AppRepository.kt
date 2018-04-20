@@ -36,6 +36,7 @@ import reactor.core.publisher.Mono
 import reactor.core.publisher.SynchronousSink
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
+import reactor.core.scheduler.Schedulers
 import java.util.*
 
 /**
@@ -238,17 +239,19 @@ class AppRepository(
             .toFlux()
             .map(::mapToAppHistory)
 
-    private fun findPage(q: Bson, pageable: Pageable) = mongo.getCollection(APP_COLL_NAME)
-            .find(q).skip(pageable.offset).limit(pageable.size)
-            .toFlux()
-            .map(::mapToApp)
-            .collectList()
-            .flatMap { items ->
-                Mono.from(mongo.getCollection(APP_COLL_NAME).count(q))
-                        .map { total ->
-                            Page(items, total.toInt(), pageable)
-                        }
-            }
+    private fun findPage(q: Bson, pageable: Pageable) = Mono.zip(
+            mongo.getCollection(APP_COLL_NAME)
+                    .find(q).skip(pageable.offset).limit(pageable.size)
+                    .toFlux()
+                    .publishOn(Schedulers.parallel())
+                    .map(::mapToApp)
+                    .collectList(),
+            mongo.getCollection(APP_COLL_NAME)
+                    .count(q)
+                    .toMono()
+    ).map {
+        Page(it.t1, it.t2.toInt(), pageable)
+    }
 
     private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = mongo.getCollection(APP_HIS_COLL_NAME).insertOne(Document(
             mapOf(

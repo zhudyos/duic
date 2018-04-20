@@ -32,6 +32,7 @@ import org.springframework.stereotype.Repository
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
+import reactor.core.scheduler.Schedulers
 import java.util.*
 
 /**
@@ -97,27 +98,25 @@ class UserRepository(
                 )
             }
 
-    /**
-     *
-     */
-    fun findPage(pageable: Pageable) = mongo.getCollection(USER_COLL_NAME).find()
-            .projection(exclude("password"))
-            .skip(pageable.offset)
-            .limit(pageable.size)
-            .toFlux()
-            .map {
-                User(
-                        email = it.getString("email"),
-                        createdAt = it.getDate("created_at"),
-                        updatedAt = it.getDate("updated_at")
-                )
-            }
-            .collectList()
-            .flatMap { items ->
-                mongo.getCollection(USER_COLL_NAME).count().toMono().map { total ->
-                    Page(items, total.toInt(), pageable)
-                }
-            }
+    fun findPage(pageable: Pageable) = Mono.zip(
+            mongo.getCollection(USER_COLL_NAME).find()
+                    .projection(exclude("password"))
+                    .skip(pageable.offset)
+                    .limit(pageable.size)
+                    .toFlux()
+                    .publishOn(Schedulers.parallel())
+                    .map {
+                        User(
+                                email = it.getString("email"),
+                                createdAt = it.getDate("created_at"),
+                                updatedAt = it.getDate("updated_at")
+                        )
+                    }
+                    .collectList(),
+            mongo.getCollection(USER_COLL_NAME).count().toMono()
+    ).map {
+        Page(it.t1, it.t2.toInt(), pageable)
+    }
 
     /**
      *
