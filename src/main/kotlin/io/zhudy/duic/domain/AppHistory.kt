@@ -18,6 +18,21 @@ package io.zhudy.duic.domain
 import org.joda.time.DateTime
 
 /**
+ * 应用配置修改历史信息。
+ *
+ * @property id 主键
+ * @property name 应用名称
+ * @property profile 应用配置
+ * @property description 应用描述
+ * @property content 应用配置内容
+ * @property token 访问令牌
+ * @property ipLimit 可访问 IP
+ * @property v 应用版本
+ * @property createdAt 应用创建时间
+ * @property updatedBy 修改者
+ * @property deletedBy 删除者
+ * @property users 应用所属用户
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 class AppHistory(

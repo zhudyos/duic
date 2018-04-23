@@ -18,6 +18,12 @@ package io.zhudy.duic.domain
 import com.fasterxml.jackson.annotation.JsonIgnore
 
 /**
+ * 分页返回数据类型。
+ *
+ * @property items 指定页的数据项
+ * @property totalItems 总记录数
+ * @property pageable 分页参数
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 data class Page<out T>(
@@ -26,5 +32,9 @@ data class Page<out T>(
         @JsonIgnore
         val pageable: Pageable
 ) {
+
+    /**
+     * 总页数。
+     */
     val totalPages: Int = if (pageable.size == 0) 1 else Math.ceil(totalItems.toDouble() / pageable.size.toDouble()).toInt()
 }

@@ -18,6 +18,13 @@ package io.zhudy.duic.domain
 import java.util.*
 
 /**
+ * 用户信息数据类型。
+ *
+ * @property email 登录邮箱
+ * @property password 登录密码
+ * @property createdAt 创建时间
+ * @property updatedAt 修改时间
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 class User(

@@ -16,6 +16,10 @@
 package io.zhudy.duic.domain
 
 /**
+ * 单个配置项返回数据类型。
+ *
+ * @property value 配置项的值
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 data class SingleValue(
