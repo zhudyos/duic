@@ -151,8 +151,9 @@ class AppRepository(
      *
      * @param app 更新的应用配置信息
      * @param userContext 用户上下文
+     * @return 当前应用版本
      */
-    fun updateContent(app: App, userContext: UserContext): Mono<*> {
+    fun updateContent(app: App, userContext: UserContext): Mono<Int> {
         val updatedAt = Date()
         val q = and(eq("name", app.name), eq("profile", app.profile), eq("v", app.v))
         val u = combine(
@@ -162,16 +163,17 @@ class AppRepository(
         )
 
         return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-            mongo.getCollection(APP_COLL_NAME).updateOne(q, u).toMono().flatMap { rs ->
+            mongo.getCollection(APP_COLL_NAME).updateOne(q, u).toMono().map { rs ->
                 if (rs.modifiedCount < 1) {
                     if (app.v != dbApp.v) {
                         throw BizCodeException(BizCodes.C_1004)
                     }
 
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
-                } else {
-                    insertHistory(dbApp, false, userContext)
                 }
+                insertHistory(dbApp, false, userContext)
+
+                app.v + 1
             }
         }
     }
