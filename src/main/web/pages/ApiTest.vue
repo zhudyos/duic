@@ -135,7 +135,7 @@
                 let p = ''
                 this.profiles.forEach((v, i) => {
                     p += v
-                    if (i < (this.profiles - 1)) {
+                    if (i < (this.profiles.length - 1)) {
                         p += ','
                     }
                 })
