@@ -41,6 +41,7 @@
 </template>
 <script>
     import axios from 'axios'
+    import yaml from 'js-yaml'
 
     export default {
         name: 'DUpdateContentApp',
@@ -58,25 +59,34 @@
         },
         methods: {
             submit() {
+                let content = this.editor.getValue()
+                try {
+                    yaml.safeLoad(content)
+                } catch (e) {
+                    console.error(e)
+                    this.$notice(e.message, {top: true, color: 'error', timeout: 10000})
+                    return
+                }
+
                 axios.put(`/api/admins/apps/contents`, {
                     name: this.app.name,
                     profile: this.app.profile,
                     v: this.app.v,
-                    content: this.editor.getValue()
+                    content: content
                 }).then((response) => {
                     this.$notice('配置修改成功', {top: true, color: 'success'})
                     this.app.v = response.data.v
                     this.submitBtnDisabled = true
                 }).catch((error) => {
-                    var d = error.response.data || {}
-                    var msg = d.message
+                    let d = error.response.data || {}
+                    let msg = d.message
                     this.$notice('配置修改失败：' + msg)
                 })
             },
             initEditor() {
                 window.require.config({paths: {'vs': '/monaco-editor/0.11.1/min/vs'}})
                 window.require(['vs/editor/editor.main'], () => {
-                    var e = monaco.editor.create(this.$refs.codeEditor, {
+                    let e = monaco.editor.create(this.$refs.codeEditor, {
                         value: this.app.content,
                         theme: 'vs-dark',
                         language: 'yaml'
