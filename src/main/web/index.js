@@ -47,7 +47,7 @@ axios.interceptors.response.use((response) => {
             store.commit('loginState', false)
         }
     } else {
-        alert('服务不可用')
+        alert('连接超时，请重试')
     }
     return Promise.reject(error)
 })
