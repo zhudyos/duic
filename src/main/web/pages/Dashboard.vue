@@ -32,7 +32,7 @@
         </v-content>
 
         <!-- 未认证模式框 -->
-        <v-dialog v-model="noLoginDialog" max-width="290">
+        <v-dialog v-model="noLoginDialog" max-width="290" @input="$store.commit('loginState', true)">
             <v-card>
                 <v-card-title class="headline">登录过期/未登录</v-card-title>
                 <v-card-text>跳转至登录页面进行重新登录，会丢失当前页面操作</v-card-text>
