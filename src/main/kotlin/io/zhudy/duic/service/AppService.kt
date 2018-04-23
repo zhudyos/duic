@@ -88,7 +88,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             fixedDelayString = "%{duic.app.watch.deleted.fixed_delay:%{duic.app.watch.deleted.fixed-delay:%{duic.app.watch.deleted.fixedDelay:600000}}}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
-        appRepository.findAppHistoryByCreatedAt(lastAppHistoryCreatedAt).subscribe {
+        appRepository.findDeletedByCreatedAt(lastAppHistoryCreatedAt).subscribe {
             cache.evict(localKey(it.name, it.profile))
             lastAppHistoryCreatedAt = it.createdAt!!.toDate()
         }
@@ -110,19 +110,19 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
      */
     fun delete(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.delete(app, userContext)
-    }!!
+    }
 
     /**
      *
      */
     fun update(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.update(app, userContext)
-    }!!
+    }
 
     /**
      *
      */
-    fun updateContent(app: App, userContext: UserContext): Mono<Int> {
+    fun updateContent(app: App, userContext: UserContext): Mono<*> {
         try {
             yaml.load<Map<String, Any>>(app.content)
         } catch (e: Exception) {
@@ -165,11 +165,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     /**
      *
      */
-    fun loadConfigByNameProfile(vo: RequestConfigVo): Mono<Map<Any, Any>> {
-        return loadAndCheckApps(vo).map {
-            mergeProps(it)
-        }
-    }
+    fun loadConfigByNameProfile(vo: RequestConfigVo) = loadAndCheckApps(vo).map(::mergeProps)
 
     /**
      *
@@ -242,7 +238,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
     fun findLast50History(name: String, profile: String, userContext: UserContext)
             = checkPermission(name, profile, userContext).flatMapMany {
         appRepository.findLast50History(name, profile)
-    }!!
+    }
 
     /**
      *
