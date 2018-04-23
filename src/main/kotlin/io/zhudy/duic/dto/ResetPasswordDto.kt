@@ -16,6 +16,11 @@
 package io.zhudy.duic.dto
 
 /**
+ * 重置密码 `DTO` 数据类型。
+ *
+ * @property email 登录邮箱
+ * @property password 新的密码
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 data class ResetPasswordDto(

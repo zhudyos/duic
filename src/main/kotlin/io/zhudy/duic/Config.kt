@@ -19,24 +19,35 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.core.annotation.Order
 
 /**
+ * `duic` 基础配置。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Order(0)
 @ConfigurationProperties(prefix = "duic")
 object Config {
 
-    var address: String = "0.0.0.0"
-    var port: Int = 7777
-
     /**
-     * 超级管理员用户名.
+     * 超级管理员用户名。
      */
     var rootEmail: String = ""
+    /**
+     * 超级管理员默认密码。
+     */
     var rootPassword: String = ""
+    /**
+     * 管理控制台 JWT 生成、管理信息。
+     */
     var jwt = Jwt
 
     object Jwt {
+        /**
+         * JWT 生成密钥。
+         */
         var secret: String = ""
-        var expiresIn: Int = 12 * 60 // 默认12小时过期
+        /**
+         * JWT 过期时间。
+         */
+        var expiresIn: Int = 12 * 60 // 默认2小时过期
     }
 }

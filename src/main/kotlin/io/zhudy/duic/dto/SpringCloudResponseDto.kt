@@ -18,6 +18,13 @@ package io.zhudy.duic.dto
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
+ * `spring-cloud` 配置返回数据类型。
+ *
+ * @property name 应用名称
+ * @property profiles 应用环境
+ * @property state 配置状态
+ * @property propertySources 配置源列表
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 class SpringCloudResponseDto(
@@ -28,4 +35,8 @@ class SpringCloudResponseDto(
         val propertySources: List<SpringCloudPropertySource>
 )
 
+/**
+ * @property name 配置源名称
+ * @property source 配置源
+ */
 data class SpringCloudPropertySource(val name: String, val source: Any)

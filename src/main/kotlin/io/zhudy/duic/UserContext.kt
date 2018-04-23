@@ -16,21 +16,26 @@
 package io.zhudy.duic
 
 /**
+ * 管理控制台登录的上下文用户信息。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 interface UserContext {
 
     companion object {
+        /**
+         * 上下文保存的 `key`。
+         */
         const val CONTEXT_KEY = "user.context"
     }
 
     /**
-     *
+     * 登录邮箱。
      */
     val email: String
 
     /**
-     *
+     * 超级管理员将返回 `true` 反之为 `false`。
      */
     val isRoot: Boolean
 

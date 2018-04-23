@@ -16,6 +16,8 @@
 package io.zhudy.duic
 
 /**
+ * 错误码定义枚举。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 enum class BizCodes(override val code: Int, override val msg: String, override val status: Int = 400) : BizCode {
