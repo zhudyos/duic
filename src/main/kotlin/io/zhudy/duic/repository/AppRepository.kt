@@ -33,13 +33,14 @@ import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.springframework.stereotype.Repository
 import reactor.core.publisher.Mono
-import reactor.core.publisher.SynchronousSink
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
 import reactor.core.scheduler.Schedulers
 import java.util.*
 
 /**
+ * MongoDB `app` 表数据操作实现。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Repository
@@ -70,7 +71,9 @@ class AppRepository(
     }
 
     /**
+     * 保存应用配置信息。
      *
+     * @param app 应用配置信息
      */
     fun insert(app: App) = mongo.getCollection(APP_COLL_NAME).insertOne(Document(
             mapOf(
@@ -88,21 +91,24 @@ class AppRepository(
     )).toMono()
 
     /**
+     * 删除应用配置信息，并在 `app_history` 中保存已删除的应用配置信息。
      *
+     * @param app 应用配置信息
+     * @param userContext 用户上下文
      */
-    fun delete(app: App, userContext: UserContext) = findOne<Any>(app.name, app.profile)
-            .flatMap { old ->
-                mongo.getCollection(APP_COLL_NAME).deleteOne(and(eq("name", app.name), eq("profile", app.profile)))
-                        .toMono()
-                        .flatMap { rs ->
-                            insertHistory(old, true, userContext).map {
-                                rs.deletedCount.toInt()
-                            }
-                        }
-            }
+    fun delete(app: App, userContext: UserContext) = findOne<Any>(app.name, app.profile).flatMap { dbApp ->
+        mongo.getCollection(APP_COLL_NAME).deleteOne(and(eq("name", app.name), eq("profile", app.profile)))
+                .toMono()
+                .flatMap {
+                    insertHistory(dbApp, true, userContext)
+                }
+    }
 
     /**
+     * 返回指定的应用配置信息。
      *
+     * @param name 应用名称
+     * @param profile 应用配置
      */
     fun <T> findOne(name: String, profile: String): Mono<App> {
         val q = and(eq("name", name), eq("profile", profile))
@@ -110,9 +116,12 @@ class AppRepository(
     }
 
     /**
+     * 更新指定的应用配置信息，并在 `app_history` 中保存被更新的应用配置信息。
      *
+     * @param app 更新的应用配置信息
+     * @param userContext 用户上下文
      */
-    fun update(app: App, userContext: UserContext): Mono<Int> {
+    fun update(app: App, userContext: UserContext): Mono<*> {
         val updatedAt = Date()
         val q = and(eq("name", app.name), eq("profile", app.profile), eq("v", app.v))
         val u = combine(
@@ -122,29 +131,28 @@ class AppRepository(
                 set("users", app.users),
                 set("updated_at", updatedAt)
         )
-        return findOne<Any>(app.name, app.profile).flatMap { old ->
+        return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
             mongo.getCollection(APP_COLL_NAME).updateOne(q, u).toMono().flatMap { rs ->
                 if (rs.modifiedCount < 1) {
-                    findOne<Any>(app.name, app.profile).handle { latestApp, _: SynchronousSink<App> ->
-                        if (latestApp.v != old.v) {
-                            throw BizCodeException(BizCodes.C_1004)
-                        }
-
-                        throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+                    if (app.v != dbApp.v) {
+                        throw BizCodeException(BizCodes.C_1004)
                     }
+
+                    throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 } else {
-                    insertHistory(old, false, userContext)
-                }.map {
-                    rs.modifiedCount.toInt()
+                    insertHistory(dbApp, false, userContext)
                 }
             }
         }
     }
 
     /**
+     * 更新应用配置信息，并在 `app_history` 中保存被更新的应用配置信息。
      *
+     * @param app 更新的应用配置信息
+     * @param userContext 用户上下文
      */
-    fun updateContent(app: App, userContext: UserContext): Mono<Int> {
+    fun updateContent(app: App, userContext: UserContext): Mono<*> {
         val updatedAt = Date()
         val q = and(eq("name", app.name), eq("profile", app.profile), eq("v", app.v))
         val u = combine(
@@ -153,53 +161,84 @@ class AppRepository(
                 inc("v", 1)
         )
 
-        return findOne<Any>(app.name, app.profile).flatMap { old ->
+        return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
             mongo.getCollection(APP_COLL_NAME).updateOne(q, u).toMono().flatMap { rs ->
                 if (rs.modifiedCount < 1) {
-                    findOne<Any>(app.name, app.profile).handle { latestApp, _: SynchronousSink<App> ->
-                        if (latestApp.v != old.v) {
-                            throw BizCodeException(BizCodes.C_1004)
-                        }
-
-                        throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+                    if (app.v != dbApp.v) {
+                        throw BizCodeException(BizCodes.C_1004)
                     }
+
+                    throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 } else {
-                    insertHistory(old, false, userContext)
-                }.map {
-                    rs.modifiedCount.toInt()
+                    insertHistory(dbApp, false, userContext)
                 }
             }
         }
     }
 
     /**
-     *
+     * 返回所有应用配置信息，并且按更新时间 `updated_at` 升序排列。
      */
     fun findAll() = mongo.getCollection(APP_COLL_NAME).find().sort(ascending("updated_at")).toFlux().map(::mapToApp)
 
+    /**
+     * 分页返回应用配置信息。
+     *
+     * @param pageable 分页参数
+     */
     fun findPage(pageable: Pageable): Mono<Page<App>> {
         return findPage(Document(), pageable)
     }
 
+    /**
+     * 分页返回所属用户的应用配置信息。
+     *
+     * @param pageable 分页参数
+     * @param userContext 用户上下文
+     */
     fun findPageByUser(pageable: Pageable, userContext: UserContext): Mono<Page<App>> {
         return findPage(elemMatch("users", eq(userContext.email)), pageable)
     }
 
+    /**
+     * 搜索应用配置并分页返回。
+     *
+     * @param q 搜索关键字
+     * @param pageable 分页参数
+     */
     fun searchPage(q: String, pageable: Pageable): Mono<Page<App>> {
         val query = if (q.isEmpty()) Document() else text(q)
         return findPage(query, pageable)
     }
 
+    /**
+     * 搜索所属用户应用配置并分页返回。
+     *
+     * @param q 搜索关键字
+     * @param pageable 分页参数
+     * @param userContext 用户上下文
+     */
     fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext): Mono<Page<App>> {
         val wh = elemMatch("users", Document("\$eq", userContext.email))
         val query = if (q.isEmpty()) wh else and(text(q), wh)
         return findPage(query, pageable)
     }
 
-    fun findByUpdatedAt(updateAt: Date) = mongo.getCollection(APP_COLL_NAME).find(gt("updated_at", updateAt)).sort(ascending("updated_at")).toFlux().map(::mapToApp)
+    /**
+     * 返回大于指定更新时间的应用配置信息，并且按更新时间 `updated_at` 升序排列。
+     *
+     * @param updateAt 应用更新时间
+     */
+    fun findByUpdatedAt(updateAt: Date) = mongo.getCollection(APP_COLL_NAME)
+            .find(gt("updated_at", updateAt))
+            .sort(ascending("updated_at"))
+            .toFlux().map(::mapToApp)
 
     /**
+     * 返回应用配置最新 50 条修改记录信息。
      *
+     * @param name 应用名称
+     * @param profile 应用配置
      */
     fun findLast50History(name: String, profile: String) = mongo.getCollection(APP_HIS_COLL_NAME)
             .find(and(eq("name", name), eq("profile", profile)))
@@ -207,7 +246,7 @@ class AppRepository(
             .toFlux()
             .map {
                 AppContentHistory(
-                        hid = it.get("_id").toString(),
+                        hid = it["_id"].toString(),
                         updatedBy = it.getString("updated_by") ?: "",
                         content = it.getString("content"),
                         updatedAt = it.getDate("created_at")
@@ -215,14 +254,12 @@ class AppRepository(
             }
 
     /**
-     *
+     * 返回所有的应用名称。
      */
-    fun findAllNames() = mongo.getCollection(APP_COLL_NAME)
-            .distinct("name", String::class.java)
-            .toFlux()
+    fun findAllNames() = mongo.getCollection(APP_COLL_NAME).distinct("name", String::class.java).toFlux()
 
     /**
-     *
+     * 返回应用名称下所有的应用配置名称。
      */
     fun findProfilesByName(name: String) = mongo.getCollection(APP_COLL_NAME)
             .find(eq("name", name))
@@ -231,9 +268,11 @@ class AppRepository(
             .map { it.getString("profile") }
 
     /**
+     * 返回指定时间以后删除的应用配置信息。
      *
+     * @param createdAt 删除时间
      */
-    fun findAppHistoryByCreatedAt(createdAt: Date) = mongo.getCollection(APP_HIS_COLL_NAME)
+    fun findDeletedByCreatedAt(createdAt: Date) = mongo.getCollection(APP_HIS_COLL_NAME)
             .find(and(gt("created_at", createdAt), ne("deleted_by", "")))
             .sort(ascending("created_at"))
             .toFlux()
@@ -268,7 +307,7 @@ class AppRepository(
     )).toMono()
 
     private fun mapToApp(doc: Document) = App(
-            id = doc.get("_id").toString(),
+            id = doc["_id"].toString(),
             name = doc.getString("name"),
             profile = doc.getString("profile"),
             token = doc.getString("token") ?: "",
@@ -278,7 +317,7 @@ class AppRepository(
             createdAt = DateTime(doc.getDate("created_at")),
             updatedAt = DateTime(doc.getDate("updated_at")),
             content = doc.getString("content"),
-            users = doc.get("users") as List<String>
+            users = doc["users"] as List<String>
     )
 
     private fun mapToAppHistory(doc: Document) = AppHistory(
@@ -293,6 +332,6 @@ class AppRepository(
             createdAt = DateTime(doc.getDate("created_at")),
             updatedBy = doc.getString("updated_by") ?: "",
             deletedBy = doc.getString("deleted_by") ?: "",
-            users = doc.get("users") as List<String>
+            users = doc["users"] as List<String>
     )
 }
