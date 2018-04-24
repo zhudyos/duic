@@ -70,7 +70,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                         .expectStatus().isOk
                         .expectBody()
                         .consumeWith {
-                            val cookie = it.responseCookies.getFirst("token")
+                            val cookie = it.responseCookies.getFirst("token")!!
                             _token = cookie.value
                         }
             }
@@ -155,7 +155,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectStatus().isOk
                 .expectBody()
                 .consumeWith {
-                    val cookie = it.responseCookies.getFirst("token")
+                    val cookie = it.responseCookies.getFirst("token")!!
                     llToken = cookie.value
                 }
 

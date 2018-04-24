@@ -78,7 +78,7 @@ class GlobalWebExceptionHandler(
                 status = 500
                 mapOf(
                         "code" to BizCode.Classic.C_500.code,
-                        "message" to e.rootCause.message
+                        "message" to e.rootCause?.message
                 )
             }
             else -> {

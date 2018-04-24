@@ -304,6 +304,7 @@ class AppRepository(
             )
     )).toMono()
 
+    @Suppress("UNCHECKED_CAST")
     private fun mapToApp(doc: Document) = App(
             id = doc["_id"].toString(),
             name = doc.getString("name"),
@@ -318,6 +319,7 @@ class AppRepository(
             users = doc["users"] as List<String>
     )
 
+    @Suppress("UNCHECKED_CAST")
     private fun mapToAppHistory(doc: Document) = AppHistory(
             id = doc.getString("_id"),
             name = doc.getString("name"),

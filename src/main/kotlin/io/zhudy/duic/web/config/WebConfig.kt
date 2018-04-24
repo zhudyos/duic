@@ -117,6 +117,6 @@ class WebConfig(val objectMapper: ObjectMapper,
                 GET("/apps", adminResource::searchAppByUser)
             }
         }
-    }.filter(AuthorizedHandlerFilter())!!
+    }.filter(AuthorizedHandlerFilter())
 
 }

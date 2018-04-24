@@ -48,7 +48,7 @@ import java.util.*
 class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
-    private val cache = cacheManager.getCache("apps")
+    private val cache = cacheManager.getCache("apps")!!
     private var lastUpdatedAt: Date? = null
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
@@ -180,6 +180,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
                     break
                 }
                 if (v is Map<*, *>) {
+                    @Suppress("UNCHECKED_CAST")
                     props = v as Map<Any, Any>
                 }
             }
@@ -323,6 +324,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         return m
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun mergeProps(a: MutableMap<Any, Any>, b: MutableMap<Any, Any>, prefix: String = "") {
         if (a.isEmpty()) {
             a.putAll(b)
@@ -353,6 +355,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         return result
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun buildFlattenedMap(result: MutableMap<String, Any>, source: Map<Any, Any>, path: String) {
         for (entry in source.entries) {
             var key: String = entry.key as? String ?: entry.key.toString()

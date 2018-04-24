@@ -118,7 +118,7 @@ class AppResource(val appService: AppService) {
         }
 
         val swe = request.attribute(WebConstants.SERVER_WEB_EXCHANGE_ATTR).get() as ServerWebExchange
-        val address = swe.request.remoteAddress.address
+        val address = swe.request.remoteAddress?.address
         if (address is Inet4Address) {
             return address.hostAddress
         }
