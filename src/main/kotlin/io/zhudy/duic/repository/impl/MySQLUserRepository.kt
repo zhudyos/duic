@@ -31,13 +31,28 @@ class MySQLUserRepository(
         }
     }.subscribeOn(Schedulers.elastic())
 
-    override fun delete(email: String): Mono<Int> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun delete(email: String) = Mono.create<Int> {
+        transactionTemplate.execute {
+            jdbcTemplate.update(
+                    "DELETE FROM `user` WHERE `email`=:email",
+                    mapOf(
+                            "email" to email
+                    )
+            )
+        }
+    }.subscribeOn(Schedulers.elastic())
 
-    override fun updatePassword(email: String, password: String): Mono<Int> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun updatePassword(email: String, password: String) = Mono.create<Int> {
+        transactionTemplate.execute {
+            jdbcTemplate.update(
+                    "UPDATE `user` SET `password`=:password,`updated_at`=now() WHERE `email`=:email",
+                    mapOf(
+                            "email" to email,
+                            "password" to password
+                    )
+            )
+        }
+    }.subscribeOn(Schedulers.elastic())
 
     override fun findByEmail(email: String): Mono<User> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
