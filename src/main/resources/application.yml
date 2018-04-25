@@ -27,11 +27,8 @@ spring:
     joda-date-time-format: yyyy-MM-dd'T'HH:mm:ss
     property-naming-strategy: SNAKE_CASE
 
-  data:
-    mongodb:
-      uri: mongodb://127.0.0.1:27017/duic
-
 duic:
+  dbms: MongoDB
   root-email: kevinz@weghst.com
   root-password: 123456
   jwt:

@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      auto-commit: false
+      connection-timeout: 3000
+      minimum-idle: 1
+      maximum-pool-size: 10
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+  flyway:
+    locations: classpath:db/migration/mysql
+
+duic:
+  dbms: MySQL
