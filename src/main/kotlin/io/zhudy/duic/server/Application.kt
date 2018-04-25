@@ -19,12 +19,15 @@ import io.zhudy.duic.Config
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration
-import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.runApplication
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 
 
@@ -32,6 +35,8 @@ import org.springframework.context.annotation.ComponentScan
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootApplication(exclude = [
+MongoReactiveAutoConfiguration::class,
+DataSourceAutoConfiguration::class,
 RestTemplateAutoConfiguration::class,
 ErrorWebFluxAutoConfiguration::class,
 CodecsAutoConfiguration::class,
@@ -39,8 +44,11 @@ PersistenceExceptionTranslationAutoConfiguration::class,
 TransactionAutoConfiguration::class,
 ValidationAutoConfiguration::class])
 @ComponentScan("io.zhudy.duic")
-@EnableConfigurationProperties(Config::class)
 class Application {
+
+    @Bean("io.zhudy.duic.Config")
+    @ConfigurationProperties(prefix = "duic")
+    fun config() = Config
 
     companion object {
 
