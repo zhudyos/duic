@@ -32,7 +32,6 @@ import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
-import org.springframework.stereotype.Repository
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -44,7 +43,6 @@ import java.util.*
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Repository
 class MongoAppRepository(
         private val mongo: MongoDatabase
 ) : AppRepository {
