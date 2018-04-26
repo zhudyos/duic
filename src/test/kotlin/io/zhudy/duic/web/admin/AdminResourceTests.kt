@@ -24,35 +24,38 @@ import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.server.Application
 import io.zhudy.duic.server.BeansInitializer
+import io.zhudy.duic.service.UserService
+import org.bson.Document
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.TestExecutionListeners
-import org.springframework.test.context.testng.AbstractTestNGSpringContextTests
+import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.testng.annotations.Test
 import reactor.core.publisher.toMono
 import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ActiveProfiles("test")
+@RunWith(SpringRunner::class)
+@ActiveProfiles("mongodb", "test")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = [BeansInitializer::class])
-@TestExecutionListeners(MockitoTestExecutionListener::class)
-class AdminResourceTests : AbstractTestNGSpringContextTests() {
+class AdminResourceTests {
 
     @Autowired
     lateinit var mongoDatabase: MongoDatabase
     @Autowired
     lateinit var userRepository: UserRepository
-
+    @Autowired
+    lateinit var userService: UserService
     @Autowired
     lateinit var webTestClient: WebTestClient
-
     @Autowired
     lateinit var objectMapper: ObjectMapper
 
@@ -77,6 +80,21 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
             return _token
         }
 
+    @Before
+    fun before() {
+        userService.insert(User(
+                email = Config.rootEmail,
+                password = Config.rootPassword
+        )).block()
+    }
+
+    @After
+    fun after() {
+        mongoDatabase.getCollection("app").deleteMany(Document()).toMono().block()
+        mongoDatabase.getCollection("app_history").deleteMany(Document()).toMono().block()
+        mongoDatabase.getCollection("user").deleteMany(Document()).toMono().block()
+    }
+
     @Test
     fun rootUser() {
         webTestClient.get()
@@ -90,7 +108,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
     @Test
     fun insertUser() {
-        val email = UUID.randomUUID().toString() + "@testng.com"
+        val email = UUID.randomUUID().toString() + "@unit-test.com"
 
         webTestClient.post()
                 .uri("/api/admins/users")
@@ -108,7 +126,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
     @Test
     fun deleteUser() {
-        val email = UUID.randomUUID().toString() + "@testng.com"
+        val email = UUID.randomUUID().toString() + "@unit-test.com"
 
         userRepository.insert(User(email = email, password = "123456")).subscribe()
 
@@ -132,7 +150,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
     @Test
     fun updateUserPassword() {
-        val email = UUID.randomUUID().toString() + "@testng.com"
+        val email = UUID.randomUUID().toString() + "@unit-test.com"
 
         webTestClient.post()
                 .uri("/api/admins/users")
@@ -175,7 +193,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
 
     @Test
     fun resetUserPassword() {
-        val email = UUID.randomUUID().toString() + "@testng.com"
+        val email = UUID.randomUUID().toString() + "@unit-test.com"
 
         userRepository.insert(User(email = email, password = "123456")).subscribe()
 
@@ -306,7 +324,7 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .syncBody(mapOf(
                         "name" to name,
                         "profile" to profile,
-                        "description" to "hello testng"
+                        "description" to "hello unit-test"
                 ))
                 .exchange()
                 .expectStatus().isOk
@@ -450,5 +468,4 @@ class AdminResourceTests : AbstractTestNGSpringContextTests() {
                 .expectStatus().isOk
                 .expectBody()
     }
-
 }
