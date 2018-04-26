@@ -12,7 +12,7 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class MySQLAppRepository(
+open class MySQLAppRepository(
         private val transactionTemplate: TransactionTemplate,
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : AppRepository {

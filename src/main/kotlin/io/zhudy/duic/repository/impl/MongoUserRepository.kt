@@ -38,7 +38,7 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class MongoUserRepository(
+open class MongoUserRepository(
         private val mongo: MongoDatabase
 ) : UserRepository {
 

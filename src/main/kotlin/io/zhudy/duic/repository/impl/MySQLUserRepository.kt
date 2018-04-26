@@ -19,8 +19,9 @@ class MySQLUserRepository(
 ) : UserRepository {
 
     override fun insert(user: User) = Mono.create<Int> {
+        var n = 0
         transactionTemplate.execute {
-            jdbcTemplate.update(
+            n = jdbcTemplate.update(
                     "INSERT INTO `user`(email,password,created_at) VALUES(:email,:password,:created_at)",
                     mapOf(
                             "email" to user.email,
@@ -29,6 +30,7 @@ class MySQLUserRepository(
                     )
             )
         }
+        it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
     override fun delete(email: String): Mono<Int> {

@@ -43,7 +43,7 @@ import java.util.*
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class MongoAppRepository(
+open class MongoAppRepository(
         private val mongo: MongoDatabase
 ) : AppRepository {
 
