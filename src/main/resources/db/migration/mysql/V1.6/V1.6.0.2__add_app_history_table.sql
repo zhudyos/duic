@@ -1,4 +1,4 @@
-CREATE TABLE `app` (
+CREATE TABLE `app_history` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `name` VARCHAR (64) NOT NULL COMMENT '应用名称',
   `profile` VARCHAR (64) NOT NULL COMMENT '应用环境',
@@ -13,5 +13,5 @@ CREATE TABLE `app` (
   PRIMARY KEY (`id`)
 ) ENGINE = INNODB CHARSET = utf8mb4 COLLATE = utf8mb4_bin;
 
-ALTER TABLE `app` ADD UNIQUE INDEX (`name`,`profile`);
-ALTER TABLE `app` ADD FULLTEXT name_profile_content(`name`,`profile`,`content`);
+ALTER TABLE `app_history` ADD UNIQUE INDEX (`name`,`profile`);
+ALTER TABLE `app_history` ADD INDEX updated (`updated_at`);

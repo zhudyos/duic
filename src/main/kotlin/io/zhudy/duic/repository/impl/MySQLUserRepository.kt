@@ -54,8 +54,16 @@ class MySQLUserRepository(
         }
     }.subscribeOn(Schedulers.elastic())
 
-    override fun findByEmail(email: String): Mono<User> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun findByEmail(email: String) = Mono.create<User> {
+        transactionTemplate.execute {
+            jdbcTemplate.queryForObject(
+                    "SELECT `email`,`password` FROM `user` WHERE `email`=:email",
+                    mapOf(
+                            "email" to email
+                    ),
+                    User::class.java
+            )
+        }
     }
 
     override fun findPage(pageable: Pageable): Mono<Page<User>> {
