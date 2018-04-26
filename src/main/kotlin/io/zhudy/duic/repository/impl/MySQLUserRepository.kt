@@ -42,7 +42,7 @@ class MySQLUserRepository(
     }
 
     override fun findByEmail(email: String): Mono<User> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Mono.empty()
     }
 
     override fun findPage(pageable: Pageable): Mono<Page<User>> {
