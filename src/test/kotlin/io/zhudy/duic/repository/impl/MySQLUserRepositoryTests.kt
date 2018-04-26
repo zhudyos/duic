@@ -41,7 +41,7 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
     @Test
     fun insert() {
         val user = User(
-                email = "kevinz@weghst.com",
+                email = "${UUID.randomUUID()}@unit-test.com",
                 password = "world",
                 createdAt = Date()
         )
