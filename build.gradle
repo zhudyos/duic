@@ -58,16 +58,12 @@ dependencies {
     compile "com.auth0:java-jwt:3.3.0"
     compile "org.springframework.security:spring-security-crypto:5.0.4.RELEASE"
 
-    //
     compile "org.flywaydb:flyway-core:5.0.7"
     compile "com.zaxxer:HikariCP:3.1.0"
     compile "org.mariadb.jdbc:mariadb-java-client:2.2.3"
     compile "org.springframework:spring-jdbc:5.0.5.RELEASE"
 
-    testCompile "org.testng:testng:6.10"
-    testCompile("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
-        exclude module: "junit"
-    }
+    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
     testCompile "io.projectreactor:reactor-test:3.1.6.RELEASE"
     testCompile "io.projectreactor.ipc:reactor-netty:0.7.6.RELEASE"
 
@@ -119,10 +115,6 @@ tasks.withType(com.hierynomus.gradle.license.tasks.LicenseCheck) {
 
 jacoco {
     toolVersion = '0.7.9'
-}
-
-test {
-    useTestNG()
 }
 
 jacocoTestReport {
