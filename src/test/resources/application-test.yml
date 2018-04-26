@@ -18,6 +18,9 @@ scheduling:
   enabled: false
 
 spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/duic-unit-test?autoReconnect=true&useServerPrepStmts=true
+    username: root
   data:
     mongodb:
-      uri: mongodb://127.0.0.1:27017/duic
+      uri: mongodb://127.0.0.1:27017/duic-unit-test
