@@ -22,7 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ConditionalOnProperty(name = ["scheduling.enabled"], matchIfMissing = true)
 @Configuration
 @EnableScheduling
+@ConditionalOnProperty(name = ["scheduling.enabled"], matchIfMissing = true)
 class SchedulingConfiguration
