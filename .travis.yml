@@ -20,7 +20,7 @@ cache:
 
 before_install:
   - chmod +x gradlew
-  - mysql -e 'CREATE DATABASE IF NOT EXISTS duic-unit-test;'
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS `duic-unit-test`;'
 
 script:
   - ./gradlew clean buildImage
