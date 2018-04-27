@@ -49,7 +49,6 @@ class AppService(val appRepository: AppRepository) {
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
     private val appCaches = ConcurrentHashMap<String, CachedApp>()
-//    private val watchSinks = ConcurrentHashMap<String>
     private var lastUpdatedAt: Date? = null
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
