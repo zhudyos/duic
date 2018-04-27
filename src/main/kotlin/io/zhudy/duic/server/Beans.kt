@@ -18,7 +18,6 @@ package io.zhudy.duic.server
 import com.auth0.jwt.algorithms.Algorithm
 import io.zhudy.duic.Config
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer
 import org.springframework.context.support.beans
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -48,6 +47,4 @@ fun beans() = beans {
     }
 
     bean<BCryptPasswordEncoder>()
-
-    bean<ConcurrentMapCacheManager>()
 }

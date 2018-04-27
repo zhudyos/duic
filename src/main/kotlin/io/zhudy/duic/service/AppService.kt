@@ -33,22 +33,23 @@ import io.zhudy.duic.vo.RequestConfigVo
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
-import org.springframework.cache.CacheManager
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
-class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
+class AppService(val appRepository: AppRepository) {
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
-    private val cache = cacheManager.getCache("apps")!!
+    private val appCaches = ConcurrentHashMap<String, CachedApp>()
+//    private val watchSinks = ConcurrentHashMap<String>
     private var lastUpdatedAt: Date? = null
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
@@ -78,7 +79,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }.doFinally {
             log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
         }.subscribe {
-            cache.put(
+            appCaches.put(
                     localKey(it.name, it.profile),
                     mapToCachedApp(it)
             )
@@ -95,7 +96,7 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
         }.doFinally {
             log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
         }.subscribe {
-            cache.evict(localKey(it.name, it.profile))
+            appCaches.remove(localKey(it.name, it.profile))
             lastAppHistoryCreatedAt = it.createdAt!!.toDate()
         }
     }
@@ -304,17 +305,16 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
      */
     private fun loadOne(name: String, profile: String): Mono<CachedApp> {
         val k = localKey(name, profile)
-        return Mono.justOrEmpty(cache.get(k, CachedApp::class.java))
+        return Mono.justOrEmpty<CachedApp>(appCaches[k])
                 .switchIfEmpty(
                         findOne(name, profile).map {
                             val ca = mapToCachedApp(it)
-                            cache.put(k, ca)
+                            appCaches.put(k, ca)
                             ca
                         }.switchIfEmpty(Mono.create {
                             it.error(BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile"))
                         })
                 )
-
     }
 
     private fun mergeProps(apps: List<CachedApp>): Map<Any, Any> {
