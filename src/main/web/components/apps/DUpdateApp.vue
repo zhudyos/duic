@@ -134,6 +134,13 @@
         },
         methods: {
             submit() {
+                if (!this.app.token) {
+                    this.app.token = ''
+                }
+                if (!this.app.ip_limit) {
+                    this.app.ip_limit = ''
+                }
+
                 axios.put(`/api/admins/apps`, this.app).then(() => {
                     this.$notice('修改成功', {top: true, color: 'success'})
                     this.$emit('updated')
