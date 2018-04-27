@@ -3,6 +3,7 @@ language: java
 jdk: openjdk8
 
 services:
+  - mysql
   - mongodb
   - docker
 
@@ -19,6 +20,7 @@ cache:
 
 before_install:
   - chmod +x gradlew
+  - mysql -e 'CREATE DATABASE IF NOT EXISTS `duic-unit-test`;'
 
 script:
   - ./gradlew clean buildImage

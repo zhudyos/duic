@@ -73,7 +73,9 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             findAll()
         } else {
             findByUpdatedAt(lastUpdatedAt!!)
-        }.doOnComplete {
+        }.doOnError {
+            log.error("refresh app config: ", it)
+        }.doFinally {
             log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
         }.subscribe {
             cache.put(
@@ -88,11 +90,14 @@ class AppService(val appRepository: AppRepository, cacheManager: CacheManager) {
             fixedDelayString = "%{duic.app.watch.deleted.fixed_delay:%{duic.app.watch.deleted.fixed-delay:%{duic.app.watch.deleted.fixedDelay:600000}}}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
-        appRepository.findDeletedByCreatedAt(lastAppHistoryCreatedAt).subscribe {
+        appRepository.findDeletedByCreatedAt(lastAppHistoryCreatedAt).doOnError {
+            log.error("evict app config: ", it)
+        }.doFinally {
+            log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
+        }.subscribe {
             cache.evict(localKey(it.name, it.profile))
             lastAppHistoryCreatedAt = it.createdAt!!.toDate()
         }
-        log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
     }
 
     /**
