@@ -2,12 +2,10 @@ package io.zhudy.duic.repository.impl
 
 import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.*
+import io.zhudy.duic.repository.AbstractTransactionRepository
 import io.zhudy.duic.repository.AppRepository
-import org.bson.Document
-import org.bson.types.ObjectId
-import org.joda.time.DateTime
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.transaction.support.TransactionTemplate
+import org.springframework.transaction.PlatformTransactionManager
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
@@ -17,22 +15,21 @@ import java.util.*
  * @author Kevin Zou (kevinz@weghst.com)
  */
 open class MySQLAppRepository(
-        private val transactionTemplate: TransactionTemplate,
+        transactionManager: PlatformTransactionManager,
         private val jdbcTemplate: NamedParameterJdbcTemplate
-) : AppRepository {
+) : AppRepository, AbstractTransactionRepository(transactionManager) {
 
     override fun insert(app: App) = Mono.create<Int> {
-        var n = 0
-        transactionTemplate.execute {
-            n = jdbcTemplate.update(
-                    "INSERT INTO `app`(`name`,`profile`,`token`,`description`,`v`,`content`,`users`) VALUES (:name,:profile,:token,:description,:v,:content,:users)",
+        val n = transactionTemplate.execute {
+            jdbcTemplate.update(
+                    "INSERT INTO `app`(`name`,`profile`,`description`,`token`,`ip_limit`,`v`,`users`) VALUES(:name,:profile,:description,:token,:ipLimit,:v,:users)",
                     mapOf(
                             "name" to app.name,
                             "profile" to app.profile,
-                            "token" to app.token,
                             "description" to app.description,
+                            "token" to app.token,
+                            "ipLimit" to app.ipLimit,
                             "v" to app.v,
-                            "content" to app.content,
                             "users" to app.users.joinToString(",")
                     )
             )
@@ -40,8 +37,18 @@ open class MySQLAppRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
-    override fun delete(app: App, userContext: UserContext) = Mono.create<Int> {
+    override fun delete(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
+        Mono.create<Int> { sink ->
+            val n = transactionTemplate.execute {
+                insertHistory(dbApp, true, userContext)
 
+                jdbcTemplate.update("DELETE FROM `app` WHERE `name`=:name and `profile`=:profile", mapOf(
+                        "name" to app.name,
+                        "profile" to app.profile
+                ))
+            }
+            sink.success(n)
+        }
     }
 
     override fun <T> findOne(name: String, profile: String) = Mono.create<App> {
@@ -107,35 +114,56 @@ open class MySQLAppRepository(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    @Suppress("UNCHECKED_CAST")
-    private fun mapToApp(doc: Document) = App(
-            id = doc["_id"].toString(),
-            name = doc.getString("name"),
-            profile = doc.getString("profile"),
-            token = doc.getString("token") ?: "",
-            ipLimit = doc.getString("ip_limit") ?: "",
-            description = doc.getString("description"),
-            v = doc.getInteger("v"),
-            createdAt = DateTime(doc.getDate("created_at")),
-            updatedAt = DateTime(doc.getDate("updated_at")),
-            content = doc.getString("content"),
-            users = doc["users"] as List<String>
-    )
+    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) =
+            jdbcTemplate.execute("INSERT INTO `app_history`(`name`,`profile`,`description`,`token`,`ip_limit`,`v`,`content`,`users`,`deleted_by`,`updated_by`,`created_at`)" +
+                    " VALUES(?,?,?,?,?,?,?,?,?,?,now())") {
+                val deletedBy = if (delete) userContext.email else ""
+                val updatedBy = if (!delete) userContext.email else ""
 
-    @Suppress("UNCHECKED_CAST")
-    private fun mapToAppHistory(doc: Document) = AppHistory(
-            id = doc.getString("_id"),
-            name = doc.getString("name"),
-            profile = doc.getString("profile"),
-            token = doc.getString("token") ?: "",
-            ipLimit = doc.getString("ip_limit") ?: "",
-            description = doc.getString("description") ?: "",
-            content = doc.getString("content") ?: "",
-            v = doc.getInteger("v"),
-            createdAt = DateTime(doc.getDate("created_at")),
-            updatedBy = doc.getString("updated_by") ?: "",
-            deletedBy = doc.getString("deleted_by") ?: "",
-            users = doc["users"] as List<String>
-    )
+                var i = 1
+                it.setString(i++, app.name)
+                it.setString(i++, app.profile)
+                it.setString(i++, app.description)
+                it.setString(i++, app.token)
+                it.setString(i++, app.ipLimit)
+                it.setInt(i++, app.v)
+                it.setString(i++, app.content)
+                it.setString(i++, app.users.joinToString(","))
+                it.setString(i++, deletedBy)
+                it.setString(i++, updatedBy)
+
+                it.executeUpdate()
+            }
+
+//    @Suppress("UNCHECKED_CAST")
+//    private fun mapToApp(doc: Document) = App(
+//            id = doc["_id"].toString(),
+//            name = doc.getString("name"),
+//            profile = doc.getString("profile"),
+//            token = doc.getString("token") ?: "",
+//            ipLimit = doc.getString("ip_limit") ?: "",
+//            description = doc.getString("description"),
+//            v = doc.getInteger("v"),
+//            createdAt = DateTime(doc.getDate("created_at")),
+//            updatedAt = DateTime(doc.getDate("updated_at")),
+//            content = doc.getString("content"),
+//            users = doc["users"] as List<String>
+//    )
+//
+//    @Suppress("UNCHECKED_CAST")
+//    private fun mapToAppHistory(doc: Document) = AppHistory(
+//            id = doc.getString("_id"),
+//            name = doc.getString("name"),
+//            profile = doc.getString("profile"),
+//            token = doc.getString("token") ?: "",
+//            ipLimit = doc.getString("ip_limit") ?: "",
+//            description = doc.getString("description") ?: "",
+//            content = doc.getString("content") ?: "",
+//            v = doc.getInteger("v"),
+//            createdAt = DateTime(doc.getDate("created_at")),
+//            updatedBy = doc.getString("updated_by") ?: "",
+//            deletedBy = doc.getString("deleted_by") ?: "",
+//            users = doc["users"] as List<String>
+//    )
 
 }

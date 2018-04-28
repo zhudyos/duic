@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.support.TransactionTemplate
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -21,6 +20,6 @@ class MySQLConfiguration {
             = MySQLUserRepository(transactionManager, jdbcTemplate)
 
     @Bean
-    fun appRepository(transactionTemplate: TransactionTemplate, jdbcTemplate: NamedParameterJdbcTemplate)
-            = MySQLAppRepository(transactionTemplate, jdbcTemplate)
+    fun appRepository(transactionManager: PlatformTransactionManager, jdbcTemplate: NamedParameterJdbcTemplate)
+            = MySQLAppRepository(transactionManager, jdbcTemplate)
 }
