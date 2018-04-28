@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 
 /**
@@ -16,8 +17,8 @@ import org.springframework.transaction.support.TransactionTemplate
 class MySQLConfiguration {
 
     @Bean
-    fun userRepository(transactionTemplate: TransactionTemplate, jdbcTemplate: NamedParameterJdbcTemplate)
-            = MySQLUserRepository(transactionTemplate, jdbcTemplate)
+    fun userRepository(transactionManager: PlatformTransactionManager, jdbcTemplate: NamedParameterJdbcTemplate)
+            = MySQLUserRepository(transactionManager, jdbcTemplate)
 
     @Bean
     fun appRepository(transactionTemplate: TransactionTemplate, jdbcTemplate: NamedParameterJdbcTemplate)

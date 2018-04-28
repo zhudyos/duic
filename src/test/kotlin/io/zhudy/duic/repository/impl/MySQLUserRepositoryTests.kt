@@ -6,6 +6,7 @@ import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.server.Application
 import io.zhudy.duic.server.BeansInitializer
 import org.junit.After
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -53,8 +54,88 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
     }
 
     @Test
+    fun delete() {
+        val user = User(
+                email = "${UUID.randomUUID()}@unit-test.com",
+                password = "world",
+                createdAt = Date()
+        )
+        userRepository.insert(user).block()
+
+        StepVerifier.create(userRepository.delete(user.email))
+                .expectNext(1)
+                .verifyComplete()
+    }
+
+    @Test
+    fun updatePassword() {
+        val user = User(
+                email = "${UUID.randomUUID()}@unit-test.com",
+                password = "world",
+                createdAt = Date()
+        )
+        userRepository.insert(user).block()
+
+        StepVerifier.create(userRepository.updatePassword(user.email, "hello"))
+                .expectNext(1)
+                .verifyComplete()
+    }
+
+    @Test
+    fun findByEmail() {
+        val user = User(
+                email = "${UUID.randomUUID()}@unit-test.com",
+                password = "world",
+                createdAt = Date()
+        )
+        userRepository.insert(user).block()
+
+        StepVerifier.create(userRepository.findByEmail(user.email))
+                .expectNextMatches {
+                    it.email == user.email
+                }
+                .verifyComplete()
+    }
+
+    @Test
+    fun `findByEmail Not Found`() {
+        StepVerifier.create(userRepository.findByEmail("${UUID.randomUUID()}@unit-test.com"))
+                .expectNextCount(0)
+                .verifyComplete()
+    }
+
+    @Test
     fun findPage() {
-        StepVerifier.create(userRepository.findPage(Pageable())).expectNext()
+        for (n in 1..30) {
+            val user = User(
+                    email = "${UUID.randomUUID()}@unit-test.com",
+                    password = "world",
+                    createdAt = Date()
+            )
+            userRepository.insert(user).block()
+        }
+
+        val p = Pageable()
+        StepVerifier.create(userRepository.findPage(p))
+                .expectNextMatches {
+                    it.totalItems > 30 && it.items.size == p.size
+                }
+                .verifyComplete()
+    }
+
+    @Test
+    fun findAllEmail() {
+        for (n in 1..30) {
+            val user = User(
+                    email = "${UUID.randomUUID()}@unit-test.com",
+                    password = "world",
+                    createdAt = Date()
+            )
+            userRepository.insert(user).block()
+        }
+
+        val list = userRepository.findAllEmail().collectList().block()
+        assertTrue(list.size >= 30)
     }
 
 }
