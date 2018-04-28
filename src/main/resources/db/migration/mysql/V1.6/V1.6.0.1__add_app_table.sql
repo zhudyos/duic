@@ -1,4 +1,5 @@
 CREATE TABLE `app` (
+<<<<<<< HEAD
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT '应用名称',
   `profile` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT '应用环境',

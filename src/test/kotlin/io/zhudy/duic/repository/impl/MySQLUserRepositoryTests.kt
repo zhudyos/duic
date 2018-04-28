@@ -1,5 +1,6 @@
 package io.zhudy.duic.repository.impl
 
+import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.server.Application
@@ -49,6 +50,11 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
         StepVerifier.create(userRepository.insert(user))
                 .expectNext(1)
                 .verifyComplete()
+    }
+
+    @Test
+    fun findPage() {
+        StepVerifier.create(userRepository.findPage(Pageable())).expectNext()
     }
 
 }

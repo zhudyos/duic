@@ -8,6 +8,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.support.TransactionTemplate
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toFlux
+import reactor.core.publisher.toMono
 import reactor.core.scheduler.Schedulers
 
 /**
@@ -33,24 +35,85 @@ class MySQLUserRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
-    override fun delete(email: String): Mono<Int> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun delete(email: String) = Mono.create<Int> {
+        transactionTemplate.execute {
+            jdbcTemplate.update(
+                    "DELETE FROM `user` WHERE `email`=:email",
+                    mapOf(
+                            "email" to email
+                    )
+            )
+        }
+    }.subscribeOn(Schedulers.elastic())
+
+    override fun updatePassword(email: String, password: String) = Mono.create<Int> {
+        transactionTemplate.execute {
+            jdbcTemplate.update(
+                    "UPDATE `user` SET `password`=:password,`updated_at`=now() WHERE `email`=:email",
+                    mapOf(
+                            "email" to email,
+                            "password" to password
+                    )
+            )
+        }
+    }.subscribeOn(Schedulers.elastic())
+
+    override fun findByEmail(email: String) = Mono.create<User> {
+        var user: User? = null
+        transactionTemplate.execute {
+            jdbcTemplate.query(
+                    "SELECT `email`,`password` FROM `user` WHERE `email`=:email",
+                    mapOf(
+                            "email" to email
+                    ), {
+                user = User(
+                        email = it.getString(0),
+                        password = it.getString(1)
+                )
+            }
+            )
+        }
+        it.success(user)
     }
 
-    override fun updatePassword(email: String, password: String): Mono<Int> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun findPage(pageable: Pageable) = Mono.zip(
+            Mono.create<List<User>> {
+                transactionTemplate.execute {
+                    jdbcTemplate.queryForList(
+                            "SELECT `email`,`created_at`,`updated_at` FROM `user` LIMIT :offset,:limit",
+                            mapOf(
+                                    "offset" to pageable.offset,
+                                    "limit" to pageable.offset + pageable.size
+                            ),
+                            User::class.java
+                    )
+                }
+            },
+            Mono.create<Int> {
+                transactionTemplate.execute {
+                    jdbcTemplate.query(
+                            "SELECT COUNT(1) FROM `user`",
+                            {
+                                it.getInt(0)
+                            }
+                    )
+                }
+            }
+    ).map {
+        Page(it.t1, it.t2, pageable)
     }
 
-    override fun findByEmail(email: String): Mono<User> {
-        return Mono.empty()
-    }
-
-    override fun findPage(pageable: Pageable): Mono<Page<User>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun findAllEmail(): Flux<String> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun findAllEmail() = Flux.create<String> { sink ->
+        val list = mutableListOf<String>()
+        transactionTemplate.execute {
+            jdbcTemplate.query(
+                    "SELECT `email` FROM `user`",
+                    {
+                        list.add(it.getString(0))
+                    }
+            )
+        }
+        list.forEach { sink.next(it) }
     }
 
 }
