@@ -118,7 +118,7 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
         val p = Pageable()
         StepVerifier.create(userRepository.findPage(p))
                 .expectNextMatches {
-                    it.totalItems > 30 && it.items.size == p.size
+                    it.totalItems >= 30 && it.items.size == p.size
                 }
                 .verifyComplete()
     }
