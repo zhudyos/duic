@@ -19,9 +19,8 @@ scheduling:
 
 spring:
   datasource:
-    url: jdbc:mysql:replication://192.168.31.233:3307,192.168.31.233:3308/duic-unit-test?autoReconnect=true&useServerPrepStmts=true
+    url: jdbc:mysql://127.0.0.1:3306/duic-unit-test?autoReconnect=true&useServerPrepStmts=true
     username: root
-    password: 123kaibola
   data:
     mongodb:
       uri: mongodb://127.0.0.1:27017/duic-unit-test
