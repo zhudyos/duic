@@ -182,10 +182,9 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
             JVM_OPTS : "-Xms1g -Xmx1g -XX:MetaspaceSize=128m",
             JAVA_OPTS: "-server -XX:+UseG1GC \$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDateStamps -verbose:gc -XX:+PrintGCDetails -Xloggc:logs/gc.log"
     ])
-    environmentVariable("DUIC_EXT_OPTS", "-Dspring.profiles.active=mongodb")
-    environmentVariable("DUIC_OPTS", "\$JAVA_OPTS \$DUIC_EXT_OPTS")
+    environmentVariable("DUIC_OPTS", "-Dspring.profiles.active=mongodb")
     exposePort(7777)
-    defaultCommand("sh", "-c", "java \$DUIC_OPTS -jar $jarName")
+    defaultCommand("sh", "-c", "java \$JAVA_OPTS \$DUIC_OPTS -jar $jarName")
 }
 
 task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: createDockerfile) {
