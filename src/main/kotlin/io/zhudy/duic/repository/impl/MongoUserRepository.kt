@@ -29,7 +29,6 @@ import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import org.bson.Document
 import org.bson.types.ObjectId
-import org.springframework.stereotype.Repository
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -39,8 +38,7 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Repository
-class MongoUserRepository(
+open class MongoUserRepository(
         private val mongo: MongoDatabase
 ) : UserRepository {
 

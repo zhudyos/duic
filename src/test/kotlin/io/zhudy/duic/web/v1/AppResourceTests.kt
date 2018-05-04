@@ -20,31 +20,30 @@ import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.server.Application
 import io.zhudy.duic.server.BeansInitializer
 import org.joda.time.DateTime
+import org.junit.After
+import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.TestExecutionListeners
-import org.springframework.test.context.testng.AbstractTestNGSpringContextTests
+import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.testng.annotations.AfterMethod
-import org.testng.annotations.Test
 import reactor.core.publisher.Mono
 import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ActiveProfiles("test")
-@SpringBootTest(classes = [BeansInitializer::class, Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@RunWith(SpringRunner::class)
+@ActiveProfiles("mongodb", "test")
+@SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ContextConfiguration(initializers = [BeansInitializer::class])
-@TestExecutionListeners(MockitoTestExecutionListener::class)
-class AppResourceTests : AbstractTestNGSpringContextTests() {
+class AppResourceTests {
 
     @SpyBean
     lateinit var appRepository: AppRepository
@@ -94,12 +93,15 @@ array:
             users = listOf("kevin", "lucy")
     )
 
-    @AfterMethod
+    @After
     fun afterMethod() {
         Mockito.reset(appRepository)
     }
 
-    @Test(description = "获取配置状态")
+    /**
+     * 获取配置状态。
+     */
+    @Test
     fun getConfigState() {
         doReturn(Mono.just(firstTestApp))
                 .`when`(appRepository).findOne<Mono<App>>(name, profile)
@@ -114,7 +116,10 @@ array:
                 .exists()
     }
 
-    @Test(description = "获取不存在的配置状态，预期返回错误码 1000")
+    /**
+     * 获取不存在的配置状态，预期返回错误码 1000。
+     */
+    @Test
     fun getConfigStateExpectedCode1000() {
         webTestClient.get()
                 .uri("/api/v1/apps/states/{name}/{profile}", UUID.randomUUID().toString(), UUID.randomUUID().toString())
@@ -126,7 +131,10 @@ array:
                 .exists()
     }
 
-    @Test(description = "获取 spring-cloud-config 的数据配置")
+    /**
+     * 获取 spring-cloud-config 的数据配置。
+     */
+    @Test
     fun getSpringCloudConfig() {
         doReturn(Mono.just(firstTestApp))
                 .`when`(appRepository).findOne<Mono<App>>(name, profile)
@@ -142,7 +150,10 @@ array:
                 .isMap
     }
 
-    @Test(description = "根据应用名称与配置名称返回数据")
+    /**
+     * 根据应用名称与配置名称返回数据。
+     */
+    @Test
     fun getConfigByNameProfile() {
         doReturn(Mono.just(firstTestApp))
                 .`when`(appRepository).findOne<Mono<App>>(name, profile)
@@ -156,7 +167,10 @@ array:
                 .exists()
     }
 
-    @Test(description = "根据应用名称、配置名称与配置键返回数据")
+    /**
+     * 根据应用名称、配置名称与配置键返回数据。
+     */
+    @Test
     fun getConfigByNameProfileKey() {
         doReturn(Mono.just(firstTestApp))
                 .`when`(appRepository).findOne<Mono<App>>(name, profile)
@@ -170,7 +184,10 @@ array:
                 .exists()
     }
 
-    @Test(description = "根据应用名称与配置名称返回数据，多个 profile 合并")
+    /**
+     * 根据应用名称与配置名称返回数据，多个 profile 合并。
+     */
+    @Test
     fun getConfigByNameProfileMulti() {
         doReturn(Mono.just(firstTestApp))
                 .`when`(appRepository).findOne<Mono<App>>(name, profile)

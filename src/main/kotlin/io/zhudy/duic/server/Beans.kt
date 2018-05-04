@@ -16,13 +16,8 @@
 package io.zhudy.duic.server
 
 import com.auth0.jwt.algorithms.Algorithm
-import com.mongodb.ConnectionString
-import com.mongodb.reactivestreams.client.MongoClient
-import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.Config
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
-import org.springframework.boot.autoconfigure.mongo.MongoProperties
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer
 import org.springframework.context.support.beans
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -51,13 +46,5 @@ fun beans() = beans {
         }
     }
 
-    bean<MongoDatabase>("duicMongoDatabase") {
-        val props = ref<MongoProperties>()
-        val database = if (props.database != null) props.database else ConnectionString(props.uri).database
-        ref<MongoClient>().getDatabase(database)
-    }
-
     bean<BCryptPasswordEncoder>()
-
-    bean<ConcurrentMapCacheManager>()
 }

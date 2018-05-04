@@ -15,16 +15,11 @@
  */
 package io.zhudy.duic
 
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.core.annotation.Order
-
 /**
  * `duic` 基础配置。
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Order(0)
-@ConfigurationProperties(prefix = "duic")
 object Config {
 
     /**
