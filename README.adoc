@@ -14,8 +14,9 @@ image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",li
 
 ```
 
-= duic 配置中心
 duic 是采用 kotlin 与 spring-webflux 开发的配置中心。通过 HTTP 的方式获取配置信息，可管理任何语言、应用的配置。设计目标是统一不同应用的配置管理方式，打造更人性化的配置编辑方式，提供更灵活的配置获取方式。
+
+= duic 配置中心
 
 * 支持 mongodb 与 mysql 存在配置信息
 * 支持多配置合并
