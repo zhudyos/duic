@@ -23,7 +23,7 @@ duic 是采用 kotlin 与 spring-webflux 开发的配置中心。通过 HTTP 的
 * 支持按需获取配置
 * 支持用户权限控制
 * 支持 ip/token 访问限制
-* 支持分页式集群配置管理
+* 支持分布式集群配置管理
 * 支持 docker
 
 == 特性
