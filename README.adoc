@@ -15,11 +15,15 @@ image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",li
 ```
 
 = duic 配置中心
-duic 配置中心的设计目标是统一不同应用的配置管理方式，打造更人性化的配置编辑方式，提供更灵活的配置获取方式
+duic 是采用 kotlin 与 spring-webflux 开发的配置中心。通过 HTTP 的方式获取配置信息，可管理任何语言、应用的配置。设计目标是统一不同应用的配置管理方式，打造更人性化的配置编辑方式，提供更灵活的配置获取方式。
 
-== 简介
-duic 是采用 spring-webflux 开发，通过 RESTful 方式拉取配置，支持配置合并，内置 web 控制台修改配置，
-支持配置用户权限设置，支持配置访问 IP 限制，支持 token 限制，支持多应用多环境变量，支持 docker，支持集群。
+* 支持 mongodb 与 mysql 存在配置信息
+* 支持多配置合并
+* 支持按需获取配置
+* 支持用户权限控制
+* 支持 ip/token 访问限制
+* 支持分页式集群配置管理
+* 支持 docker
 
 == 特性
 * **集中配置管理, 多应用多环境配置**
@@ -102,7 +106,7 @@ duic 不仅可以管理你的业务配置，同时还可以管理 spring-boot �
 https://hub.docker.com/r/zhudyos/duic[https://hub.docker.com/r/zhudyos/duic]
 * **部署简单**
 +
-duic 部署只依赖于 https://www.mongodb.com[mongodb]，集群部署也只需要直接启动多个实例即可，不需要其它任何中间件或者服务
+duic 部署非常简单，只依赖一个数据库存储配置数据，不依赖其它任何中间件，即可实现分布式集群部署
 * **高性能**
 +
 duic 是采用 spring-webflux 开发，能最大化利用机器的硬件资源，同时 duic 是直接将所有可用的配置直接加载在内存中，在拉取配置时
