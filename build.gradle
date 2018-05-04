@@ -92,6 +92,9 @@ license {
     mapping([
             "vue": "XML_STYLE"
     ])
+    excludes([
+            "db/migration/**"
+    ])
     ext {
         year = "2017-${Calendar.getInstance().get(Calendar.YEAR)}"
         author = "the original author or authors"
