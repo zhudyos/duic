@@ -172,18 +172,18 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
     def jarName = "${project.name}.jar".toString()
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
 
-    from "openjdk:8u151-jdk-alpine3.7"
+    from "openjdk:8u162-jre-slim-stretch"
     maintainer "Kevin Zou <kevinz@weghst.com>"
     copyFile(jarName, "/app/$jarName".toString())
     workingDir("/app")
     volume("/app/logs")
-    runCommand("apk add --no-cache tzdata")
     environmentVariable("TZ", "Asia/Shanghai") // 默认时区设置为东8区
     environmentVariable([
             JVM_OPTS : "-Xms1g -Xmx1g -XX:MetaspaceSize=128m",
             JAVA_OPTS: "-server -XX:+UseG1GC \$JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDateStamps -verbose:gc -XX:+PrintGCDetails -Xloggc:logs/gc.log"
     ])
-    environmentVariable("DUIC_OPTS", "\$JAVA_OPTS -Dspring.profiles.active=prod")
+    environmentVariable("DUIC_EXT_OPTS", "-Dspring.profiles.active=mongodb")
+    environmentVariable("DUIC_OPTS", "\$JAVA_OPTS \$DUIC_EXT_OPTS")
     exposePort(7777)
     defaultCommand("sh", "-c", "java \$DUIC_OPTS -jar $jarName")
 }
