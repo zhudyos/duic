@@ -279,12 +279,13 @@ open class MongoAppRepository(
             mongo.getCollection(APP_COLL_NAME)
                     .find(q).skip(pageable.offset).limit(pageable.size)
                     .toFlux()
-                    .publishOn(Schedulers.parallel())
+                    .subscribeOn(Schedulers.parallel())
                     .map(::mapToApp)
                     .collectList(),
             mongo.getCollection(APP_COLL_NAME)
                     .count(q)
                     .toMono()
+                    .subscribeOn(Schedulers.parallel())
     ).map {
         Page(it.t1, it.t2.toInt(), pageable)
     }

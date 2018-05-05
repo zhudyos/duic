@@ -103,7 +103,7 @@ open class MongoUserRepository(
                     .skip(pageable.offset)
                     .limit(pageable.size)
                     .toFlux()
-                    .publishOn(Schedulers.parallel())
+                    .subscribeOn(Schedulers.parallel())
                     .map {
                         User(
                                 email = it.getString("email"),
@@ -112,7 +112,10 @@ open class MongoUserRepository(
                         )
                     }
                     .collectList(),
-            mongo.getCollection(USER_COLL_NAME).count().toMono()
+            mongo.getCollection(USER_COLL_NAME)
+                    .count()
+                    .toMono()
+                    .subscribeOn(Schedulers.parallel())
     ).map {
         Page(it.t1, it.t2.toInt(), pageable)
     }
