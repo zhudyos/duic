@@ -43,13 +43,14 @@ open class MySQLAppRepository(
     override fun insert(app: App) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "INSERT INTO app(name,profile,description,token,ip_limit,v,users,updated_at) VALUES(:name,:profile,:description,:token,:ipLimit,:v,:users,now())",
+                    "INSERT INTO app(name,profile,description,token,ip_limit,content,v,users,updated_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:users,now())",
                     mapOf(
                             "name" to app.name,
                             "profile" to app.profile,
                             "description" to app.description,
                             "token" to app.token,
                             "ipLimit" to app.ipLimit,
+                            "content" to app.content,
                             "v" to app.v,
                             "users" to app.users.joinToString(",")
                     )
