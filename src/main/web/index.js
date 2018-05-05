@@ -93,8 +93,8 @@ Vue.prototype.$confirm = function (text, confirmFun, cancelFun) {
         <v-card-text class="body-2">${text}</v-card-text>
         <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn flat color="info" @click="cancel">取消</v-btn>
-            <v-btn flat color="success" @click="confirm">确认</v-btn>
+            <v-btn flat color="info" @click="cancel" name="confirm__cancel">取消</v-btn>
+            <v-btn flat color="success" @click="confirm" name="confirm__confirm">确认</v-btn>
         </v-card-actions>
     </v-card>
 </v-dialog>`,

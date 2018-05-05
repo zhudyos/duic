@@ -54,13 +54,13 @@
                     <td>{{props.item.updated_at}}</td>
                     <td align="center">
                         <a @click="updateApp(props.item.name, props.item.profile)">
-                            <v-icon color="blue">fas fa-edit</v-icon>
+                            <v-icon :id="'edit__' + props.item.name + '__' + props.item.profile" color="blue">fas fa-edit</v-icon>
                         </a>
                         <a @click="deleteApp(props.item.name, props.item.profile)">
-                            <v-icon color="red">fas fa-trash-alt</v-icon>
+                            <v-icon :id="'delete__' + props.item.name + '__' + props.item.profile" color="red">fas fa-trash-alt</v-icon>
                         </a>
                         <a @click="$router.push(`/app-histories?name=${props.item.name}&profile=${props.item.profile}`)">
-                            <v-icon>fas fa-history</v-icon>
+                            <v-icon :id="'history__' + props.item.name + '__' + props.item.profile">fas fa-history</v-icon>
                         </a>
                     </td>
                 </tr>
