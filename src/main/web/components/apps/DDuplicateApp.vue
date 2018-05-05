@@ -24,6 +24,7 @@
                     <v-layout row>
                         <v-flex>
                             <v-text-field required
+                                          name="name"
                                           label="应用名称"
                                           v-model="app.name"
                                           disabled></v-text-field>
@@ -32,6 +33,7 @@
                     <v-layout row>
                         <v-flex>
                             <v-text-field required
+                                          name="profile"
                                           label="应用环境"
                                           v-model="app.profile"
                                           :rules="rules.profile"
@@ -41,6 +43,7 @@
                     <v-layout row>
                         <v-flex>
                             <v-text-field required
+                                          name="description"
                                           multi-line
                                           :rows="2"
                                           placeholder="应用描述"
@@ -51,6 +54,7 @@
                     <v-layout row>
                         <v-flex>
                             <v-text-field placeholder="访问令牌"
+                                          name="token"
                                           clearable
                                           append-icon="fas fa-random"
                                           :append-icon-cb="generateToken"
@@ -60,6 +64,7 @@
                     <v-layout row>
                         <v-flex>
                             <v-text-field label="IP 限制"
+                                          name="ip_limit"
                                           hint="示例：127.0.0.1,192.168.1.1-192.168.1.255"
                                           persistent-hint
                                           clearable
@@ -71,6 +76,7 @@
                     <v-layout row>
                         <v-flex>
                             <v-select required
+                                      name="users"
                                       autocomplete
                                       tags
                                       multiple

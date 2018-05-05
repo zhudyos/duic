@@ -23,12 +23,14 @@
                 <v-form ref="form">
                     <v-layout row>
                         <v-text-field required
+                                      name="email"
                                       label="邮箱"
                                       v-model="user.email"
                                       :rules="rules.email"></v-text-field>
                     </v-layout>
                     <v-layout row>
                         <v-text-field required
+                                      name="password"
                                       label="密码"
                                       v-model="user.password"
                                       :rules="rules.password"

@@ -23,6 +23,7 @@
                 <v-form ref="form">
                     <v-layout row>
                         <v-text-field required
+                                      name="password"
                                       label="密码"
                                       v-model="password"
                                       :rules="rules.password"

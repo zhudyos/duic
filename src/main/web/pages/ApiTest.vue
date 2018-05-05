@@ -43,6 +43,7 @@
                             <v-layout row>
                                 <v-select
                                         :items="operableNames"
+                                        name="name"
                                         v-model="name"
                                         label="NAME"
                                         required
@@ -55,6 +56,7 @@
                             <v-layout row>
                                 <v-select
                                         :items="operableProfiles"
+                                        name="profiles"
                                         v-model="profiles"
                                         label="PROFILES"
                                         required
@@ -68,6 +70,7 @@
                             <v-layout row>
                                 <v-text-field
                                         label="KEY"
+                                        name="key"
                                         v-model.trim="key"
                                         persistent-hint
                                         hint="示例：user.default.avatar"
@@ -77,6 +80,7 @@
                             <v-layout row>
                                 <v-text-field
                                         label="TOKENS"
+                                        name="tokens"
                                         v-model.trim="tokens"
                                         persistent-hint
                                         hint="示例：token1,token2,token3"

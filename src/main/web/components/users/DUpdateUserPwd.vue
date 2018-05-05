@@ -23,6 +23,7 @@
                 <v-form ref="form">
                     <v-layout row>
                         <v-text-field required
+                                      name="oldPassword"
                                       label="原密码"
                                       v-model="oldPassword"
                                       :rules="rules.oldPassword"
@@ -32,6 +33,7 @@
                     </v-layout>
                     <v-layout row>
                         <v-text-field required
+                                      name="newPassword"
                                       label="新密码"
                                       v-model="newPassword"
                                       :rules="rules.newPassword"
@@ -41,6 +43,7 @@
                     </v-layout>
                     <v-layout row>
                         <v-text-field required
+                                      name="confirmPassword"
                                       label="确认密码"
                                       v-model="confirmPassword"
                                       :rules="rules.confirmPassword"
