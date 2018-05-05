@@ -175,7 +175,7 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
     def jarName = "${project.name}.jar".toString()
     destFile = project.file("${project.buildDir}/docker/Dockerfile")
 
-    from "openjdk:8u162-jre-slim-stretch"
+    from "openjdk:8u171-jre-slim-stretch"
     maintainer "Kevin Zou <kevinz@weghst.com>"
     copyFile(jarName, "/app/$jarName".toString())
     workingDir("/app")
