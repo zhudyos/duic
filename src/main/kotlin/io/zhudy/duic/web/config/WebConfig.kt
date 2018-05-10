@@ -76,6 +76,7 @@ class WebConfig(val objectMapper: ObjectMapper,
 
             path("/apps").nest {
                 GET("/states/{name}/{profile}", appResource::getConfigState)
+                GET("/watches/{name}/{profile}", appResource::watchConfigState)
                 GET("/{name}/{profile}", appResource::getConfigByNameProfile)
                 GET("/{name}/{profile}/{key}", appResource::getConfigByNameProfileKey)
             }

@@ -22,6 +22,7 @@ import io.zhudy.duic.service.AppService
 import io.zhudy.duic.web.WebConstants
 import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
+import io.zhudy.duic.web.queryTrimString
 import org.springframework.stereotype.Controller
 import org.springframework.util.StringUtils
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -45,6 +46,18 @@ class AppResource(val appService: AppService) {
     fun getConfigState(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
         return appService.getConfigState(vo).flatMap {
+            ok().body(mapOf("state" to it))
+        }
+    }
+
+    /**
+     * 监控配置状态。
+     */
+    fun watchConfigState(request: ServerRequest): Mono<ServerResponse> {
+        val vo = getRequestConfigVo(request)
+        val oldState = request.queryParam("state").orElse("")
+
+        return appService.watchConfigState(vo, oldState).flatMap {
             ok().body(mapOf("state" to it))
         }
     }

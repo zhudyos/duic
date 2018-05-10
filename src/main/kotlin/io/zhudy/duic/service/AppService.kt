@@ -38,8 +38,14 @@ import org.springframework.stereotype.Service
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.publisher.MonoSink
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.thread
+import kotlin.concurrent.withLock
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -48,10 +54,20 @@ import java.util.concurrent.ConcurrentHashMap
 class AppService(val appRepository: AppRepository) {
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
+    private val watchStateMonoSinkTimeout = 30 * 1000
+
     private val appCaches = ConcurrentHashMap<String, CachedApp>()
+
+    private val watchStateLock = ReentrantLock()
+    private val watchStateCond = watchStateLock.newCondition()
+    private val watchStateMonoSinks = ConcurrentHashMap<String, MutableList<WatchStateMonoSink>>()
+    private val updateAppQueue = LinkedBlockingQueue<String>()
+
     private var lastUpdatedAt: Date? = null
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
+
+    private var minWatchStateMs = 0L
 
     /**
      * 缓存的 APP 实例。
@@ -64,6 +80,84 @@ class AppService(val appRepository: AppRepository) {
             val v: Int,
             val properties: Map<Any, Any>
     )
+
+    /**
+     * 客户端监控状态的缓存对象。
+     */
+    private data class WatchStateMonoSink(
+            val monoSink: MonoSink<String>,
+            val configVo: RequestConfigVo,
+            val state: String,
+            val initTime: Long
+    )
+
+    init {
+        thread(isDaemon = true, name = "update-app-mono-sink") {
+            while (true) {
+                try {
+                    val k = updateAppQueue.take()
+                    val a = watchStateLock.withLock {
+                        watchStateMonoSinks.remove(k)
+                    }
+
+                    a?.forEach { stateMonoSink ->
+                        try {
+                            getConfigState(stateMonoSink.configVo).subscribe {
+                                stateMonoSink.monoSink.success(it)
+                            }
+                        } catch (e: Exception) {
+                            stateMonoSink.monoSink.error(e)
+                        }
+                    }
+                } catch (e: Exception) {
+                    log.error("通知更新状态错误", e)
+                }
+            }
+        }
+
+        thread(isDaemon = true, name = "default-watch-app-state") {
+            while (true) {
+                try {
+                    watchStateLock.withLock {
+
+                        if (minWatchStateMs != 0L) {
+                            watchStateCond.await(System.currentTimeMillis() - minWatchStateMs, TimeUnit.MILLISECONDS)
+                        } else {
+                            watchStateCond.await()
+                        }
+
+                        var t = 0L
+
+                        watchStateMonoSinks.entries.forEach { entry ->
+                            val mlist = entry.value
+
+                            mlist.toList().forEach {
+                                val to = it.initTime + watchStateMonoSinkTimeout
+                                if (to <= System.currentTimeMillis()) {
+                                    it.monoSink.success(it.state)
+
+                                    // 清理
+                                    if (mlist.size <= 1) {
+                                        watchStateMonoSinks.remove(entry.key)
+                                    } else {
+                                        mlist.remove(it)
+                                    }
+                                } else {
+                                    if (t == 0L || it.initTime < t) {
+                                        t = it.initTime
+                                    }
+                                }
+                            }
+                        }
+
+                        minWatchStateMs = t
+                    }
+                } catch (e: Exception) {
+                    log.error("默认状态响应错误", e)
+                }
+            }
+        }
+    }
 
     @Scheduled(initialDelay = 0,
             fixedDelayString = "%{duic.app.watch.updated.fixed_delay:%{duic.app.watch.updated.fixed-delay:%{duic.app.watch.updated.fixedDelay:5000}}}")
@@ -78,11 +172,11 @@ class AppService(val appRepository: AppRepository) {
         }.doFinally {
             log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
         }.subscribe {
-            appCaches.put(
-                    localKey(it.name, it.profile),
-                    mapToCachedApp(it)
-            )
+            val k = localKey(it.name, it.profile)
+            appCaches.put(k, mapToCachedApp(it))
             lastUpdatedAt = it.updatedAt!!.toDate()
+
+            updateAppQueue.offer(k)
         }
     }
 
@@ -149,6 +243,33 @@ class AppService(val appRepository: AppRepository) {
                 state.append(it.v)
             }
             state.toString()
+        }
+    }
+
+    /**
+     *
+     */
+    fun watchConfigState(vo: RequestConfigVo, oldState: String) = getConfigState(vo).flatMap { state ->
+        if (state != oldState) {
+            return@flatMap Mono.just(state)
+        }
+        Mono.create<String> { sink ->
+            val ws = WatchStateMonoSink(sink, vo, state, System.currentTimeMillis())
+
+            watchStateLock.withLock {
+                vo.profiles.forEach {
+                    val k = localKey(vo.name, it)
+                    val a = watchStateMonoSinks[k] ?: mutableListOf()
+                    a.add(ws)
+
+                    watchStateMonoSinks[k] = a
+                }
+
+                if (minWatchStateMs == 0L) {
+                    minWatchStateMs = ws.initTime
+                    watchStateCond.signalAll()
+                }
+            }
         }
     }
 
