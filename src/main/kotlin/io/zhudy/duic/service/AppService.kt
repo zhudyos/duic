@@ -48,26 +48,27 @@ import kotlin.concurrent.thread
 import kotlin.concurrent.withLock
 
 /**
+ * 应用配置逻辑处理实现。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
 class AppService(val appRepository: AppRepository) {
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
-    private val watchStateMonoSinkTimeout = 30 * 1000
 
     private val appCaches = ConcurrentHashMap<String, CachedApp>()
 
+    private val watchStateMonoSinkTimeout = 30 * 1000
     private val watchStateLock = ReentrantLock()
     private val watchStateCond = watchStateLock.newCondition()
     private val watchStateMonoSinks = ConcurrentHashMap<String, MutableList<WatchStateMonoSink>>()
     private val updateAppQueue = LinkedBlockingQueue<String>()
+    private var minWatchStateMs = 0L
 
     private var lastUpdatedAt: Date? = null
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
-
-    private var minWatchStateMs = 0L
 
     /**
      * 缓存的 APP 实例。
@@ -92,71 +93,7 @@ class AppService(val appRepository: AppRepository) {
     )
 
     init {
-        thread(isDaemon = true, name = "update-app-mono-sink") {
-            while (true) {
-                try {
-                    val k = updateAppQueue.take()
-                    val a = watchStateLock.withLock {
-                        watchStateMonoSinks.remove(k)
-                    }
-
-                    a?.forEach { stateMonoSink ->
-                        try {
-                            getConfigState(stateMonoSink.configVo).subscribe {
-                                stateMonoSink.monoSink.success(it)
-                            }
-                        } catch (e: Exception) {
-                            stateMonoSink.monoSink.error(e)
-                        }
-                    }
-                } catch (e: Exception) {
-                    log.error("通知更新状态错误", e)
-                }
-            }
-        }
-
-        thread(isDaemon = true, name = "default-watch-app-state") {
-            while (true) {
-                try {
-                    watchStateLock.withLock {
-
-                        if (minWatchStateMs != 0L) {
-                            watchStateCond.await(System.currentTimeMillis() - minWatchStateMs, TimeUnit.MILLISECONDS)
-                        } else {
-                            watchStateCond.await()
-                        }
-
-                        var t = 0L
-
-                        watchStateMonoSinks.entries.forEach { entry ->
-                            val mlist = entry.value
-
-                            mlist.toList().forEach {
-                                val to = it.initTime + watchStateMonoSinkTimeout
-                                if (to <= System.currentTimeMillis()) {
-                                    it.monoSink.success(it.state)
-
-                                    // 清理
-                                    if (mlist.size <= 1) {
-                                        watchStateMonoSinks.remove(entry.key)
-                                    } else {
-                                        mlist.remove(it)
-                                    }
-                                } else {
-                                    if (t == 0L || it.initTime < t) {
-                                        t = it.initTime
-                                    }
-                                }
-                            }
-                        }
-
-                        minWatchStateMs = t
-                    }
-                } catch (e: Exception) {
-                    log.error("默认状态响应错误", e)
-                }
-            }
-        }
+        initResponseWatchState()
     }
 
     @Scheduled(initialDelay = 0,
@@ -195,7 +132,7 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 保存应用。
      */
     fun insert(app: App): Mono<*> {
         app.id = ObjectId().toHexString()
@@ -205,21 +142,21 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 删除应用。
      */
     fun delete(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.delete(app, userContext)
     }
 
     /**
-     *
+     * 更新应用。
      */
     fun update(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.update(app, userContext)
     }
 
     /**
-     *
+     * 更新应用配置。
      */
     fun updateContent(app: App, userContext: UserContext): Mono<*> {
         try {
@@ -234,7 +171,7 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 获取配置状态。
      */
     fun getConfigState(vo: RequestConfigVo): Mono<String> {
         return loadAndCheckApps(vo).map { apps ->
@@ -247,7 +184,7 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 监控配置状态。
      */
     fun watchConfigState(vo: RequestConfigVo, oldState: String) = getConfigState(vo).flatMap { state ->
         if (state != oldState) {
@@ -274,7 +211,7 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 获取兼容 `spring-cloud` 格式的配置。
      */
     fun loadSpringCloudConfig(vo: RequestConfigVo): Mono<SpringCloudResponseDto> {
         return loadAndCheckApps(vo).map { apps ->
@@ -289,12 +226,12 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 获取配置。
      */
     fun loadConfigByNameProfile(vo: RequestConfigVo) = loadAndCheckApps(vo).map(::mergeProps)
 
     /**
-     *
+     * 获取某个 `key` 的具体配置。
      */
     fun loadConfigByNameProfileKey(vo: RequestConfigVo): Mono<Any> {
         return loadConfigByNameProfile(vo).map {
@@ -322,27 +259,29 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 查询指定的应用详细信息。
      */
     fun findOne(name: String, profile: String) = appRepository.findOne<Any>(name, profile)
 
     /**
-     *
+     * 查询所有应用详细信息。
      */
     fun findAll(): Flux<App> = appRepository.findAll()
 
     /**
+     * 查询在指定更新时间之后的应用详细信息。
      *
+     * @param updateAt 更新时间
      */
     fun findByUpdatedAt(updateAt: Date): Flux<App> = appRepository.findByUpdatedAt(updateAt)
 
     /**
-     *
+     * 分页查询应用详细信息。
      */
     fun findPage(pageable: Pageable): Mono<Page<App>> = appRepository.findPage(pageable)
 
     /**
-     *
+     * 分页查询用户所有的应用详细信息。
      */
     fun findPageByUser(pageable: Pageable, userContext: UserContext): Mono<Page<App>> = if (userContext.isRoot) {
         findPage(pageable)
@@ -360,7 +299,7 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 查询应用更新的最新 50 条更新记录。
      */
     fun findLast50History(name: String, profile: String, userContext: UserContext)
             = checkPermission(name, profile, userContext).flatMapMany {
@@ -368,12 +307,12 @@ class AppService(val appRepository: AppRepository) {
     }
 
     /**
-     *
+     * 查询所有应用名称。
      */
     fun findAllNames() = appRepository.findAllNames()
 
     /**
-     *
+     * 查询应用下所有的环境名称。
      */
     fun findProfilesByName(name: String) = appRepository.findProfilesByName(name)
 
@@ -420,9 +359,6 @@ class AppService(val appRepository: AppRepository) {
         }
     }).collectList()
 
-    /**
-     *
-     */
     private fun loadOne(name: String, profile: String): Mono<CachedApp> {
         val k = localKey(name, profile)
         return Mono.justOrEmpty<CachedApp>(appCaches[k])
@@ -542,4 +478,72 @@ class AppService(val appRepository: AppRepository) {
     }
 
     private fun localKey(name: String, profile: String) = "${name}_$profile"
+
+    private fun initResponseWatchState() {
+        thread(isDaemon = true, name = "response-watch-app-state") {
+            while (true) {
+                try {
+                    val k = updateAppQueue.take()
+                    val a = watchStateLock.withLock {
+                        watchStateMonoSinks.remove(k)
+                    }
+
+                    a?.forEach { stateMonoSink ->
+                        try {
+                            getConfigState(stateMonoSink.configVo).subscribe {
+                                stateMonoSink.monoSink.success(it)
+                            }
+                        } catch (e: Exception) {
+                            stateMonoSink.monoSink.error(e)
+                        }
+                    }
+                } catch (e: Exception) {
+                    log.error("通知更新状态错误", e)
+                }
+            }
+        }
+
+        thread(isDaemon = true, name = "default-response-watch-app-state") {
+            while (true) {
+                try {
+                    watchStateLock.withLock {
+
+                        if (minWatchStateMs != 0L) {
+                            watchStateCond.await(System.currentTimeMillis() - minWatchStateMs, TimeUnit.MILLISECONDS)
+                        } else {
+                            watchStateCond.await()
+                        }
+
+                        var t = 0L
+
+                        watchStateMonoSinks.entries.forEach { entry ->
+                            val mlist = entry.value
+
+                            mlist.toList().forEach {
+                                val to = it.initTime + watchStateMonoSinkTimeout
+                                if (to <= System.currentTimeMillis()) {
+                                    it.monoSink.success(it.state)
+
+                                    // 清理
+                                    if (mlist.size <= 1) {
+                                        watchStateMonoSinks.remove(entry.key)
+                                    } else {
+                                        mlist.remove(it)
+                                    }
+                                } else {
+                                    if (t == 0L || it.initTime < t) {
+                                        t = it.initTime
+                                    }
+                                }
+                            }
+                        }
+
+                        minWatchStateMs = t
+                    }
+                } catch (e: Exception) {
+                    log.error("默认状态响应错误", e)
+                }
+            }
+        }
+    }
 }
