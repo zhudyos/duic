@@ -15,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
 import org.springframework.transaction.support.TransactionTemplate
+import reactor.core.publisher.toFlux
 import reactor.test.StepVerifier
 
 /**
@@ -68,8 +69,10 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
 
     @Test
     fun findServers() {
-        serverRepository.register("localhost", 1234).block()
-        val servers = serverRepository.findServers().buffer().blockFirst()
+        val servers = serverRepository.register("localhost", 1234).flux().flatMap {
+            serverRepository.findServers()
+        }.buffer().blockFirst()
+
         assertTrue(servers.isNotEmpty())
     }
 }
