@@ -20,6 +20,7 @@ import io.zhudy.duic.web.WebConstants
 import io.zhudy.duic.web.admin.AdminResource
 import io.zhudy.duic.web.security.AuthorizedHandlerFilter
 import io.zhudy.duic.web.security.RootRoleHandler
+import io.zhudy.duic.web.server.ServerResource
 import io.zhudy.duic.web.v1.AppResource
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -42,7 +43,8 @@ import java.util.concurrent.TimeUnit
 @EnableWebFlux
 class WebConfig(val objectMapper: ObjectMapper,
                 val appResource: AppResource,
-                val adminResource: AdminResource) : WebFluxConfigurer {
+                val adminResource: AdminResource,
+                val serverResource: ServerResource) : WebFluxConfigurer {
 
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/api/v1/**")
@@ -80,6 +82,10 @@ class WebConfig(val objectMapper: ObjectMapper,
                 GET("/{name}/{profile}", appResource::getConfigByNameProfile)
                 GET("/{name}/{profile}/{key}", appResource::getConfigByNameProfileKey)
             }
+        }
+
+        path("/servers").nest {
+            POST("/apps/refresh", serverResource::refreshApp)
         }
     }
 
