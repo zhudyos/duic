@@ -10,6 +10,8 @@ import com.mongodb.reactivestreams.client.MongoCollection
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.domain.Server
 import io.zhudy.duic.repository.ServerRepository
+import io.zhudy.duic.repository.ServerRepository.Companion.ACTIVE_TIMEOUT_MINUTES
+import io.zhudy.duic.repository.ServerRepository.Companion.CLEAN_BEFORE_MINUTES
 import org.bson.Document
 import org.joda.time.DateTime
 import reactor.core.publisher.toFlux
@@ -22,11 +24,6 @@ import java.util.*
 open class MongoServerRepository(
         private val mongo: MongoDatabase
 ) : ServerRepository {
-
-    // 服务超时时间为1分钟
-    private val activeTimeoutMinute = 1
-    // 删除2分钟未活跃的服务
-    private val cleanBeforeMinute = 2
 
     private val serverColl: MongoCollection<Document>
         get() = mongo.getCollection("server")
@@ -65,7 +62,7 @@ open class MongoServerRepository(
     ).toMono()
 
     override fun findServers() = serverColl.find(
-            gte("active_at", DateTime.now().minusMinutes(activeTimeoutMinute).toDate())
+            gte("active_at", DateTime.now().minusMinutes(ACTIVE_TIMEOUT_MINUTES).toDate())
     ).toFlux().map {
         Server(
                 host = it.getString("host"),
@@ -76,6 +73,6 @@ open class MongoServerRepository(
     }
 
     override fun clean() = serverColl.deleteMany(
-            lt("active_at", DateTime.now().minusMinutes(cleanBeforeMinute).toDate())
+            lt("active_at", DateTime.now().minusMinutes(CLEAN_BEFORE_MINUTES).toDate())
     ).toMono()
 }
