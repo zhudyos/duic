@@ -9,6 +9,18 @@ import reactor.core.publisher.Mono
  */
 interface ServerRepository {
 
+    companion object {
+
+        /**
+         * 服务超时时间为1分钟。
+         */
+        const val ACTIVE_TIMEOUT_MINUTES = 1
+        /**
+         * 删除2分钟未活跃的服务。
+         */
+        const val CLEAN_BEFORE_MINUTES = 2
+    }
+
     /**
      *
      */
