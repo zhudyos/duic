@@ -19,6 +19,7 @@ import com.mongodb.ConnectionString
 import com.mongodb.reactivestreams.client.MongoClient
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.repository.impl.MongoAppRepository
+import io.zhudy.duic.repository.impl.MongoServerRepository
 import io.zhudy.duic.repository.impl.MongoUserRepository
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
@@ -49,5 +50,8 @@ class MongoConfiguration {
 
     @Bean
     fun appRepository(mongo: MongoDatabase) = MongoAppRepository(mongo)
+
+    @Bean
+    fun serverRepository(mongo: MongoDatabase) = MongoServerRepository(mongo)
 
 }
