@@ -15,17 +15,16 @@
  */
 package io.zhudy.duic.service
 
-import io.zhudy.duic.BizCode
-import io.zhudy.duic.BizCodeException
-import io.zhudy.duic.BizCodes
-import io.zhudy.duic.UserContext
+import io.zhudy.duic.*
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Page
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.SingleValue
+import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
+import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.service.ip.SectionIpChecker
 import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
@@ -33,8 +32,10 @@ import io.zhudy.duic.vo.RequestConfigVo
 import org.bson.types.ObjectId
 import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
+import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClient
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -53,7 +54,11 @@ import kotlin.concurrent.withLock
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
-class AppService(val appRepository: AppRepository) {
+class AppService(
+        val appRepository: AppRepository,
+        val serverRepository: ServerRepository,
+        val webClientBuilder: WebClient.Builder
+) {
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
 
@@ -66,7 +71,9 @@ class AppService(val appRepository: AppRepository) {
     private val updateAppQueue = LinkedBlockingQueue<String>()
     private var minWatchStateMs = 0L
 
+    @Volatile
     private var lastUpdatedAt: Date? = null
+    @Volatile
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
 
@@ -97,24 +104,9 @@ class AppService(val appRepository: AppRepository) {
     }
 
     @Scheduled(initialDelay = 0,
-            fixedDelayString = "%{duic.app.watch.updated.fixed_delay:%{duic.app.watch.updated.fixed-delay:%{duic.app.watch.updated.fixedDelay:5000}}}")
+            fixedDelayString = "%{duic.app.watch.updated.fixed_delay:%{duic.app.watch.updated.fixed-delay:%{duic.app.watch.updated.fixedDelay:60000}}}")
     fun watchApps() {
-        // 更新 APP 配置信息
-        if (lastUpdatedAt == null) {
-            findAll()
-        } else {
-            findByUpdatedAt(lastUpdatedAt!!)
-        }.doOnError {
-            log.error("refresh app config: ", it)
-        }.doFinally {
-            log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
-        }.subscribe {
-            val k = localKey(it.name, it.profile)
-            appCaches.put(k, mapToCachedApp(it))
-            lastUpdatedAt = it.updatedAt!!.toDate()
-
-            updateAppQueue.offer(k)
-        }
+        refresh().subscribe()
     }
 
     @Scheduled(initialDelay = 0,
@@ -128,6 +120,32 @@ class AppService(val appRepository: AppRepository) {
         }.subscribe {
             appCaches.remove(localKey(it.name, it.profile))
             lastAppHistoryCreatedAt = it.createdAt!!.toDate()
+        }
+    }
+
+    /**
+     * 刷新内存的配置信息。
+     *
+     * @return 配置最后的更新时间戳（毫秒）
+     */
+    fun refresh() = Mono.create<Long> { sink ->
+        // 更新 APP 配置信息
+        if (lastUpdatedAt == null) {
+            findAll()
+        } else {
+            findByUpdatedAt(lastUpdatedAt!!)
+        }.doOnError {
+            log.error("refresh app config: ", it)
+        }.doFinally {
+            log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
+        }.doOnComplete {
+            sink.success(lastUpdatedAt?.time ?: 0L)
+        }.subscribe {
+            val k = localKey(it.name, it.profile)
+            appCaches.put(k, mapToCachedApp(it))
+            lastUpdatedAt = it.updatedAt!!.toDate()
+
+            updateAppQueue.offer(k)
         }
     }
 
@@ -167,6 +185,13 @@ class AppService(val appRepository: AppRepository) {
 
         return checkPermission(app.name, app.profile, userContext).flatMap {
             appRepository.updateContent(app, userContext)
+        }.flatMap { v ->
+            refresh().map {
+                v
+            }
+        }.doOnSuccess {
+            // 刷新集群配置
+            refreshClusterConfig()
         }
     }
 
@@ -544,6 +569,41 @@ class AppService(val appRepository: AppRepository) {
                     log.error("默认状态响应错误", e)
                 }
             }
+        }
+    }
+
+    // 刷新集群配置
+    private fun refreshClusterConfig() {
+        serverRepository.findServers().subscribe { s ->
+            val server = Config.server
+            // 跳过本机
+            if (s.host == server.host && s.port == server.port) {
+                return@subscribe
+            }
+
+            val schema = if (server.sslEnabled) "https" else "http"
+            webClientBuilder
+                    .baseUrl("$schema://${s.host}:${s.port}")
+                    .build()
+                    .post()
+                    .uri("/servers/apps/refresh")
+                    .accept(APPLICATION_JSON)
+                    .retrieve()
+                    .onStatus({ !it.is2xxSuccessful }, {
+                        Mono.error(IllegalStateException("http status: ${it.statusCode().value()}"))
+                    })
+                    .bodyToMono(ServerRefreshDto::class.java)
+                    .handle<ServerRefreshDto> { t, u ->
+                        val luat = lastUpdatedAt!!.time
+                        if (t.lastUpdatedAt != luat) {
+                            u.error(IllegalStateException("${s.host}:${s.port} 刷新最终更新时间不一致 local-lastUpdatedAt: $luat, remote-lastUpdatedAt: ${t.lastUpdatedAt}"))
+                        }
+                    }
+                    .retry(3)
+                    .doOnError {
+                        log.error("${s.host}:${s.port} 刷新失败", it)
+                    }
+                    .subscribe()
         }
     }
 }
