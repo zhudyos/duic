@@ -3,9 +3,9 @@ package io.zhudy.duic.repository.impl
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.server.Application
 import io.zhudy.duic.server.BeansInitializer
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -31,8 +31,8 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
     @Autowired
     lateinit var serverRepository: ServerRepository
 
-//    @After
-    fun after() {
+    @Before
+    fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from server", EmptySqlParameterSource.INSTANCE)
         }
@@ -40,7 +40,7 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
 
     @Test
     fun register() {
-        val n = serverRepository.register("localhost", 1234)
+        val n = serverRepository.register("localhost", 1234).block()
         assertEquals(1, n)
     }
 

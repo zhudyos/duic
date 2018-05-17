@@ -25,6 +25,7 @@ import org.joda.time.DateTime
 import org.joda.time.LocalDate
 import org.junit.After
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -66,8 +67,8 @@ class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             get() = false
     }
 
-    @After
-    fun after() {
+    @Before
+    fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from app", EmptySqlParameterSource.INSTANCE)
             jdbcTemplate.update("delete from app_history", EmptySqlParameterSource.INSTANCE)
