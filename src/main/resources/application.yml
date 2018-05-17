@@ -37,6 +37,6 @@ duic:
   app:
     watch:
       updated:
-        fixed-delay: 5000
+        fixed-delay: 60000
       deleted:
         fixed-delay: 600000
