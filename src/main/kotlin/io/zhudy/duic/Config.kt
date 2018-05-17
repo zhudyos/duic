@@ -23,6 +23,10 @@ package io.zhudy.duic
 object Config {
 
     /**
+     * 服务信息。
+     */
+    lateinit var server: Server
+    /**
      * 超级管理员用户名。
      */
     var rootEmail: String = ""
@@ -45,4 +49,13 @@ object Config {
          */
         var expiresIn: Int = 12 * 60 // 默认2小时过期
     }
+
+    /**
+     * 服务信息。
+     *
+     * @property host 主机地址
+     * @property port 服务端口
+     * @property sslEnabled 是否启用 SSL
+     */
+    class Server(val host: String, val port: Int, val sslEnabled: Boolean)
 }
