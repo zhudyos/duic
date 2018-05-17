@@ -15,7 +15,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
 import org.springframework.transaction.support.TransactionTemplate
-import reactor.core.publisher.toFlux
 import reactor.test.StepVerifier
 
 /**
@@ -42,9 +41,8 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
 
     @Test
     fun register() {
-        StepVerifier.create(serverRepository.register("localhost", 1234))
-                .expectNext(1)
-                .verifyComplete()
+        val n = serverRepository.register("localhost", 1234)
+        assertEquals(1, n)
     }
 
     @Test
