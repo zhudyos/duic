@@ -66,10 +66,8 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
 
     @Test
     fun findServers() {
-        val servers = serverRepository.register("localhost", 1234).flux().flatMap {
-            serverRepository.findServers()
-        }.buffer().blockFirst()
-
+        serverRepository.register("localhost", 1234).block()
+        val servers = serverRepository.findServers().collectList().block()
         assertTrue(servers.isNotEmpty())
     }
 }
