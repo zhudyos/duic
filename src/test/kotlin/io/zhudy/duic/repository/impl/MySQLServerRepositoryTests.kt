@@ -15,7 +15,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
 import org.springframework.transaction.support.TransactionTemplate
-import reactor.test.StepVerifier
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -32,7 +31,7 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
     @Autowired
     lateinit var serverRepository: ServerRepository
 
-    @After
+//    @After
     fun after() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from server", EmptySqlParameterSource.INSTANCE)
