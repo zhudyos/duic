@@ -16,6 +16,7 @@
 package io.zhudy.duic.repository.config
 
 import io.zhudy.duic.repository.impl.MySQLAppRepository
+import io.zhudy.duic.repository.impl.MySQLServerRepository
 import io.zhudy.duic.repository.impl.MySQLUserRepository
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Bean
@@ -37,4 +38,8 @@ class MySQLConfiguration {
     @Bean
     fun appRepository(transactionManager: PlatformTransactionManager, jdbcTemplate: NamedParameterJdbcTemplate)
             = MySQLAppRepository(transactionManager, jdbcTemplate)
+
+    @Bean
+    fun serverRepository(transactionManager: PlatformTransactionManager, jdbcTemplate: NamedParameterJdbcTemplate)
+            = MySQLServerRepository(transactionManager, jdbcTemplate)
 }
