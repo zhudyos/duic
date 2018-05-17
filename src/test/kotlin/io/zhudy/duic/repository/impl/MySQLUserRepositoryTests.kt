@@ -150,7 +150,7 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
         }
 
         val list = userRepository.findAllEmail().collectList().block()
-        assertTrue(list.size >= 30)
+        assertTrue(list.isNotEmpty())
     }
 
 }
