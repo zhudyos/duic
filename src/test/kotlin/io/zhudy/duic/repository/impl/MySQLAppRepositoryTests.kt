@@ -67,7 +67,7 @@ class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             get() = false
     }
 
-    @Before
+    // @Before
     fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from app", EmptySqlParameterSource.INSTANCE)

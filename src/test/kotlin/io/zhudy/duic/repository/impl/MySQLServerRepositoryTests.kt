@@ -31,7 +31,7 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
     @Autowired
     lateinit var serverRepository: ServerRepository
 
-    @Before
+    // @Before
     fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from server", EmptySqlParameterSource.INSTANCE)
