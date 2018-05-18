@@ -72,7 +72,7 @@ class AppService(
     private var minWatchStateMs = 0L
 
     @Volatile
-    private var lastUpdatedAt: Date? = null
+    private var lastDataTime: Date? = null
     @Volatile
     private var lastAppHistoryCreatedAt = Date()
     private val yaml = Yaml()
@@ -130,24 +130,29 @@ class AppService(
      */
     fun refresh() = Mono.create<Long> { sink ->
         // 更新 APP 配置信息
-        if (lastUpdatedAt == null) {
+        if (lastDataTime == null) {
             findAll()
         } else {
-            findByUpdatedAt(lastUpdatedAt!!)
+            findByUpdatedAt(lastDataTime!!)
         }.doOnError {
             log.error("refresh app config: ", it)
         }.doFinally {
-            log.debug("lastUpdatedAt={}", lastUpdatedAt?.time)
+            log.debug("lastDataTime={}", lastDataTime?.time)
         }.doOnComplete {
-            sink.success(lastUpdatedAt?.time ?: 0L)
+            sink.success(lastDataTime?.time ?: 0L)
         }.subscribe {
             val k = localKey(it.name, it.profile)
             appCaches.put(k, mapToCachedApp(it))
-            lastUpdatedAt = it.updatedAt!!.toDate()
+            lastDataTime = it.updatedAt!!.toDate()
 
             updateAppQueue.offer(k)
         }
     }
+
+    /**
+     * 获取内存配置状态，如果当前不存在任何配置则返回0。
+     */
+    fun getMemoryLastDataTime() = lastDataTime?.time ?: 0
 
     /**
      * 保存应用。
@@ -594,9 +599,9 @@ class AppService(
                     })
                     .bodyToMono(ServerRefreshDto::class.java)
                     .handle<ServerRefreshDto> { t, u ->
-                        val luat = lastUpdatedAt!!.time
-                        if (t.lastUpdatedAt != luat) {
-                            u.error(IllegalStateException("${s.host}:${s.port} 刷新最终更新时间不一致 local-lastUpdatedAt: $luat, remote-lastUpdatedAt: ${t.lastUpdatedAt}"))
+                        val luat = lastDataTime!!.time
+                        if (t.lastDataTime != luat) {
+                            u.error(IllegalStateException("${s.host}:${s.port} 刷新最终更新时间不一致 local-lastDataTime: $luat, remote-lastDataTime: ${t.lastDataTime}"))
                         }
                     }
                     .retry(3)
