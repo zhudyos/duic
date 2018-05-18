@@ -48,7 +48,7 @@
 
         <!-- dialog -->
         <v-dialog v-if="creationDialog" v-model="creationDialog" max-width="800px">
-            <d-creation-user @finish="creationDialog = false; loadUsers()"></d-creation-user>
+            <d-creation-user @finish="creationDialog = false; loadServers()"></d-creation-user>
         </v-dialog>
 
         <v-dialog v-if="resetPwdDialog" v-model="resetPwdDialog" max-width="800px">
@@ -103,10 +103,10 @@
             standbyEmail: ''
         }),
         mounted() {
-            this.loadUsers()
+            this.loadServers()
         },
         methods: {
-            loadUsers() {
+            loadServers() {
                 let p = this.pagination
                 axios.get(`/api/admins/users?page=${p.page}&size=${p.rowsPerPage}`).then(response => {
                     this.items = response.data.items
@@ -116,13 +116,13 @@
             },
             inputPage(v) {
                 this.pagination.page = v
-                this.loadUsers()
+                this.loadServers()
             },
             deleteUser(email) {
                 this.$confirm(`确认删除用户 <span class="red--text">${email}</span>`, () => {
                     axios.delete(`/api/admins/users/${email}`).then(() => {
                         this.$notice('删除成功', {top: true, color: 'success'})
-                        this.loadUsers()
+                        this.loadServers()
                     })
                 })
             }

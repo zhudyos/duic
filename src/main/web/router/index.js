@@ -39,6 +39,10 @@ const routes = [
                 component: (r) => require(['@/pages/users/Users.vue'], r)
             },
             {
+                path: "/clusters", meta: {title: "集群状态"},
+                component: (r) => require(['@/pages/servers/Servers.vue'], r)
+            },
+            {
                 path: "/api-test", meta: {title: "配置 API 测试"},
                 component: (r) => require(['@/pages/ApiTest.vue'], r)
             }
