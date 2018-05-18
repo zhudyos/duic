@@ -25,6 +25,7 @@ import io.zhudy.duic.domain.AppContentHistory
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.service.AppService
+import io.zhudy.duic.service.ServerService
 import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
 import io.zhudy.duic.web.body
@@ -48,7 +49,8 @@ import reactor.core.publisher.Mono
 class AdminResource(
         val userService: UserService,
         val appService: AppService,
-        val jwtAlgorithm: Algorithm
+        val jwtAlgorithm: Algorithm,
+        val serverService: ServerService
 ) {
 
     data class LoginUser(val email: String, val password: String)
@@ -271,4 +273,9 @@ class AdminResource(
             }
     // ======================================= APP ======================================================= //
 
+    // ======================================= SERVER ==================================================== //
+
+    fun loadServerStates(request: ServerRequest) = ok().body(serverService.loadServerStates())
+
+    // ======================================= SERVER ==================================================== //
 }

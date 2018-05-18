@@ -38,6 +38,11 @@ class ServerResource(
         ok().body(ServerRefreshDto(it))
     }
 
+    /**
+     *
+     */
+    fun getLastDataTime(request: ServerRequest) = ok().body(ServerRefreshDto(appService.getMemoryLastDataTime()))
+
     private fun getLocalHost(): String {
         val e = NetworkInterface.getNetworkInterfaces()
         while (e.hasMoreElements()) {

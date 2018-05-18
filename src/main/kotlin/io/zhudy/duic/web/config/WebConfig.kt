@@ -86,6 +86,7 @@ class WebConfig(val objectMapper: ObjectMapper,
 
         path("/servers").nest {
             POST("/apps/refresh", serverResource::refreshApp)
+            GET("/last-data-time", serverResource::getLastDataTime)
         }
     }
 
@@ -122,6 +123,10 @@ class WebConfig(val objectMapper: ObjectMapper,
 
             path("/search").nest {
                 GET("/apps", adminResource::searchAppByUser)
+            }
+
+            path("/servers").nest {
+                GET("/", adminResource::loadServerStates)
             }
         }
     }.filter(AuthorizedHandlerFilter())
