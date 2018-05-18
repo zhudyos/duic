@@ -23,7 +23,6 @@ import io.zhudy.duic.server.Application
 import io.zhudy.duic.server.BeansInitializer
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
-import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -67,7 +66,7 @@ class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             get() = false
     }
 
-    // @Before
+    @Before
     fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from app", EmptySqlParameterSource.INSTANCE)
