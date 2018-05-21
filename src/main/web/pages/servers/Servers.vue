@@ -18,13 +18,30 @@
 <template>
     <v-card>
         <v-card-actions>
+            <v-flex md3>
+                <!--<v-btn color="error" :disabled="refreshBtnDisabled">刷新集群配置</v-btn>-->
+                <label class="body-1">数据库最新数据状态：{{lastDataTime}}</label>
+            </v-flex>
+            <v-spacer></v-spacer>
+            <v-flex md3>
+                <v-text-field
+                        v-model="search"
+                        append-icon="search"
+                        label="搜索"
+                        single-line
+                        hide-details
+                ></v-text-field>
+            </v-flex>
         </v-card-actions>
 
         <v-data-table
                 hide-actions
                 no-data-text="没有数据"
                 :headers="headers"
-                :items="items">
+                :search="search"
+                :items="items"
+                :pagination.sync="pagination"
+        >
             <template slot="items" slot-scope="props">
                 <td>{{props.item.host}}</td>
                 <td>{{props.item.port}}</td>
@@ -35,7 +52,10 @@
         </v-data-table>
 
         <div class="text-xs-right pt-2">
-            <v-pagination v-model="pagination.page" :length="pagination.totalPages" @input="inputPage"></v-pagination>
+            <v-pagination v-model="pagination.page"
+                          :length="pagination.totalPages"
+                          :total-visible="pagination.totalItems"
+            ></v-pagination>
         </div>
 
     </v-card>
@@ -45,6 +65,7 @@
 
     export default {
         data: () => ({
+            search: '',
             headers: [
                 {
                     text: '主机',
@@ -75,7 +96,9 @@
                 page: 1,
                 totalItems: 0,
                 totalPages: 0
-            }
+            },
+            refreshBtnDisabled: true,
+            lastDataTime: 0
         }),
         mounted() {
             this.loadServers()
@@ -84,10 +107,21 @@
             loadServers() {
                 axios.get(`/api/admins/servers`).then(response => {
                     this.items = response.data
+                    this.pagination.totalItems = this.items.length
+                    this.pagination.totalPages = Math.ceil(this.items.length / this.pagination.rowsPerPage)
+
+                    this.loadLastDataTime()
                 })
             },
-            inputPage(v) {
-                this.pagination.page = v
+            loadLastDataTime() {
+                axios.get(`/api/admins/apps/last-data-time`).then(response => {
+                    this.lastDataTime = response.data.last_data_time
+                    // this.items.forEach(item => {
+                    //     if (this.refreshBtnDisabled && item.last_data_time !== this.lastDataTime) {
+                    //         this.refreshBtnDisabled = false
+                    //     }
+                    // })
+                })
             }
         }
     }
