@@ -8,9 +8,9 @@ servers:
     url: https://virtserver.swaggerhub.com/kevinz70/duic/1.0.0
 
 info:
-  description: DuiC 统一配置管理 API
+  description: DuiC 配置中心 API
   version: 1.0.0
-  title: DuiC 统一配置管理 API
+  title: DuiC 配置中心 API
   contact:
     email: kevinz@weghst.com
   license:
@@ -26,11 +26,44 @@ paths:
     get:
       tags:
         - apps
-      description: 检查应用状态
+      description: |
+        获取应用状态。
+        该接口会立即返回应用当前配置的状态。
       parameters:
         - $ref: '#/components/parameters/AppNamePath'
         - $ref: '#/components/parameters/AppProfilePath'
         - $ref: '#/components/parameters/ConfigTokenHeader'
+      responses:
+        200:
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - state
+                properties:
+                  state:
+                    type: string
+                    example: "45"
+  /apps/watches/{name}/{profile}:
+    get:
+      tags:
+        - apps
+      description: |
+        监控应用配置状态。
+        如果服务端当前的配置状态与传入的参数 state 不相同，则服务端会立即响应当前最新的状态给客户端。
+        如果服务端当前的配置状态与传入的参数 state 相同，该接口会延迟响应，当服务端配置状态发生变化时会立即响应给客户端。
+        服务端延迟最多 30 秒一定会响应客户端 state 状态，响应的 state 可能与传入的参数 state 相同，客户端需要判断当 state 不同时做出相应的动作，
+        比如刷新客户端配置信息。
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+        - name: state
+          in: query
+          description: 客户端当前的 state 状态值
+          required: true
       responses:
         200:
           description: 正确返回
