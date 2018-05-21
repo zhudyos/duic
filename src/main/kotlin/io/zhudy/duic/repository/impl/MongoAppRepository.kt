@@ -22,6 +22,7 @@ import com.mongodb.client.model.Projections.include
 import com.mongodb.client.model.Sorts.ascending
 import com.mongodb.client.model.Sorts.descending
 import com.mongodb.client.model.Updates.*
+import com.mongodb.reactivestreams.client.MongoCollection
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
@@ -51,6 +52,9 @@ open class MongoAppRepository(
         private val APP_COLL_NAME = "app"
         private val APP_HIS_COLL_NAME = "app_history"
     }
+
+    private val appColl: MongoCollection<Document>
+        get() = mongo.getCollection("app")
 
     init {
         mongo.getCollection(APP_COLL_NAME).createIndexes(listOf(
@@ -274,6 +278,14 @@ open class MongoAppRepository(
             .sort(ascending("created_at"))
             .toFlux()
             .map(::mapToAppHistory)
+
+    override fun findLastDataTime() = appColl.find()
+            .projection(include("updated_at"))
+            .sort(descending("updated_at"))
+            .limit(1)
+            .toMono()
+            .map { it.getDate("updated_at").time }
+            .defaultIfEmpty(0)
 
     private fun findPage(q: Bson, pageable: Pageable) = Mono.zip(
             mongo.getCollection(APP_COLL_NAME)

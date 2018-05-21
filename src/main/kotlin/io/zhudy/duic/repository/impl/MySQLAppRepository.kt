@@ -359,6 +359,18 @@ open class MySQLAppRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
+    override fun findLastDataTime() = Mono.create<Long> { sink ->
+        roTransactionTemplate.execute {
+            jdbcTemplate.query("SELECT updated_at FROM app ORDER BY updated_at DESC", ResultSetExtractor {
+                if (it.next()) {
+                    sink.success(it.getDate("updated_at").time)
+                } else {
+                    sink.success(0)
+                }
+            })
+        }
+    }
+
     private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = jdbcTemplate.update(
             """INSERT INTO app_history(name,profile,description,token,ip_limit,v,content,users,deleted_by,updated_by,created_at)
 VALUES(:name,:profile,:description,:token,:ip_limit,:v,:content,:users,:deleted_by,:updated_by,now())""",

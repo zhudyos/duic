@@ -135,4 +135,9 @@ interface AppRepository {
      */
     fun findDeletedByCreatedAt(createdAt: Date): Flux<AppHistory>
 
+    /**
+     * 返回数据库中最新配置信息的修改时间戳。
+     */
+    fun findLastDataTime(): Mono<Long>
+
 }
