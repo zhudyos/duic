@@ -271,6 +271,14 @@ class AdminResource(
             .flatMap {
                 ok().body(it)
             }
+
+    /**
+     *
+     */
+    fun findLastDataTime(request: ServerRequest) = appService.findLastDataTime().flatMap {
+        ok().body(mapOf("last_data_time" to it))
+    }
+
     // ======================================= APP ======================================================= //
 
     // ======================================= SERVER ==================================================== //

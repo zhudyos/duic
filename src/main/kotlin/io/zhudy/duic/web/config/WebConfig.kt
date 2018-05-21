@@ -114,6 +114,7 @@ class WebConfig(val objectMapper: ObjectMapper,
                 GET("/{name}/{profile}", adminResource::findOneApp)
                 GET("/{name}/{profile}/histories", adminResource::findAppContentHistory)
                 POST("/duplicates/{name}/{profile}", adminResource::insertAppForApp)
+                GET("/last-data-time", adminResource::findLastDataTime)
             }
 
             path("/tests").nest {

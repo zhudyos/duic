@@ -346,6 +346,11 @@ class AppService(
      */
     fun findProfilesByName(name: String) = appRepository.findProfilesByName(name)
 
+    /**
+     * 返回数据库最新配置修改时间，如果不存在配置则返回0。
+     */
+    fun findLastDataTime() = appRepository.findLastDataTime()
+
     private fun checkPermission(name: String, profile: String, userContext: UserContext): Mono<Unit> {
         if (userContext.isRoot) {
             return Mono.just(Unit)
