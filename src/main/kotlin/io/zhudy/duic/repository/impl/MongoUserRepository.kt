@@ -22,6 +22,7 @@ import com.mongodb.client.model.Projections.exclude
 import com.mongodb.client.model.Projections.include
 import com.mongodb.client.model.Updates.combine
 import com.mongodb.client.model.Updates.set
+import com.mongodb.reactivestreams.client.MongoCollection
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.domain.Page
 import io.zhudy.duic.domain.Pageable
@@ -42,12 +43,11 @@ open class MongoUserRepository(
         private val mongo: MongoDatabase
 ) : UserRepository {
 
-    companion object {
-        private val USER_COLL_NAME = "user"
-    }
+    private val userColl: MongoCollection<Document>
+        get() = mongo.getCollection("user")
 
     init {
-        mongo.getCollection(USER_COLL_NAME).createIndexes(listOf(
+        userColl.createIndexes(listOf(
                 IndexModel(Document("email", 1), IndexOptions().background(true).unique(true))
         )).toMono().subscribe()
     }
@@ -55,7 +55,7 @@ open class MongoUserRepository(
     /**
      *
      */
-    override fun insert(user: User) = mongo.getCollection(USER_COLL_NAME).insertOne(Document(
+    override fun insert(user: User) = userColl.insertOne(Document(
             mapOf(
                     "_id" to ObjectId().toString(),
                     "email" to user.email,
@@ -68,14 +68,14 @@ open class MongoUserRepository(
     /**
      *
      */
-    override fun delete(email: String) = mongo.getCollection(USER_COLL_NAME).deleteOne(eq("email", email))
+    override fun delete(email: String) = userColl.deleteOne(eq("email", email))
             .toMono()
             .map { it.deletedCount.toInt() }
 
     /**
      *
      */
-    override fun updatePassword(email: String, password: String) = mongo.getCollection(USER_COLL_NAME).updateOne(
+    override fun updatePassword(email: String, password: String) = userColl.updateOne(
             eq("email", email),
             combine(
                     set("password", password),
@@ -87,7 +87,7 @@ open class MongoUserRepository(
     /**
      *
      */
-    override fun findByEmail(email: String): Mono<User> = mongo.getCollection(USER_COLL_NAME).find(eq("email", email))
+    override fun findByEmail(email: String): Mono<User> = userColl.find(eq("email", email))
             .first()
             .toMono()
             .map {
@@ -98,7 +98,7 @@ open class MongoUserRepository(
             }
 
     override fun findPage(pageable: Pageable) = Mono.zip(
-            mongo.getCollection(USER_COLL_NAME).find()
+            userColl.find()
                     .projection(exclude("password"))
                     .skip(pageable.offset)
                     .limit(pageable.size)
@@ -112,8 +112,7 @@ open class MongoUserRepository(
                         )
                     }
                     .collectList(),
-            mongo.getCollection(USER_COLL_NAME)
-                    .count()
+            userColl.count()
                     .toMono()
                     .subscribeOn(Schedulers.parallel())
     ).map {
@@ -123,7 +122,7 @@ open class MongoUserRepository(
     /**
      *
      */
-    override fun findAllEmail() = mongo.getCollection(USER_COLL_NAME).find()
+    override fun findAllEmail() = userColl.find()
             .projection(include("email"))
             .toFlux()
             .map { it.getString("email") }

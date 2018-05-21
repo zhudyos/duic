@@ -48,16 +48,13 @@ open class MongoAppRepository(
         private val mongo: MongoDatabase
 ) : AppRepository {
 
-    companion object {
-        private val APP_COLL_NAME = "app"
-        private val APP_HIS_COLL_NAME = "app_history"
-    }
-
     private val appColl: MongoCollection<Document>
         get() = mongo.getCollection("app")
+    private val appHisColl: MongoCollection<Document>
+        get() = mongo.getCollection("app_history")
 
     init {
-        mongo.getCollection(APP_COLL_NAME).createIndexes(listOf(
+        appColl.createIndexes(listOf(
                 IndexModel(Document(mapOf("name" to 1, "profile" to 1)), IndexOptions().background(true).unique(true)),
                 IndexModel(Document("created_at", 1), IndexOptions().background(true)),
                 IndexModel(Document("updated_at", 1), IndexOptions().background(true)),
@@ -67,7 +64,7 @@ open class MongoAppRepository(
                 ))
         )).toMono().subscribe()
 
-        mongo.getCollection(APP_HIS_COLL_NAME).createIndexes(listOf(
+        appHisColl.createIndexes(listOf(
                 IndexModel(Document(mapOf("name" to 1, "profile" to 1)), IndexOptions().background(true)),
                 IndexModel(Document("created_at", 1), IndexOptions().background(true))
         )).toMono().subscribe()
@@ -78,7 +75,7 @@ open class MongoAppRepository(
      *
      * @param app 应用配置信息
      */
-    override fun insert(app: App) = mongo.getCollection(APP_COLL_NAME).insertOne(Document(
+    override fun insert(app: App) = appColl.insertOne(Document(
             mapOf(
                     "_id" to ObjectId().toString(),
                     "name" to app.name,
@@ -100,7 +97,7 @@ open class MongoAppRepository(
      * @param userContext 用户上下文
      */
     override fun delete(app: App, userContext: UserContext) = findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-        mongo.getCollection(APP_COLL_NAME).deleteOne(and(eq("name", app.name), eq("profile", app.profile)))
+        appColl.deleteOne(and(eq("name", app.name), eq("profile", app.profile)))
                 .toMono()
                 .flatMap {
                     insertHistory(dbApp, true, userContext)
@@ -115,7 +112,7 @@ open class MongoAppRepository(
      */
     override fun <T> findOne(name: String, profile: String): Mono<App> {
         val q = and(eq("name", name), eq("profile", profile))
-        return mongo.getCollection(APP_COLL_NAME).find(q).first().toMono().map(::mapToApp)
+        return appColl.find(q).first().toMono().map(::mapToApp)
     }
 
     /**
@@ -135,7 +132,7 @@ open class MongoAppRepository(
                 set("updated_at", updatedAt)
         )
         return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-            mongo.getCollection(APP_COLL_NAME).updateOne(q, u).toMono().map { rs ->
+            appColl.updateOne(q, u).toMono().map { rs ->
                 if (rs.modifiedCount < 1) {
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 }
@@ -162,7 +159,7 @@ open class MongoAppRepository(
         )
 
         return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-            mongo.getCollection(APP_COLL_NAME).updateOne(q, u).toMono().map { rs ->
+            appColl.updateOne(q, u).toMono().map { rs ->
                 if (rs.modifiedCount < 1) {
                     if (app.v != dbApp.v) {
                         throw BizCodeException(BizCodes.C_1004)
@@ -180,7 +177,7 @@ open class MongoAppRepository(
     /**
      * 返回所有应用配置信息，并且按更新时间 `updated_at` 升序排列。
      */
-    override fun findAll() = mongo.getCollection(APP_COLL_NAME).find().sort(ascending("updated_at")).toFlux().map(::mapToApp)
+    override fun findAll() = appColl.find().sort(ascending("updated_at")).toFlux().map(::mapToApp)
 
     /**
      * 分页返回应用配置信息。
@@ -230,7 +227,7 @@ open class MongoAppRepository(
      *
      * @param updateAt 应用更新时间
      */
-    override fun findByUpdatedAt(updateAt: Date) = mongo.getCollection(APP_COLL_NAME)
+    override fun findByUpdatedAt(updateAt: Date) = appColl
             .find(gt("updated_at", updateAt))
             .sort(ascending("updated_at"))
             .toFlux().map(::mapToApp)
@@ -241,7 +238,7 @@ open class MongoAppRepository(
      * @param name 应用名称
      * @param profile 应用配置
      */
-    override fun findLast50History(name: String, profile: String) = mongo.getCollection(APP_HIS_COLL_NAME)
+    override fun findLast50History(name: String, profile: String) = appHisColl
             .find(and(eq("name", name), eq("profile", profile)))
             .sort(descending("created_at"))
             .toFlux()
@@ -257,12 +254,12 @@ open class MongoAppRepository(
     /**
      * 返回所有的应用名称。
      */
-    override fun findAllNames() = mongo.getCollection(APP_COLL_NAME).distinct("name", String::class.java).toFlux()
+    override fun findAllNames() = appColl.distinct("name", String::class.java).toFlux()
 
     /**
      * 返回应用名称下所有的应用配置名称。
      */
-    override fun findProfilesByName(name: String) = mongo.getCollection(APP_COLL_NAME)
+    override fun findProfilesByName(name: String) = appColl
             .find(eq("name", name))
             .projection(include("profile"))
             .toFlux()
@@ -273,7 +270,7 @@ open class MongoAppRepository(
      *
      * @param createdAt 删除时间
      */
-    override fun findDeletedByCreatedAt(createdAt: Date) = mongo.getCollection(APP_HIS_COLL_NAME)
+    override fun findDeletedByCreatedAt(createdAt: Date) = appHisColl
             .find(and(gt("created_at", createdAt), ne("deleted_by", "")))
             .sort(ascending("created_at"))
             .toFlux()
@@ -288,21 +285,19 @@ open class MongoAppRepository(
             .defaultIfEmpty(0)
 
     private fun findPage(q: Bson, pageable: Pageable) = Mono.zip(
-            mongo.getCollection(APP_COLL_NAME)
-                    .find(q).skip(pageable.offset).limit(pageable.size)
+            appColl.find(q).skip(pageable.offset).limit(pageable.size)
                     .toFlux()
                     .subscribeOn(Schedulers.parallel())
                     .map(::mapToApp)
                     .collectList(),
-            mongo.getCollection(APP_COLL_NAME)
-                    .count(q)
+            appColl.count(q)
                     .toMono()
                     .subscribeOn(Schedulers.parallel())
     ).map {
         Page(it.t1, it.t2.toInt(), pageable)
     }
 
-    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = mongo.getCollection(APP_HIS_COLL_NAME).insertOne(Document(
+    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = appHisColl.insertOne(Document(
             mapOf(
                     "_id" to ObjectId().toString(),
                     "name" to app.name,
