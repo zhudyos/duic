@@ -288,7 +288,7 @@ open class MySQLAppRepository(
     }
 
     override fun findByUpdatedAt(updateAt: Date) = Flux.create<App> { sink ->
-        roTransactionTemplate.execute {
+        transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM app WHERE updated_at > :updated_at ORDER BY updated_at",
                     mapOf("updated_at" to updateAt)
