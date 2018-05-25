@@ -61,6 +61,7 @@ dependencies {
     compile "org.flywaydb:flyway-core:5.0.7"
     compile "com.zaxxer:HikariCP:3.1.0"
     compile "org.mariadb.jdbc:mariadb-java-client:2.2.3"
+    compile "org.postgresql:postgresql:42.2.2"
     compile "org.springframework:spring-jdbc:5.0.5.RELEASE"
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
