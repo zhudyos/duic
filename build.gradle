@@ -141,7 +141,7 @@ artifacts {
 
 node {
     version = "8.9.4"
-    yarnVersion = "1.3.2"
+    yarnVersion = "1.7.0"
     download = true
 }
 
