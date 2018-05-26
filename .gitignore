@@ -28,4 +28,7 @@ build/
 dist/
 .gradle/
 .idea/
-config/
+
+config/application-test\.yml
+config/application\.yml
+config/postgresql\.properties
