@@ -24,6 +24,8 @@ before_install:
   - mysql -e 'CREATE DATABASE IF NOT EXISTS `duic-unit-test`;'
   - psql -c 'create database "duic-unit-test";' -U postgres
 
+install: true
+
 script:
   - ./gradlew clean buildImage
 
