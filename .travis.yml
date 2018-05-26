@@ -25,7 +25,7 @@ cache:
 before_install:
   - chmod +x gradlew
   - mysql -e 'CREATE DATABASE IF NOT EXISTS `duic-unit-test`;'
-  - psql -c 'create database "duic-unit-test";' -U postgres
+  - psql -c 'CREATE DATABASE "duic-unit-test";' -U postgres
 
 install: true
 
