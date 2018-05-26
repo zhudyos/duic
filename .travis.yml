@@ -27,7 +27,7 @@ before_install:
 install: true
 
 script:
-  - ./gradlew clean buildImage
+  - ./gradlew clean buildImage --stacktrace
 
 after_success:
   - if [ ! -z "$TRAVIS_TAG" ]; then
