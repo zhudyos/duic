@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlinVersion = "1.2.31"
+        kotlinVersion = "1.2.41"
         springBootVersion = "2.0.1.RELEASE"
     }
 
@@ -146,7 +146,7 @@ node {
 }
 
 yarn {
-    args = ["install", "--production=false"]
+    args = ["install --production=false"]
 }
 
 task buildAdmin(type: YarnTask, dependsOn: yarn) {
