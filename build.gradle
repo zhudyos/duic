@@ -145,10 +145,6 @@ node {
     download = true
 }
 
-yarn {
-    args = ["install", "--production=false"]
-}
-
 task buildAdmin(type: YarnTask, dependsOn: yarn) {
     group = "node"
     args = ["run", "build"]
