@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="file:config/postgresql.properties" ignore-resource-not-found="true"/>
+
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
+        <property name="driverClassName" value="org.postgresql.Driver"/>
+        <property name="autoCommit" value="false"/>
+        <property name="jdbcUrl" value="${jdbc.url:jdbc:postgresql://127.0.0.1:5432/duic-unit-test}"/>
+        <property name="username" value="${jdbc.username:postgres}"/>
+        <property name="password" value="${jdbc.password:''}"/>
+    </bean>
+
+    <bean id="flyway" class="org.flywaydb.core.Flyway" init-method="migrate">
+        <property name="locations" value="db/migration/postgresql"/>
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <import resource="classpath:relational-dbms-spring.xml"/>
+</beans>
