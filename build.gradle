@@ -42,7 +42,7 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jre8"
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile "org.jetbrains.kotlin:kotlin-reflect"
 
     compile("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion") {
@@ -146,7 +146,7 @@ node {
 }
 
 yarn {
-    args = ["install --production=false"]
+    args = ["install", "--production=false"]
 }
 
 task buildAdmin(type: YarnTask, dependsOn: yarn) {
