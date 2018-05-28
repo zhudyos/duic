@@ -15,6 +15,8 @@
  */
 package io.zhudy.duic.repository.config
 
+import io.zhudy.duic.repository.impl.PostgreSQLAppRepository
+import io.zhudy.duic.repository.impl.PostgreSQLServerRepository
 import io.zhudy.duic.repository.impl.PostgreSQLUserRepository
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Bean
@@ -32,5 +34,13 @@ class PostgreSQLConfiguration {
     @Bean
     fun userRepository(transactionManager: PlatformTransactionManager, jdbcTemplate: NamedParameterJdbcTemplate)
             = PostgreSQLUserRepository(transactionManager, jdbcTemplate)
+
+    @Bean
+    fun appRepository(transactionManager: PlatformTransactionManager, jdbcTemplate: NamedParameterJdbcTemplate)
+            = PostgreSQLAppRepository(transactionManager, jdbcTemplate)
+
+    @Bean
+    fun serverRepository(transactionManager: PlatformTransactionManager, jdbcTemplate: NamedParameterJdbcTemplate)
+            = PostgreSQLServerRepository(transactionManager, jdbcTemplate)
 
 }
