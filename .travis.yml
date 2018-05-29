@@ -1,6 +1,7 @@
 sudo: required
 language: java
 jdk: oraclejdk8
+dist: trusty
 
 services:
   - mysql
@@ -9,7 +10,7 @@ services:
   - docker
 
 addons:
-  postgresql: "9.3"
+  postgresql: "9.5"
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
