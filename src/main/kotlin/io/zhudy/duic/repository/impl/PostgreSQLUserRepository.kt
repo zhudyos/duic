@@ -39,11 +39,10 @@ class PostgreSQLUserRepository(
     override fun insert(user: User) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    """INSERT INTO "user"(email,password,created_at) VALUES(:email,:password,:created_at)""",
+                    """INSERT INTO "user"(email,password,created_at) VALUES(:email,:password,now())""",
                     mapOf(
                             "email" to user.email,
-                            "password" to user.password,
-                            "created_at" to user.createdAt
+                            "password" to user.password
                     )
             )
         }
@@ -95,8 +94,8 @@ class PostgreSQLUserRepository(
                     ) {
                         sink.next(User(
                                 email = it.getString(1),
-                                createdAt = it.getDate(2),
-                                updatedAt = it.getDate(3)
+                                createdAt = it.getTimestamp(2),
+                                updatedAt = it.getTimestamp(3)
                         ))
                     }
                     sink.complete()

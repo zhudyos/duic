@@ -294,7 +294,7 @@ class PostgreSQLAppRepository(
                         hid = it.getString("id"),
                         updatedBy = it.getString("updated_by") ?: "",
                         content = it.getString("content") ?: "",
-                        updatedAt = it.getDate("created_at")
+                        updatedAt = it.getTimestamp("created_at")
                 ))
             }
         }
@@ -334,7 +334,7 @@ class PostgreSQLAppRepository(
                         token = it.getString("token"),
                         ipLimit = it.getString("ip_limit"),
                         v = it.getInt("v"),
-                        createdAt = DateTime(it.getDate("created_at")),
+                        createdAt = DateTime(it.getTimestamp("created_at")),
                         updatedBy = it.getString("updated_by"),
                         deletedBy = it.getString("deleted_by"),
                         users = it.getString("users").split(",")
@@ -348,7 +348,7 @@ class PostgreSQLAppRepository(
         roTransactionTemplate.execute {
             jdbcTemplate.query("SELECT updated_at FROM app ORDER BY updated_at DESC", ResultSetExtractor {
                 if (it.next()) {
-                    sink.success(it.getDate("updated_at").time)
+                    sink.success(it.getTimestamp("updated_at").time)
                 } else {
                     sink.success(0)
                 }
@@ -381,8 +381,8 @@ VALUES(:name,:profile,:description,:token,:ip_limit,:v,:content,:users,:deleted_
             token = rs.getString("token") ?: "",
             ipLimit = rs.getString("ip_limit") ?: "",
             v = rs.getInt("v"),
-            createdAt = DateTime(rs.getDate("created_at")),
-            updatedAt = DateTime(rs.getDate("updated_at")),
+            createdAt = DateTime(rs.getTimestamp("created_at")),
+            updatedAt = DateTime(rs.getTimestamp("updated_at")),
             content = rs.getString("content") ?: "",
             users = rs.getString("users").split(",")
     )

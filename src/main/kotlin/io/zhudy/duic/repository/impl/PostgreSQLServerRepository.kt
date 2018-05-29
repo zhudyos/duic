@@ -65,8 +65,8 @@ open class PostgreSQLServerRepository(
                 sink.next(Server(
                         host = it.getString("host"),
                         port = it.getInt("port"),
-                        initAt = DateTime(it.getDate("init_at")),
-                        activeAt = DateTime(it.getDate("active_at"))
+                        initAt = DateTime(it.getTimestamp("init_at")),
+                        activeAt = DateTime(it.getTimestamp("active_at"))
                 ))
             }
         }
