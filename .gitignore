@@ -35,4 +35,4 @@ config/postgresql\.properties
 
 config/application-postgresql\.yml
 
-config/mysql\.properties
+config/oracle\.properties
