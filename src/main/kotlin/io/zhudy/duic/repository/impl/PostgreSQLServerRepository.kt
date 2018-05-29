@@ -21,13 +21,11 @@ open class PostgreSQLServerRepository(
     override fun register(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "INSERT INTO server(id,host,port,init_at,active_at) VALUES(:id,:host,:port,:init_at,:active_at) ON CONFLICT (id) DO UPDATE SET init_at=:init_at,active_at=:active_at",
+                    "INSERT INTO server(id,host,port,init_at,active_at) VALUES(:id,:host,:port,now(),now()) ON CONFLICT (id) DO UPDATE SET init_at=now(),active_at=now()",
                     mapOf(
                             "id" to "${host}_$port",
                             "host" to host,
-                            "port" to port,
-                            "init_at" to Date(),
-                            "active_at" to Date()
+                            "port" to port
                     )
             )
         }
