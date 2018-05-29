@@ -1,11 +1,16 @@
 sudo: required
 language: java
-jdk: openjdk8
+jdk: oraclejdk8
+dist: trusty
 
 services:
   - mysql
+  - postgresql
   - mongodb
   - docker
+
+addons:
+  postgresql: "9.5"
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
@@ -21,9 +26,12 @@ cache:
 before_install:
   - chmod +x gradlew
   - mysql -e 'CREATE DATABASE IF NOT EXISTS `duic-unit-test`;'
+  - psql -c 'CREATE DATABASE "duic-unit-test";' -U postgres
+
+install: true
 
 script:
-  - ./gradlew clean buildImage
+  - ./gradlew clean buildImage --stacktrace
 
 after_success:
   - if [ ! -z "$TRAVIS_TAG" ]; then
