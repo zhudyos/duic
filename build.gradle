@@ -117,6 +117,12 @@ tasks.withType(com.hierynomus.gradle.license.tasks.LicenseCheck) {
     it.enabled = false
 }
 
+test {
+    testLogging {
+        exceptionFormat "full"
+    }
+}
+
 jacoco {
     toolVersion = '0.7.9'
 }
