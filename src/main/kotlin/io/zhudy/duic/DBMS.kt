@@ -31,11 +31,7 @@ enum class DBMS(@JvmField val isNoSQL: Boolean = false) {
     /**
      * MySQL/MariaDB。
      */
-    MySQL,
-    /**
-     * PostgreSQL。
-     */
-    PostgreSQL,
+    MySQL
     ;
 
     companion object {
