@@ -122,6 +122,7 @@ test {
     testLogging {
         exceptionFormat "full"
     }
+    exclude "**/Oracle*RepositoryTests*"
 }
 
 jacoco {
