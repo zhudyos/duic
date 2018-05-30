@@ -175,8 +175,8 @@ class OracleAppRepository(
                             "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app WHERE users LIKE '%' || :email || '%' ) A WHERE ROWNUM <= :e ) WHERE RN >= :b",
                             mapOf(
                                     "email" to userContext.email,
-                                    "b" to pageable.offset,
-                                    "e" to pageable.size
+                                    "b" to pageable.begin,
+                                    "e" to pageable.end
                             )
                     ) {
                         sink.next(mapToApp(it))
@@ -211,8 +211,8 @@ class OracleAppRepository(
                             sql,
                             mapOf(
                                     "q" to q,
-                                    "b" to pageable.offset,
-                                    "e" to pageable.size
+                                    "b" to pageable.begin,
+                                    "e" to pageable.end
                             )
                     ) {
                         sink.next(mapToApp(it))
@@ -248,8 +248,8 @@ class OracleAppRepository(
                             mapOf(
                                     "q" to q,
                                     "email" to userContext.email,
-                                    "b" to pageable.offset,
-                                    "e" to pageable.size
+                                    "b" to pageable.begin,
+                                    "e" to pageable.end
                             )
                     ) {
                         sink.next(mapToApp(it))
