@@ -16,10 +16,13 @@
 package io.zhudy.duic.domain
 
 /**
+ * 分页查询参数对象。
  *
- * @property page
- * @property size
- * @property offset
+ * @property page 页码
+ * @property size 每页条数
+ * @property offset 分页偏移量
+ * @property begin 开始行数
+ * @property end 结束行数
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
@@ -29,4 +32,6 @@ data class Pageable(
 ) {
 
     val offset = (page - 1) * size
+    val begin = offset + 1
+    val end = offset + size
 }
