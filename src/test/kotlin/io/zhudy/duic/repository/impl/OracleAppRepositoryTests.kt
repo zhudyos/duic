@@ -7,6 +7,7 @@ import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.repository.config.OracleConfiguration
 import org.joda.time.DateTime
 import org.joda.time.LocalDate
+import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,7 +52,7 @@ class OracleAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             get() = false
     }
 
-    //    @After
+    @After
     fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from app", EmptySqlParameterSource.INSTANCE)
