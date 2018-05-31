@@ -27,9 +27,10 @@
     <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
         <property name="driverClassName" value="org.mariadb.jdbc.Driver"/>
         <property name="autoCommit" value="false"/>
-        <property name="jdbcUrl" value="${jdbc.url:jdbc:mysql://127.0.0.1:3306/duic-unit-test?autoReconnect=true&amp;useServerPrepStmts=true}"/>
+        <property name="jdbcUrl"
+                  value="${jdbc.url:jdbc:mysql://127.0.0.1:3306/duic-unit-test?autoReconnect=true&amp;useServerPrepStmts=true}"/>
         <property name="username" value="${jdbc.username:root}"/>
-        <property name="password" value="${jdbc.password:''}"/>
+        <property name="password" value="${jdbc.password:}"/>
     </bean>
 
     <bean id="flyway" class="org.flywaydb.core.Flyway" init-method="migrate">
