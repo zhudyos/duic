@@ -18,16 +18,15 @@ package io.zhudy.duic.repository.impl
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
-import io.zhudy.duic.server.Application
-import io.zhudy.duic.server.BeansInitializer
+import io.zhudy.duic.repository.config.MySQLConfiguration
 import org.junit.After
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.ContextHierarchy
+import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
 import org.springframework.transaction.support.TransactionTemplate
 import reactor.test.StepVerifier
@@ -36,9 +35,11 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ActiveProfiles("mysql", "test")
-@SpringBootTest(classes = [Application::class])
-@ContextConfiguration(initializers = [BeansInitializer::class])
+@ContextHierarchy(*[
+ContextConfiguration(locations = ["classpath:mysql-spring.xml"]),
+ContextConfiguration(classes = [MySQLConfiguration::class])
+])
+@TestPropertySource(properties = ["duic.dbms=MySQL"])
 class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
 
     @Autowired
@@ -49,7 +50,7 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
     lateinit var userRepository: UserRepository
 
     @After
-    fun after() {
+    fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.execute("delete from `user`")
         }
