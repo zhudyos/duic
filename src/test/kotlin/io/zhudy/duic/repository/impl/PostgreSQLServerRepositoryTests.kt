@@ -17,9 +17,9 @@ package io.zhudy.duic.repository.impl
 
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.repository.config.PostgreSQLConfiguration
+import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
@@ -47,7 +47,7 @@ class PostgreSQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
     @Autowired
     lateinit var serverRepository: ServerRepository
 
-    @Before
+    @After
     fun clean() {
         transactionTemplate.execute {
             jdbcTemplate.update("delete from server", EmptySqlParameterSource.INSTANCE)
