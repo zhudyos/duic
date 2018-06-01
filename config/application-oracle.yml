@@ -1,5 +1,0 @@
-spring:
-  datasource:
-    url: jdbc:oracle:thin:@192.168.31.164:1521:XE
-    username: duic
-    password: duic
