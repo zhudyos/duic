@@ -24,7 +24,7 @@ import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse.ok
-import java.net.NetworkInterface
+import java.net.InetAddress
 
 /**
  *`/servers`。
@@ -40,7 +40,7 @@ class ServerResource(
 
     init {
         Config.server = Config.Server(
-                host = serverProperties.address?.hostAddress ?: getLocalHost(),
+                host = InetAddress.getLocalHost().hostName,
                 port = serverProperties.port,
                 sslEnabled = serverProperties.ssl?.isEnabled ?: false
         )
@@ -57,17 +57,5 @@ class ServerResource(
      *
      */
     fun getLastDataTime(request: ServerRequest) = ok().body(ServerRefreshDto(appService.getMemoryLastDataTime()))
-
-    private fun getLocalHost(): String {
-        val e = NetworkInterface.getNetworkInterfaces()
-        while (e.hasMoreElements()) {
-            val ni = e.nextElement()
-            val addr = ni.interfaceAddresses.find { it.address.isSiteLocalAddress }
-            if (addr != null) {
-                return addr.address.hostAddress
-            }
-        }
-        throw IllegalStateException("未找到本机可访问的 IP 地址，请使用 server.address 配置上明确指定服务 IP")
-    }
 
 }
