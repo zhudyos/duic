@@ -32,10 +32,5 @@
         <property name="password" value="${jdbc.password:duic}"/>
     </bean>
 
-    <bean id="flyway" class="org.flywaydb.core.Flyway" init-method="migrate">
-        <property name="locations" value="db/migration/oracle"/>
-        <property name="dataSource" ref="dataSource"/>
-    </bean>
-
     <import resource="classpath:relational-dbms-spring.xml"/>
 </beans>
