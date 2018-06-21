@@ -14,6 +14,10 @@
 # limitations under the License.
 #
 
+logging:
+  level:
+    root: info
+
 server:
   port: 7777
 
