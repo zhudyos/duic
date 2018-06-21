@@ -22,11 +22,11 @@ open class OracleServerRepository(
     override fun register(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    """MERGE INTO SERVER d
-USING (SELECT :id id,:host host,:port port from DUAL) s
-ON (d.id = s.id)
-WHEN MATCHED THEN UPDATE SET d.init_at=CURRENT_TIMESTAMP, d.active_at=CURRENT_TIMESTAMP
-WHEN NOT MATCHED THEN INSERT (id,host,port,init_at,active_at) VALUES (s.id,s.host,s.port,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)""",
+                    """MERGE INTO DUIC_SERVER d
+USING (SELECT :id ID,:host HOST,:port PORT from DUAL) s
+ON (d.ID = s.ID)
+WHEN MATCHED THEN UPDATE SET d.INIT_AT=CURRENT_TIMESTAMP, d.ACTIVE_AT=CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN INSERT (ID,HOST,PORT,INIT_AT,ACTIVE_AT) VALUES (s.ID,s.HOST,s.PORT,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)""",
                     mapOf(
                             "id" to "${host}_$port",
                             "host" to host,
@@ -39,7 +39,7 @@ WHEN NOT MATCHED THEN INSERT (id,host,port,init_at,active_at) VALUES (s.id,s.hos
 
     override fun unregister(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
-            jdbcTemplate.update("DELETE FROM server WHERE id=:id", mapOf("id" to "${host}_$port"))
+            jdbcTemplate.update("DELETE FROM DUIC_SERVER WHERE ID=:id", mapOf("id" to "${host}_$port"))
         }
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
@@ -47,7 +47,7 @@ WHEN NOT MATCHED THEN INSERT (id,host,port,init_at,active_at) VALUES (s.id,s.hos
     override fun ping(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "UPDATE server SET active_at=:active_at WHERE id=:id",
+                    "UPDATE DUIC_SERVER SET ACTIVE_AT=:active_at WHERE ID=:id",
                     mapOf(
                             "id" to "${host}_$port",
                             "active_at" to Date()
@@ -60,7 +60,7 @@ WHEN NOT MATCHED THEN INSERT (id,host,port,init_at,active_at) VALUES (s.id,s.hos
     override fun findServers() = Flux.create<Server> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT host,port,init_at,active_at FROM server WHERE active_at >= :active_at",
+                    "SELECT HOST,PORT,INIT_AT,ACTIVE_AT FROM DUIC_SERVER WHERE ACTIVE_AT >= :active_at",
                     mapOf(
                             "active_at" to DateTime.now().minusMinutes(ServerRepository.ACTIVE_TIMEOUT_MINUTES).toDate()
                     )
@@ -79,7 +79,7 @@ WHEN NOT MATCHED THEN INSERT (id,host,port,init_at,active_at) VALUES (s.id,s.hos
     override fun clean() = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "DELETE FROM server WHERE active_at<=:active_at",
+                    "DELETE FROM DUIC_SERVER WHERE ACTIVE_AT<=:active_at",
                     mapOf(
                             "active_at" to DateTime.now().minusMinutes(ServerRepository.CLEAN_BEFORE_MINUTES).toDate()
                     )

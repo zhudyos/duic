@@ -55,8 +55,8 @@ class OracleAppRepositoryTests : AbstractJUnit4SpringContextTests() {
     @After
     fun clean() {
         transactionTemplate.execute {
-            jdbcTemplate.update("delete from app", EmptySqlParameterSource.INSTANCE)
-            jdbcTemplate.update("delete from app_history", EmptySqlParameterSource.INSTANCE)
+            jdbcTemplate.update("DELETE FROM DUIC_APP", EmptySqlParameterSource.INSTANCE)
+            jdbcTemplate.update("DELETE FROM DUIC_APP_HISTORY", EmptySqlParameterSource.INSTANCE)
         }
     }
 
@@ -90,7 +90,7 @@ class OracleAppRepositoryTests : AbstractJUnit4SpringContextTests() {
                 .verifyComplete()
 
         jdbcTemplate.query(
-                "SELECT * FROM app_history WHERE name=:name AND profile=:profile",
+                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
                 mapOf(
                         "name" to app.name,
                         "profile" to app.profile
@@ -139,7 +139,7 @@ class OracleAppRepositoryTests : AbstractJUnit4SpringContextTests() {
                 .verifyComplete()
 
         jdbcTemplate.query(
-                "SELECT * FROM app_history WHERE name=:name AND profile=:profile",
+                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
                 mapOf(
                         "name" to app.name,
                         "profile" to app.profile
@@ -168,7 +168,7 @@ class OracleAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         Assert.assertEquals(app.v + 1, v)
 
         jdbcTemplate.query(
-                "SELECT * FROM app_history WHERE name=:name AND profile=:profile",
+                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
                 mapOf(
                         "name" to app.name,
                         "profile" to app.profile

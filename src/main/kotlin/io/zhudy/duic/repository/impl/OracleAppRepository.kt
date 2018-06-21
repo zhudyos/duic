@@ -28,7 +28,7 @@ class OracleAppRepository(
     override fun insert(app: App) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "INSERT INTO app(id,name,profile,description,token,ip_limit,content,v,users,created_at,updated_at) VALUES(SEQ_APP.nextval,:name,:profile,:description,:token,:ipLimit,:content,:v,:users,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
+                    "INSERT INTO DUIC_APP(ID,NAME,PROFILE,DESCRIPTION,TOKEN,IP_LIMIT,CONTENT,V,USERS,CREATED_AT,UPDATED_AT) VALUES(SEQ_DUIC_APP.NEXTVAL,:name,:profile,:description,:token,:ipLimit,:content,:v,:users,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)",
                     mapOf(
                             "name" to app.name,
                             "profile" to app.profile,
@@ -47,7 +47,7 @@ class OracleAppRepository(
     override fun delete(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
         Mono.create<Int> { sink ->
             val n = transactionTemplate.execute {
-                val n = jdbcTemplate.update("DELETE FROM app WHERE name=:name AND profile=:profile", mapOf(
+                val n = jdbcTemplate.update("DELETE FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile", mapOf(
                         "name" to app.name,
                         "profile" to app.profile
                 ))
@@ -62,7 +62,7 @@ class OracleAppRepository(
     override fun <T> findOne(name: String, profile: String) = Mono.create<App> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT * FROM app WHERE name=:name AND profile=:profile",
+                    "SELECT * FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile",
                     mapOf("name" to name, "profile" to profile),
                     ResultSetExtractor {
                         if (it.next()) {
@@ -79,7 +79,7 @@ class OracleAppRepository(
         Mono.create<Int> { sink ->
             val n = transactionTemplate.execute {
                 val n = jdbcTemplate.update(
-                        "UPDATE app SET token=:token,ip_limit=:ip_limit,description=:description,users=:users,updated_at=CURRENT_TIMESTAMP WHERE name=:name and profile=:profile and v=:v",
+                        "UPDATE DUIC_APP SET TOKEN=:token,IP_LIMIT=:ip_limit,DESCRIPTION=:description,USERS=:users,UPDATED_AT=CURRENT_TIMESTAMP WHERE NAME=:name AND PROFILE=:profile AND V=:v",
                         mapOf(
                                 "token" to app.token,
                                 "ip_limit" to app.ipLimit,
@@ -109,7 +109,7 @@ class OracleAppRepository(
         Mono.create<Int> { sink ->
             val v = transactionTemplate.execute {
                 val n = jdbcTemplate.update(
-                        "UPDATE app SET content=:content,v=v+1,updated_at=CURRENT_TIMESTAMP WHERE name=:name AND profile=:profile AND v=:v",
+                        "UPDATE DUIC_APP SET CONTENT=:content,V=V+1,UPDATED_AT=CURRENT_TIMESTAMP WHERE NAME=:name AND PROFILE=:profile AND V=:v",
                         mapOf(
                                 "content" to app.content,
                                 "name" to app.name,
@@ -135,7 +135,7 @@ class OracleAppRepository(
 
     override fun findAll() = Flux.create<App> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT * FROM app ORDER BY updated_at") {
+            jdbcTemplate.query("SELECT * FROM DUIC_APP ORDER BY UPDATED_AT") {
                 sink.next(mapToApp(it))
             }
         }
@@ -146,7 +146,7 @@ class OracleAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
-                            "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app ) A WHERE ROWNUM <= :e ) WHERE RN >= :b",
+                            "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM DUIC_APP ) A WHERE ROWNUM <= :e ) WHERE RN >= :b",
                             mapOf("b" to pageable.begin, "e" to pageable.end)
                     ) {
                         sink.next(mapToApp(it))
@@ -157,7 +157,7 @@ class OracleAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     jdbcTemplate.queryForObject(
-                            "SELECT COUNT(1) FROM app",
+                            "SELECT COUNT(1) FROM DUIC_APP",
                             EmptySqlParameterSource.INSTANCE,
                             Int::class.java
                     )
@@ -172,7 +172,7 @@ class OracleAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
-                            "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app WHERE users LIKE '%' || :email || '%' ) A WHERE ROWNUM <= :e ) WHERE RN >= :b",
+                            "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM DUIC_APP WHERE USERS LIKE '%' || :email || '%' ) A WHERE ROWNUM <= :e ) WHERE RN >= :b",
                             mapOf(
                                     "email" to userContext.email,
                                     "b" to pageable.begin,
@@ -187,7 +187,7 @@ class OracleAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     jdbcTemplate.queryForObject(
-                            "SELECT COUNT(1) FROM app WHERE users LIKE '%' || :email || '%'",
+                            "SELECT COUNT(1) FROM DUIC_APP WHERE USERS LIKE '%' || :email || '%'",
                             mapOf("email" to userContext.email),
                             Int::class.java
                     )
@@ -202,9 +202,9 @@ class OracleAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
+                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM DUIC_APP ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
                     } else {
-                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app WHERE CONTAINS(CONTENT, :q) > 0 ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
+                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM DUIC_APP WHERE CONTAINS(CONTENT, :q) > 0 ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
                     }
 
                     jdbcTemplate.query(
@@ -223,9 +223,9 @@ class OracleAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT COUNT(*) FROM app"
+                        "SELECT COUNT(*) FROM DUIC_APP"
                     } else {
-                        "SELECT COUNT(*) FROM app WHERE CONTAINS(CONTENT, :q) > 0"
+                        "SELECT COUNT(*) FROM DUIC_APP WHERE CONTAINS(CONTENT, :q) > 0"
                     }
                     jdbcTemplate.queryForObject(sql, mapOf("q" to q), Int::class.java)
                 }
@@ -239,9 +239,9 @@ class OracleAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app WHERE users LIKE '%' || :email || '%' ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
+                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM DUIC_APP WHERE USERS LIKE '%' || :email || '%' ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
                     } else {
-                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app WHERE users LIKE '%' || :email || '%' AND CONTAINS(CONTENT, :q) > 0 ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
+                        "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM ( SELECT * FROM DUIC_APP WHERE USERS LIKE '%' || :email || '%' AND CONTAINS(CONTENT, :q) > 0 ) A WHERE ROWNUM <= :e ) WHERE RN >= :b"
                     }
                     jdbcTemplate.query(
                             sql,
@@ -260,9 +260,9 @@ class OracleAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT COUNT(*) FROM app WHERE users LIKE '%' || :email || '%'"
+                        "SELECT COUNT(*) FROM DUIC_APP WHERE USERS LIKE '%' || :email || '%'"
                     } else {
-                        "SELECT COUNT(*) FROM app WHERE users LIKE '%' || :email || '%' AND CONTAINS(CONTENT, :q) > 0"
+                        "SELECT COUNT(*) FROM DUIC_APP WHERE USERS LIKE '%' || :email || '%' AND CONTAINS(CONTENT, :q) > 0"
                     }
                     jdbcTemplate.queryForObject(sql, mapOf("q" to q, "email" to userContext.email), Int::class.java)
                 }
@@ -275,7 +275,7 @@ class OracleAppRepository(
     override fun findByUpdatedAt(updateAt: Date) = Flux.create<App> { sink ->
         transactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT * FROM app WHERE updated_at > :updated_at ORDER BY updated_at",
+                    "SELECT * FROM DUIC_APP WHERE UPDATED_AT > :updated_at ORDER BY UPDATED_AT",
                     mapOf("updated_at" to updateAt)
             ) {
                 sink.next(mapToApp(it))
@@ -287,7 +287,7 @@ class OracleAppRepository(
     override fun findLast50History(name: String, profile: String) = Flux.create<AppContentHistory> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT A.*, ROWNUM RN FROM ( SELECT * FROM app_history WHERE name=:name AND profile=:profile ORDER BY created_at DESC ) A WHERE ROWNUM <= 50",
+                    "SELECT A.*, ROWNUM RN FROM ( SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile ORDER BY CREATED_AT DESC ) A WHERE ROWNUM <= 50",
                     mapOf("name" to name, "profile" to profile)
             ) {
                 sink.next(AppContentHistory(
@@ -303,7 +303,7 @@ class OracleAppRepository(
 
     override fun findAllNames() = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT name FROM app") {
+            jdbcTemplate.query("SELECT NAME FROM DUIC_APP") {
                 sink.next(it.getString("name"))
             }
         }
@@ -312,7 +312,7 @@ class OracleAppRepository(
 
     override fun findProfilesByName(name: String) = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT profile FROM app WHERE name=:name", mapOf("name" to name)) {
+            jdbcTemplate.query("SELECT PROFILE FROM DUIC_APP WHERE NAME=:name", mapOf("name" to name)) {
                 sink.next(it.getString("profile"))
             }
         }
@@ -322,7 +322,7 @@ class OracleAppRepository(
     override fun findDeletedByCreatedAt(createdAt: Date) = Flux.create<AppHistory> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT * FROM app_history WHERE created_at > :created_at AND deleted_by IS NOT NULL ORDER BY created_at",
+                    "SELECT * FROM DUIC_APP_HISTORY WHERE CREATED_AT > :created_at AND DELETED_BY IS NOT NULL ORDER BY CREATED_AT",
                     mapOf("created_at" to createdAt)
             ) {
                 sink.next(AppHistory(
@@ -346,7 +346,7 @@ class OracleAppRepository(
 
     override fun findLastDataTime() = Mono.create<Long> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT updated_at FROM app ORDER BY updated_at DESC", ResultSetExtractor {
+            jdbcTemplate.query("SELECT UPDATED_AT FROM DUIC_APP ORDER BY UPDATED_AT DESC", ResultSetExtractor {
                 if (it.next()) {
                     sink.success(it.getTimestamp("updated_at").time)
                 } else {
@@ -357,8 +357,8 @@ class OracleAppRepository(
     }
 
     private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = jdbcTemplate.update(
-            """INSERT INTO app_history(id,name,profile,description,token,ip_limit,v,content,users,deleted_by,updated_by,created_at)
-VALUES(SEQ_APP_HISTORY.nextval,:name,:profile,:description,:token,:ip_limit,:v,:content,:users,:deleted_by,:updated_by,CURRENT_TIMESTAMP)""",
+            """INSERT INTO DUIC_APP_HISTORY(ID,NAME,PROFILE,DESCRIPTION,TOKEN,IP_LIMIT,V,CONTENT,USERS,DELETED_BY,UPDATED_BY,CREATED_AT)
+VALUES(SEQ_DUIC_APP_HISTORY.NEXTVAL,:name,:profile,:description,:token,:ip_limit,:v,:content,:users,:deleted_by,:updated_by,CURRENT_TIMESTAMP)""",
             mapOf(
                     "name" to app.name,
                     "profile" to app.profile,

@@ -24,7 +24,7 @@ class OracleUserRepository(
     override fun insert(user: User) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "INSERT INTO T_USER(id,email,password,created_at) VALUES(SEQ_USER.nextval,:email,:password,CURRENT_TIMESTAMP)",
+                    "INSERT INTO DUIC_USER(ID,EMAIL,PASSWORD,CREATED_AT) VALUES(SEQ_DUIC_USER.NEXTVAL,:email,:password,CURRENT_TIMESTAMP)",
                     mapOf(
                             "email" to user.email,
                             "password" to user.password
@@ -37,7 +37,7 @@ class OracleUserRepository(
     override fun delete(email: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "DELETE FROM T_USER WHERE email=:email",
+                    "DELETE FROM DUIC_USER WHERE EMAIL=:email",
                     mapOf("email" to email)
             )
         }
@@ -47,7 +47,7 @@ class OracleUserRepository(
     override fun updatePassword(email: String, password: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "UPDATE T_USER SET password=:password,updated_at=CURRENT_TIMESTAMP WHERE email=:email",
+                    "UPDATE DUIC_USER SET PASSWORD=:password,UPDATED_AT=CURRENT_TIMESTAMP WHERE EMAIL=:email",
                     mapOf("email" to email, "password" to password)
             )
         }
@@ -57,7 +57,7 @@ class OracleUserRepository(
     override fun findByEmail(email: String) = Mono.create<User> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT email,password FROM T_USER WHERE email=:email",
+                    "SELECT EMAIL,PASSWORD FROM DUIC_USER WHERE EMAIL=:email",
                     mapOf("email" to email),
                     ResultSetExtractor {
                         if (it.next()) {
@@ -74,7 +74,7 @@ class OracleUserRepository(
             Flux.create<User> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
-                            "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM (SELECT email,created_at,updated_at FROM T_USER) A WHERE ROWNUM <= :e ) WHERE RN >= :b",
+                            "SELECT * FROM ( SELECT A.*, ROWNUM RN FROM (SELECT EMAIL,CREATED_AT,UPDATED_AT FROM DUIC_USER) A WHERE ROWNUM <= :e ) WHERE RN >= :b",
                             mapOf("b" to pageable.begin, "e" to pageable.end)
                     ) {
                         sink.next(User(
@@ -89,7 +89,7 @@ class OracleUserRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     jdbcTemplate.queryForObject(
-                            "SELECT COUNT(1) FROM T_USER",
+                            "SELECT COUNT(1) FROM DUIC_USER",
                             EmptySqlParameterSource.INSTANCE,
                             Int::class.java
                     )
@@ -102,7 +102,7 @@ class OracleUserRepository(
 
     override fun findAllEmail() = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT email FROM T_USER") {
+            jdbcTemplate.query("SELECT EMAIL FROM DUIC_USER") {
                 sink.next(it.getString(1))
             }
             sink.complete()

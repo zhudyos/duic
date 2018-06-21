@@ -43,7 +43,7 @@ open class MySQLAppRepository(
     override fun insert(app: App) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "INSERT INTO app(name,profile,description,token,ip_limit,content,v,users,updated_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:users,now())",
+                    "INSERT INTO DUIC_APP(NAME,PROFILE,DESCRIPTION,TOKEN,IP_LIMIT,CONTENT,V,USERS,UPDATED_AT) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:users,NOW())",
                     mapOf(
                             "name" to app.name,
                             "profile" to app.profile,
@@ -62,7 +62,7 @@ open class MySQLAppRepository(
     override fun delete(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
         Mono.create<Int> { sink ->
             val n = transactionTemplate.execute {
-                val n = jdbcTemplate.update("DELETE FROM app WHERE name=:name AND profile=:profile", mapOf(
+                val n = jdbcTemplate.update("DELETE FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile", mapOf(
                         "name" to app.name,
                         "profile" to app.profile
                 ))
@@ -77,7 +77,7 @@ open class MySQLAppRepository(
     override fun <T> findOne(name: String, profile: String) = Mono.create<App> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT * FROM app WHERE name=:name AND profile=:profile",
+                    "SELECT * FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile",
                     mapOf("name" to name, "profile" to profile),
                     ResultSetExtractor {
                         if (it.next()) {
@@ -94,7 +94,7 @@ open class MySQLAppRepository(
         Mono.create<Int> { sink ->
             val n = transactionTemplate.execute {
                 val n = jdbcTemplate.update(
-                        "UPDATE app SET token=:token,ip_limit=:ip_limit,description=:description,users=:users,updated_at=now() WHERE name=:name and profile=:profile and v=:v",
+                        "UPDATE DUIC_APP SET TOKEN=:token,IP_LIMIT=:ip_limit,DESCRIPTION=:description,USERS=:users,UPDATED_AT=now() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
                         mapOf(
                                 "token" to app.token,
                                 "ip_limit" to app.ipLimit,
@@ -124,7 +124,7 @@ open class MySQLAppRepository(
         Mono.create<Int> { sink ->
             val v = transactionTemplate.execute {
                 val n = jdbcTemplate.update(
-                        "UPDATE app SET content=:content,v=v+1,updated_at=now() WHERE name=:name AND profile=:profile AND v=:v",
+                        "UPDATE DUIC_APP SET CONTENT=:content,V=V+1,UPDATED_AT=now() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
                         mapOf(
                                 "content" to app.content,
                                 "name" to app.name,
@@ -150,7 +150,7 @@ open class MySQLAppRepository(
 
     override fun findAll() = Flux.create<App> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT * FROM app ORDER BY updated_at") {
+            jdbcTemplate.query("SELECT * FROM DUIC_APP ORDER BY UPDATED_AT") {
                 sink.next(mapToApp(it))
             }
         }
@@ -161,7 +161,7 @@ open class MySQLAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
-                            "SELECT * FROM app LIMIT :offset,:limit",
+                            "SELECT * FROM DUIC_APP LIMIT :offset,:limit",
                             mapOf("offset" to pageable.offset, "limit" to pageable.size)
                     ) {
                         sink.next(mapToApp(it))
@@ -172,7 +172,7 @@ open class MySQLAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     jdbcTemplate.queryForObject(
-                            "SELECT COUNT(1) FROM app",
+                            "SELECT COUNT(1) FROM DUIC_APP",
                             EmptySqlParameterSource.INSTANCE,
                             Int::class.java
                     )
@@ -187,7 +187,7 @@ open class MySQLAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
-                            "SELECT * FROM app WHERE users LIKE CONCAT('%', :email, '%') LIMIT :offset,:limit",
+                            "SELECT * FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%') LIMIT :offset,:limit",
                             mapOf(
                                     "email" to userContext.email,
                                     "offset" to pageable.offset,
@@ -202,7 +202,7 @@ open class MySQLAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     jdbcTemplate.queryForObject(
-                            "SELECT COUNT(1) FROM app WHERE users LIKE CONCAT('%', :email, '%')",
+                            "SELECT COUNT(1) FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%')",
                             mapOf("email" to userContext.email),
                             Int::class.java
                     )
@@ -217,9 +217,9 @@ open class MySQLAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT * FROM app LIMIT :offset,:limit"
+                        "SELECT * FROM DUIC_APP LIMIT :offset,:limit"
                     } else {
-                        "SELECT * FROM app WHERE MATCH(name, profile, content) AGAINST(:q) LIMIT :offset,:limit"
+                        "SELECT * FROM DUIC_APP WHERE MATCH(NAME, PROFILE, CONTENT) AGAINST(:q) LIMIT :offset,:limit"
                     }
 
                     jdbcTemplate.query(
@@ -238,9 +238,9 @@ open class MySQLAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT COUNT(*) FROM app"
+                        "SELECT COUNT(*) FROM DUIC_APP"
                     } else {
-                        "SELECT COUNT(*) FROM app WHERE MATCH(name, profile, content) AGAINST(:q)"
+                        "SELECT COUNT(*) FROM DUIC_APP WHERE MATCH(NAME, PROFILE, CONTENT) AGAINST(:q)"
                     }
                     jdbcTemplate.queryForObject(sql, mapOf("q" to q), Int::class.java)
                 }
@@ -254,9 +254,9 @@ open class MySQLAppRepository(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT * FROM app WHERE users LIKE CONCAT('%', :email, '%') LIMIT :offset,:limit"
+                        "SELECT * FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%') LIMIT :offset,:limit"
                     } else {
-                        "SELECT * FROM app WHERE users LIKE CONCAT('%', :email, '%') AND MATCH(name, profile, content) AGAINST(:q) LIMIT :offset,:limit"
+                        "SELECT * FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%') AND MATCH(NAME, PROFILE, CONTENT) AGAINST(:q) LIMIT :offset,:limit"
                     }
                     jdbcTemplate.query(
                             sql,
@@ -275,9 +275,9 @@ open class MySQLAppRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
-                        "SELECT COUNT(*) FROM app WHERE users LIKE CONCAT('%', :email, '%')"
+                        "SELECT COUNT(*) FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%')"
                     } else {
-                        "SELECT COUNT(*) FROM app WHERE users LIKE CONCAT('%', :email, '%') AND MATCH(name, profile, content) AGAINST(:q)"
+                        "SELECT COUNT(*) FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%') AND MATCH(NAME, PROFILE, CONTENT) AGAINST(:q)"
                     }
                     jdbcTemplate.queryForObject(sql, mapOf("q" to q, "email" to userContext.email), Int::class.java)
                 }
@@ -290,7 +290,7 @@ open class MySQLAppRepository(
     override fun findByUpdatedAt(updateAt: Date) = Flux.create<App> { sink ->
         transactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT * FROM app WHERE updated_at > :updated_at ORDER BY updated_at",
+                    "SELECT * FROM DUIC_APP WHERE UPDATED_AT > :updated_at ORDER BY UPDATED_AT",
                     mapOf("updated_at" to updateAt)
             ) {
                 sink.next(mapToApp(it))
@@ -302,7 +302,7 @@ open class MySQLAppRepository(
     override fun findLast50History(name: String, profile: String) = Flux.create<AppContentHistory> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT * FROM app_history WHERE name=:name AND profile=:profile ORDER BY created_at DESC LIMIT 0,50",
+                    "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile ORDER BY CREATED_AT DESC LIMIT 0,50",
                     mapOf("name" to name, "profile" to profile)
             ) {
                 sink.next(AppContentHistory(
@@ -318,7 +318,7 @@ open class MySQLAppRepository(
 
     override fun findAllNames() = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT name FROM app") {
+            jdbcTemplate.query("SELECT NAME FROM DUIC_APP") {
                 sink.next(it.getString("name"))
             }
         }
@@ -327,7 +327,7 @@ open class MySQLAppRepository(
 
     override fun findProfilesByName(name: String) = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT profile FROM app WHERE name=:name", mapOf("name" to name)) {
+            jdbcTemplate.query("SELECT PROFILE FROM DUIC_APP WHERE NAME=:name", mapOf("name" to name)) {
                 sink.next(it.getString("profile"))
             }
         }
@@ -337,7 +337,7 @@ open class MySQLAppRepository(
     override fun findDeletedByCreatedAt(createdAt: Date) = Flux.create<AppHistory> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT * FROM app_history WHERE created_at > :created_at AND deleted_by IS NOT NULL AND deleted_by != '' ORDER BY created_at",
+                    "SELECT * FROM DUIC_APP_HISTORY WHERE CREATED_AT > :created_at AND DELETED_BY IS NOT NULL AND DELETED_BY != '' ORDER BY CREATED_AT",
                     mapOf("created_at" to createdAt)
             ) {
                 sink.next(AppHistory(
@@ -361,7 +361,7 @@ open class MySQLAppRepository(
 
     override fun findLastDataTime() = Mono.create<Long> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT updated_at FROM app ORDER BY updated_at DESC", ResultSetExtractor {
+            jdbcTemplate.query("SELECT UPDATED_AT FROM DUIC_APP ORDER BY UPDATED_AT DESC", ResultSetExtractor {
                 if (it.next()) {
                     sink.success(it.getDate("updated_at").time)
                 } else {
@@ -372,7 +372,7 @@ open class MySQLAppRepository(
     }
 
     private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = jdbcTemplate.update(
-            """INSERT INTO app_history(name,profile,description,token,ip_limit,v,content,users,deleted_by,updated_by,created_at)
+            """INSERT INTO DUIC_APP_HISTORY(NAME,PROFILE,DESCRIPTION,TOKEN,IP_LIMIT,V,CONTENT,USERS,DELETED_BY,UPDATED_BY,CREATED_AT)
 VALUES(:name,:profile,:description,:token,:ip_limit,:v,:content,:users,:deleted_by,:updated_by,now())""",
             mapOf(
                     "name" to app.name,

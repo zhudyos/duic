@@ -34,7 +34,7 @@ class OracleServerRepositoryTests : AbstractJUnit4SpringContextTests() {
     @After
     fun clean() {
         transactionTemplate.execute {
-            jdbcTemplate.update("delete from server", EmptySqlParameterSource.INSTANCE)
+            jdbcTemplate.update("DELETE FROM DUIC_SERVER", EmptySqlParameterSource.INSTANCE)
         }
     }
 

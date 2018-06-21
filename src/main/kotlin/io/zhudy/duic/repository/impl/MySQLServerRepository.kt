@@ -38,13 +38,11 @@ open class MySQLServerRepository(
     override fun register(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "INSERT INTO server(id,host,port,init_at,active_at) VALUES(:id,:host,:port,:init_at,:active_at) ON DUPLICATE KEY UPDATE init_at=:init_at,active_at=:active_at",
+                    "INSERT INTO DUIC_SERVER(ID,HOST,PORT,INIT_AT,ACTIVE_AT) VALUES(:id,:host,:port,NOW(),NOW()) ON DUPLICATE KEY UPDATE INIT_AT=NOW(),ACTIVE_AT=NOW()",
                     mapOf(
                             "id" to "${host}_$port",
                             "host" to host,
-                            "port" to port,
-                            "init_at" to Date(),
-                            "active_at" to Date()
+                            "port" to port
                     )
             )
         }
@@ -53,7 +51,7 @@ open class MySQLServerRepository(
 
     override fun unregister(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
-            jdbcTemplate.update("DELETE FROM server WHERE id=:id", mapOf("id" to "${host}_$port"))
+            jdbcTemplate.update("DELETE FROM DUIC_SERVER WHERE ID=:id", mapOf("id" to "${host}_$port"))
         }
         it.success(n)
     }
@@ -61,7 +59,7 @@ open class MySQLServerRepository(
     override fun ping(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "UPDATE server SET active_at=:active_at WHERE id=:id",
+                    "UPDATE DUIC_SERVER SET ACTIVE_AT=:active_at WHERE ID=:id",
                     mapOf(
                             "id" to "${host}_$port",
                             "active_at" to Date()
@@ -74,7 +72,7 @@ open class MySQLServerRepository(
     override fun findServers() = Flux.create<Server> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    "SELECT host,port,init_at,active_at FROM server WHERE active_at >= :active_at",
+                    "SELECT HOST,PORT,INIT_AT,ACTIVE_AT FROM DUIC_SERVER WHERE ACTIVE_AT >= :active_at",
                     mapOf(
                             "active_at" to DateTime.now().minusMinutes(ACTIVE_TIMEOUT_MINUTES)
                     )
@@ -93,7 +91,7 @@ open class MySQLServerRepository(
     override fun clean() = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    "DELETE FROM server WHERE active_at<=:active_at",
+                    "DELETE FROM DUIC_SERVER WHERE ACTIVE_AT<=:active_at",
                     mapOf(
                             "active_at" to DateTime.now().minusMinutes(CLEAN_BEFORE_MINUTES).toDate()
                     )

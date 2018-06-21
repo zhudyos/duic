@@ -39,7 +39,7 @@ class PostgreSQLUserRepository(
     override fun insert(user: User) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    """INSERT INTO "user"(email,password,created_at) VALUES(:email,:password,now())""",
+                    """INSERT INTO DUIC_USER(EMAIL,PASSWORD,CREATED_AT) VALUES(:email,:password,NOW())""",
                     mapOf(
                             "email" to user.email,
                             "password" to user.password
@@ -52,7 +52,7 @@ class PostgreSQLUserRepository(
     override fun delete(email: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    """DELETE FROM "user" WHERE email=:email""",
+                    """DELETE FROM DUIC_USER WHERE EMAIL=:email""",
                     mapOf("email" to email)
             )
         }
@@ -62,7 +62,7 @@ class PostgreSQLUserRepository(
     override fun updatePassword(email: String, password: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
-                    """UPDATE "user" SET password=:password,updated_at=now() WHERE email=:email""",
+                    """UPDATE DUIC_USER SET PASSWORD=:password,UPDATED_AT=NOW() WHERE EMAIL=:email""",
                     mapOf("email" to email, "password" to password)
             )
         }
@@ -72,7 +72,7 @@ class PostgreSQLUserRepository(
     override fun findByEmail(email: String) = Mono.create<User> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
-                    """SELECT email,password FROM "user" WHERE "email"=:email""",
+                    """SELECT EMAIL,PASSWORD FROM DUIC_USER WHERE EMAIL=:email""",
                     mapOf("email" to email),
                     ResultSetExtractor {
                         if (it.next()) {
@@ -89,7 +89,7 @@ class PostgreSQLUserRepository(
             Flux.create<User> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
-                            """SELECT email,created_at,updated_at FROM "user" LIMIT :limit OFFSET :offset""",
+                            """SELECT EMAIL,CREATED_AT,UPDATED_AT FROM DUIC_USER LIMIT :limit OFFSET :offset""",
                             mapOf("offset" to pageable.offset, "limit" to pageable.size)
                     ) {
                         sink.next(User(
@@ -104,7 +104,7 @@ class PostgreSQLUserRepository(
             Mono.create<Int> {
                 val c = roTransactionTemplate.execute {
                     jdbcTemplate.queryForObject(
-                            """SELECT COUNT(1) FROM "user"""",
+                            """SELECT COUNT(1) FROM DUIC_USER""",
                             EmptySqlParameterSource.INSTANCE,
                             Int::class.java
                     )
@@ -117,7 +117,7 @@ class PostgreSQLUserRepository(
 
     override fun findAllEmail() = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("""SELECT email FROM "user"""") {
+            jdbcTemplate.query("""SELECT EMAIL FROM DUIC_USER""") {
                 sink.next(it.getString(1))
             }
             sink.complete()

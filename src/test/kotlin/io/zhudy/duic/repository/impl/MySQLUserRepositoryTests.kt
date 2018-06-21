@@ -52,7 +52,7 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
     @After
     fun clean() {
         transactionTemplate.execute {
-            jdbcTemplate.execute("delete from `user`")
+            jdbcTemplate.execute("DELETE FROM DUIC_USER")
         }
     }
 
