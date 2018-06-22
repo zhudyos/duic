@@ -17,6 +17,7 @@
 logging:
   level:
     root: info
+    liquibase.integration.spring.SpringLiquibase: error
 
 server:
   port: 7777
