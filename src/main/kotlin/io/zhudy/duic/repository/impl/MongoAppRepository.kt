@@ -132,11 +132,12 @@ open class MongoAppRepository(
                 set("updated_at", updatedAt)
         )
         return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-            appColl.updateOne(q, u).toMono().map { rs ->
+            appColl.updateOne(q, u).toMono().flatMap { rs ->
                 if (rs.modifiedCount < 1) {
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 }
                 insertHistory(dbApp, false, userContext)
+            }.map {
                 dbApp.v
             }
         }
@@ -159,7 +160,7 @@ open class MongoAppRepository(
         )
 
         return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-            appColl.updateOne(q, u).toMono().map { rs ->
+            appColl.updateOne(q, u).toMono().flatMap { rs ->
                 if (rs.modifiedCount < 1) {
                     if (app.v != dbApp.v) {
                         throw BizCodeException(BizCodes.C_1004)
@@ -168,7 +169,7 @@ open class MongoAppRepository(
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 }
                 insertHistory(dbApp, false, userContext)
-
+            }.map {
                 app.v + 1
             }
         }
