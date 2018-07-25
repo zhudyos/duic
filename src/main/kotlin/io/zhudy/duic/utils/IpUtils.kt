@@ -22,7 +22,7 @@ package io.zhudy.duic.utils
  */
 object IpUtils {
 
-    val LOCALHOST = 2130706433L
+    private const val LOCALHOST = 2130706433L
 
 
     /**

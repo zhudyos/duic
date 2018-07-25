@@ -31,6 +31,8 @@ import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 
 /**
+ * 集群服务管理。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
@@ -48,7 +50,7 @@ class ServerService(
     private val failServerRefreshDto = ServerRefreshDto(lastDataTime = -1)
 
     /**
-     *
+     * 监听 [ApplicationReadyEvent] 事件，服务启动成功后会自动注册当前服务。
      */
     @EventListener(classes = [ApplicationReadyEvent::class])
     fun register() {
@@ -58,7 +60,7 @@ class ServerService(
     }
 
     /**
-     *
+     * 监听 [ContextClosedEvent] 事件，服务停止后会自动下线当前服务。
      */
     @EventListener(classes = [ContextClosedEvent::class])
     fun unregister() {
@@ -67,6 +69,9 @@ class ServerService(
         }.subscribe()
     }
 
+    /**
+     * 服务心跳。每隔[PING_DELAY]毫秒，会定时维持服务心跳。超时的服务会被自动下线。
+     */
     @Scheduled(initialDelay = PING_DELAY, fixedDelay = PING_DELAY)
     fun clockPing() {
         serverRepository.clean()

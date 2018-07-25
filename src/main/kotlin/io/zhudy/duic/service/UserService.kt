@@ -29,6 +29,8 @@ import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
 
 /**
+ * 用户管理。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
@@ -45,7 +47,7 @@ class UserService(val userRepository: UserRepository,
     }
 
     /**
-     * 用户登录.
+     * 用户登录。
      *
      * 错误返回
      * - [BizCodes.C_2000]
@@ -65,7 +67,7 @@ class UserService(val userRepository: UserRepository,
     }
 
     /**
-     * 保存用户.
+     * 保存用户。
      */
     fun insert(user: User): Mono<*> {
         user.password = passwordEncoder.encode(user.password)
@@ -73,7 +75,11 @@ class UserService(val userRepository: UserRepository,
     }
 
     /**
+     * 更新用户密码。
      *
+     * @param email 邮箱
+     * @param oldPassword 原密码
+     * @param newPassword 新密码
      */
     fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Int> {
         return userRepository.findByEmail(email).single().flatMap {
@@ -85,7 +91,7 @@ class UserService(val userRepository: UserRepository,
     }
 
     /**
-     *
+     * 删除用户。
      */
     fun delete(email: String): Mono<*> {
         if (email == Config.rootEmail) {
@@ -95,7 +101,7 @@ class UserService(val userRepository: UserRepository,
     }
 
     /**
-     * 重置密码.
+     * 重置密码。
      */
     fun resetPassword(dto: ResetPasswordDto): Mono<*> {
         if (dto.email == Config.rootEmail) {
@@ -105,12 +111,12 @@ class UserService(val userRepository: UserRepository,
     }
 
     /**
-     *
+     * 分页查询用户列表。
      */
     fun findPage(page: Pageable) = userRepository.findPage(page)
 
     /**
-     *
+     * 返回所有用户的邮箱。
      */
     fun findAllEmail() = userRepository.findAllEmail()
 }

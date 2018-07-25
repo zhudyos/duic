@@ -32,17 +32,20 @@ import org.springframework.context.annotation.ComponentScan
 
 
 /**
+ * 程序入口。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootApplication(exclude = [
-MongoReactiveAutoConfiguration::class,
-DataSourceAutoConfiguration::class,
-RestTemplateAutoConfiguration::class,
-ErrorWebFluxAutoConfiguration::class,
-CodecsAutoConfiguration::class,
-PersistenceExceptionTranslationAutoConfiguration::class,
-TransactionAutoConfiguration::class,
-ValidationAutoConfiguration::class])
+    MongoReactiveAutoConfiguration::class,
+    DataSourceAutoConfiguration::class,
+    RestTemplateAutoConfiguration::class,
+    ErrorWebFluxAutoConfiguration::class,
+    CodecsAutoConfiguration::class,
+    PersistenceExceptionTranslationAutoConfiguration::class,
+    TransactionAutoConfiguration::class,
+    ValidationAutoConfiguration::class
+])
 @ComponentScan("io.zhudy.duic")
 class Application {
 

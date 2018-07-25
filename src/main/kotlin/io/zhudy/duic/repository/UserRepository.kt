@@ -22,37 +22,39 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
+ * 用户管理操作。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 interface UserRepository {
 
     /**
-     *
+     * 添加一个新用户。
      */
     fun insert(user: User): Mono<*>
 
     /**
-     *
+     * 删除一个用户。
      */
     fun delete(email: String): Mono<Int>
 
     /**
-     *
+     * 更新用户密码。
      */
     fun updatePassword(email: String, password: String): Mono<Int>
 
     /**
-     *
+     * 根据邮箱查询用户信息。
      */
     fun findByEmail(email: String): Mono<User>
 
     /**
-     *
+     * 分页查询用户列表。
      */
     fun findPage(pageable: Pageable): Mono<Page<User>>
 
     /**
-     *
+     * 返回所有用户的邮箱。
      */
     fun findAllEmail(): Flux<String>
 

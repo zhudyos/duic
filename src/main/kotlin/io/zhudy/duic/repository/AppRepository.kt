@@ -22,6 +22,8 @@ import reactor.core.publisher.Mono
 import java.util.*
 
 /**
+ * 应用配置操作。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 interface AppRepository {

@@ -20,6 +20,8 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
+ * 集群服务管理。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 interface ServerRepository {
@@ -37,22 +39,31 @@ interface ServerRepository {
     }
 
     /**
+     * 注册服务。
      *
+     * @param host 服务主机
+     * @param port 服务端口
      */
     fun register(host: String, port: Int): Mono<*>
 
     /**
+     * 下线集群服务。
      *
+     * @param host 服务主机
+     * @param port 服务端口
      */
     fun unregister(host: String, port: Int): Mono<*>
 
     /**
+     * 服务心跳。
      *
+     * @param host 服务主机
+     * @param port 服务端口
      */
     fun ping(host: String, port: Int): Mono<*>
 
     /**
-     *
+     * 返回集群服务列表。
      */
     fun findServers(): Flux<Server>
 

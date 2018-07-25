@@ -19,6 +19,8 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 
 /**
+ * 事务数据操作基类。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 abstract class AbstractTransactionRepository(
@@ -26,13 +28,13 @@ abstract class AbstractTransactionRepository(
 ) {
 
     /**
-     *
+     * 返回一个事务模板实例。
      */
     protected val transactionTemplate: TransactionTemplate
         get() = TransactionTemplate(transactionManager)
 
     /**
-     *
+     * 返回一个只读事务模板实例。
      */
     protected val roTransactionTemplate: TransactionTemplate
         get() {

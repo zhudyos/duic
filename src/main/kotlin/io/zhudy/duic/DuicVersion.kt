@@ -25,9 +25,8 @@ object DuicVersion {
     /**
      * 返回 duic 版本号，如果没有则返回空字符串。
      */
-    val version: String
-        get() {
-            return DuicVersion::class.java.`package`?.implementationVersion ?: ""
-        }
+    val version: String by lazy {
+        DuicVersion::class.java.`package`?.implementationVersion ?: ""
+    }
 
 }
