@@ -32,6 +32,7 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebExceptionHandler
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.io.IOException
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -45,6 +46,8 @@ class GlobalWebExceptionHandler(
 
     override fun handle(exchange: ServerWebExchange, e: Throwable): Mono<Void> {
         val response = exchange.response
+        if (response.isCommitted && e is IOException) return Mono.empty<Void>()
+
         var status = 400
         val body = when (e) {
             is DuplicateKeyException -> mapOf(
