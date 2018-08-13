@@ -22,6 +22,7 @@
         right 0
         bottom 0
         left 0
+        overflow hidden
 </style>
 <template>
     <v-card tile style="overflow: hidden" @keydown.esc="$emit('input')">
@@ -91,8 +92,10 @@
                         theme: 'vs-dark',
                         language: 'yaml'
                     })
-
-                    e.onDidChangeModelContent(this.changeContent);
+                    e.getModel().updateOptions({
+                        tabSize: 2
+                    })
+                    e.onDidChangeModelContent(this.changeContent)
                     e.focus()
                     this.editor = e
                 })
