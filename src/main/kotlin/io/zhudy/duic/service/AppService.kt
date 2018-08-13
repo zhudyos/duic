@@ -400,7 +400,7 @@ class AppService(
                 .switchIfEmpty(
                         findOne(name, profile).map {
                             val ca = mapToCachedApp(it)
-                            appCaches.put(k, ca)
+                            appCaches[k] = ca
                             ca
                         }.switchIfEmpty(Mono.create {
                             it.error(BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile"))
