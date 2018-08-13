@@ -84,7 +84,7 @@
                 })
             },
             initEditor() {
-                window.require.config({paths: {'vs': '/monaco-editor/0.11.1/min/vs'}})
+                window.require.config({paths: {'vs': '/monaco-editor/min/vs'}})
                 window.require(['vs/editor/editor.main'], () => {
                     let e = monaco.editor.create(this.$refs.codeEditor, {
                         value: this.app.content,

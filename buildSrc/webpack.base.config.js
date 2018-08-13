@@ -95,7 +95,7 @@ module.exports = {
         }),
         new CopyWebpackPlugin([{
             from: './node_modules/monaco-editor/min',
-            to: 'monaco-editor/0.11.1/min'
+            to: 'monaco-editor/min'
         }, {
             from: './node_modules/monaco-editor/min-maps',
             to: 'monaco-editor/0.11.1/min-maps'

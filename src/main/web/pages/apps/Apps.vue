@@ -258,3 +258,7 @@
         }
     }
 </script>
+<style lang="stylus">
+    .dialog
+        border-radius 0px !important
+</style>
