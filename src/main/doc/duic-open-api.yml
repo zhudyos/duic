@@ -1,11 +1,7 @@
-openapi: 3.0.0
+openapi: 3.0.1
 servers:
   - description: DuiC Server
     url: https://duic.zhudy.io/api/v1
-
-    # Added by API Auto Mocking Plugin
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/kevinz70/duic/1.0.0
 
 info:
   description: DuiC 配置中心 API
@@ -46,13 +42,25 @@ paths:
                   state:
                     type: string
                     example: "45"
+        400:
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        401:
+          description: 认证失败缺少或者错误的 `x-config-token`
   /apps/watches/{name}/{profile}:
     get:
       tags:
         - apps
       description: |
         监控应用配置状态。
+
         如果服务端当前的配置状态与传入的参数 state 不相同，则服务端会立即响应当前最新的状态给客户端。
+
         如果服务端当前的配置状态与传入的参数 state 相同，该接口会延迟响应，当服务端配置状态发生变化时会立即响应给客户端。
         服务端延迟最多 30 秒一定会响应客户端 state 状态，响应的 state 可能与传入的参数 state 相同，客户端需要判断当 state 不同时做出相应的动作，
         比如刷新客户端配置信息。
@@ -62,6 +70,8 @@ paths:
         - $ref: '#/components/parameters/ConfigTokenHeader'
         - name: state
           in: query
+          schema:
+            type: string
           description: 客户端当前的 state 状态值
           required: true
       responses:
@@ -77,6 +87,16 @@ paths:
                   state:
                     type: string
                     example: "45"
+        400:
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        401:
+          description: 认证失败缺少或者错误的 `x-config-token`
   /apps/{name}/{profile}:
     get:
       tags:
@@ -93,6 +113,16 @@ paths:
             application/json:
               schema:
                 type: object
+        400:
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        401:
+          description: 认证失败缺少或者错误的 `x-config-token`
   /apps/{name}/{profile}/{key}:
     get:
       tags:
@@ -115,7 +145,16 @@ paths:
             application/json:
               schema:
                 type: object
-
+        400:
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        401:
+          description: 认证失败缺少或者错误的 `x-config-token`
   /ssc/{name}/{profile}:
     get:
       tags:
@@ -131,9 +170,17 @@ paths:
           content:
             application/json:
               schema:
-                type: object
                 $ref: '#/components/schemas/SpringCloudRes'
-
+        400:
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        401:
+          description: 认证失败缺少或者错误的 `x-config-token`
 components:
   parameters:
     AppNamePath:
@@ -152,13 +199,25 @@ components:
         type: string
     ConfigTokenHeader:
       in: header
-      name: X-Config-Token
+      name: x-config-token
       description: 应用配置访问令牌
       schema:
         type: array
         items:
           type: string
   schemas:
+    ErrorRes:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: error description
     SpringCloudRes:
       type: object
       required:
