@@ -145,7 +145,7 @@ class AdminResourceTests {
                 .uri("/api/admins/users/{email}", Config.rootEmail)
                 .cookie("token", token)
                 .exchange()
-                .expectStatus().isBadRequest
+                .expectStatus().isForbidden
                 .expectBody()
                 .jsonPath("code").isEqualTo(2002)
     }
@@ -217,7 +217,7 @@ class AdminResourceTests {
                 ))
                 .cookie("token", token)
                 .exchange()
-                .expectStatus().isBadRequest
+                .expectStatus().isForbidden
                 .expectBody()
                 .jsonPath("code").isEqualTo(2003)
     }
