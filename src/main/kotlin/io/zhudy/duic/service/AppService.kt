@@ -281,7 +281,7 @@ class AppService(
             if (v is Map<*, *>
                     || v is Collection<*>
                     || v is Array<*>
-                    ) {
+            ) {
                 return@map v
             }
             SingleValue(v)
@@ -292,6 +292,9 @@ class AppService(
      * 查询指定的应用详细信息。
      */
     fun findOne(name: String, profile: String) = appRepository.findOne<Any>(name, profile)
+            .switchIfEmpty(Mono.defer {
+                throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
+            })
 
     /**
      * 查询所有应用详细信息。
@@ -331,8 +334,7 @@ class AppService(
     /**
      * 查询应用更新的最新 50 条更新记录。
      */
-    fun findLast50History(name: String, profile: String, userContext: UserContext)
-            = checkPermission(name, profile, userContext).flatMapMany {
+    fun findLast50History(name: String, profile: String, userContext: UserContext) = checkPermission(name, profile, userContext).flatMapMany {
         appRepository.findLast50History(name, profile)
     }
 
