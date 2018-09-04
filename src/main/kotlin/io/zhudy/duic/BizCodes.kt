@@ -34,7 +34,7 @@ enum class BizCodes(override val code: Int, override val msg: String, override v
     // 用户错误码
     C_2000(2000, "用户不存在"),
     C_2001(2001, "密码不匹配"),
-    C_2002(2002, "ROOT 用户禁止删除"),
-    C_2003(2003, "ROOT 用户禁止重置密码")
+    C_2002(2002, "ROOT 用户禁止删除", 403),
+    C_2003(2003, "ROOT 用户禁止重置密码", 403)
     ;
 }
