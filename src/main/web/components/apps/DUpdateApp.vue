@@ -46,7 +46,7 @@
                                           multi-line
                                           :rows="2"
                                           placeholder="应用描述"
-                                          v-model="app.description"
+                                          v-model.trim="app.description"
                                           :rules="rules.description"></v-text-field>
                         </v-flex>
                     </v-layout>
@@ -57,7 +57,7 @@
                                           clearable
                                           append-icon="fas fa-random"
                                           :append-icon-cb="generateToken"
-                                          v-model="app.token"></v-text-field>
+                                          v-model.trim="app.token"></v-text-field>
                         </v-flex>
                     </v-layout>
                     <v-layout row>
@@ -69,7 +69,7 @@
                                           clearable
                                           append-icon="fas fa-lock"
                                           :append-icon-cb="localNetIps"
-                                          v-model="app.ip_limit"></v-text-field>
+                                          v-model.trim="app.ip_limit"></v-text-field>
                         </v-flex>
                     </v-layout>
                     <v-layout row>

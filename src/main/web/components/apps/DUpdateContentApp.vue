@@ -90,8 +90,10 @@
                     let e = monaco.editor.create(this.$refs.codeEditor, {
                         value: this.app.content,
                         theme: 'vs-dark',
-                        language: 'yaml'
+                        language: 'yaml',
+                        mouseWheelZoom: true
                     })
+
                     e.getModel().updateOptions({
                         tabSize: 2
                     })
