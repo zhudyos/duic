@@ -32,6 +32,7 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebExceptionHandler
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.ipc.netty.channel.AbortedException
 import java.io.IOException
 
 /**
@@ -46,7 +47,14 @@ class GlobalWebExceptionHandler(
 
     override fun handle(exchange: ServerWebExchange, e: Throwable): Mono<Void> {
         val response = exchange.response
-        if (response.isCommitted && e is IOException) return Mono.empty<Void>()
+        if (response.isCommitted) {
+            val b = e is IOException
+                    || e is AbortedException
+            if (!b) {
+                log.error("unhandled exception", e)
+            }
+            return Mono.empty()
+        }
 
         var status = 400
         val body = when (e) {
