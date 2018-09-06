@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import org.joda.time.DateTime
+import java.util.*
 
 /**
  * 服务主机信息。
@@ -30,6 +30,6 @@ import org.joda.time.DateTime
 class Server(
         val host: String = "",
         val port: Int = 0,
-        val initAt: DateTime,
-        val activeAt: DateTime
+        val initAt: Date,
+        val activeAt: Date
 )

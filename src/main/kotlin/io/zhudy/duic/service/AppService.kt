@@ -30,7 +30,6 @@ import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
 import io.zhudy.duic.vo.RequestConfigVo
 import org.bson.types.ObjectId
-import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.scheduling.annotation.Scheduled
@@ -119,7 +118,7 @@ class AppService(
             log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
         }.subscribe {
             appCaches.remove(localKey(it.name, it.profile))
-            lastAppHistoryCreatedAt = it.createdAt!!.toDate()
+            lastAppHistoryCreatedAt = it.createdAt!!
         }
     }
 
@@ -142,8 +141,8 @@ class AppService(
             sink.success(lastDataTime?.time ?: 0L)
         }.subscribe {
             val k = localKey(it.name, it.profile)
-            appCaches.put(k, mapToCachedApp(it))
-            lastDataTime = it.updatedAt!!.toDate()
+            appCaches[k] = mapToCachedApp(it)
+            lastDataTime = it.updatedAt
 
             updateAppQueue.offer(k)
         }
@@ -159,8 +158,8 @@ class AppService(
      */
     fun insert(app: App): Mono<*> {
         app.id = ObjectId().toHexString()
-        app.createdAt = DateTime.now()
-        app.updatedAt = DateTime.now()
+        app.createdAt = Date()
+        app.updatedAt = Date()
         return appRepository.insert(app)
     }
 

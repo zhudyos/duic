@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import org.joda.time.DateTime
+import java.util.*
 
 /**
  * 应用配置信息。
@@ -42,8 +42,8 @@ class App(
         var token: String = "",
         var ipLimit: String = "",
         var v: Int = 1,
-        var createdAt: DateTime? = null,
-        var updatedAt: DateTime? = null,
+        var createdAt: Date? = null,
+        var updatedAt: Date? = null,
         var content: String = "",
         var users: List<String> = emptyList()
 )

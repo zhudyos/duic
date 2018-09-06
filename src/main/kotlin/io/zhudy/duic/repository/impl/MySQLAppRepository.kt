@@ -21,7 +21,6 @@ import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.*
 import io.zhudy.duic.repository.AbstractTransactionRepository
 import io.zhudy.duic.repository.AppRepository
-import org.joda.time.DateTime
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -349,7 +348,7 @@ open class MySQLAppRepository(
                         token = it.getString("token"),
                         ipLimit = it.getString("ip_limit"),
                         v = it.getInt("v"),
-                        createdAt = DateTime(it.getDate("created_at")),
+                        createdAt = it.getDate("created_at"),
                         updatedBy = it.getString("updated_by"),
                         deletedBy = it.getString("deleted_by"),
                         users = it.getString("users").split(",")
@@ -396,8 +395,8 @@ VALUES(:name,:profile,:description,:token,:ip_limit,:v,:content,:users,:deleted_
             token = rs.getString("token") ?: "",
             ipLimit = rs.getString("ip_limit") ?: "",
             v = rs.getInt("v"),
-            createdAt = DateTime(rs.getDate("created_at")),
-            updatedAt = DateTime(rs.getDate("updated_at")),
+            createdAt = rs.getDate("created_at"),
+            updatedAt = rs.getDate("updated_at"),
             content = rs.getString("content") ?: "",
             users = rs.getString("users").split(",")
     )

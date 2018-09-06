@@ -18,11 +18,13 @@ package io.zhudy.duic.repository.impl
 import io.zhudy.duic.domain.Server
 import io.zhudy.duic.repository.AbstractTransactionRepository
 import io.zhudy.duic.repository.ServerRepository
-import org.joda.time.DateTime
+import io.zhudy.duic.repository.ServerRepository.Companion.ACTIVE_TIMEOUT
+import io.zhudy.duic.repository.ServerRepository.Companion.CLEAN_BEFORE
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.Instant
 import java.util.*
 
 /**
@@ -72,14 +74,14 @@ open class PostgreSQLServerRepository(
             jdbcTemplate.query(
                     "SELECT HOST,PORT,INIT_AT,ACTIVE_AT FROM DUIC_SERVER WHERE ACTIVE_AT >= :active_at",
                     mapOf(
-                            "active_at" to DateTime.now().minusMinutes(ServerRepository.ACTIVE_TIMEOUT_MINUTES).toDate()
+                            "active_at" to Date.from(Instant.now().minus(ACTIVE_TIMEOUT))
                     )
             ) {
                 sink.next(Server(
                         host = it.getString("host"),
                         port = it.getInt("port"),
-                        initAt = DateTime(it.getTimestamp("init_at")),
-                        activeAt = DateTime(it.getTimestamp("active_at"))
+                        initAt = it.getDate("init_at"),
+                        activeAt = it.getDate("active_at")
                 ))
             }
         }
@@ -91,7 +93,7 @@ open class PostgreSQLServerRepository(
             jdbcTemplate.update(
                     "DELETE FROM DUIC_SERVER WHERE ACTIVE_AT<=:active_at",
                     mapOf(
-                            "active_at" to DateTime.now().minusMinutes(ServerRepository.CLEAN_BEFORE_MINUTES).toDate()
+                            "active_at" to Date.from(Instant.now().minus(CLEAN_BEFORE))
                     )
             )
         }

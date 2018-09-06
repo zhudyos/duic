@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import org.joda.time.DateTime
+import java.util.*
 
 /**
  * 应用配置修改历史信息。
@@ -44,7 +44,7 @@ class AppHistory(
         var token: String = "",
         var ipLimit: String = "",
         var v: Int = 1,
-        var createdAt: DateTime? = null,
+        var createdAt: Date? = null,
         var updatedBy: String = "",
         var deletedBy: String = "",
         var users: List<String> = emptyList()

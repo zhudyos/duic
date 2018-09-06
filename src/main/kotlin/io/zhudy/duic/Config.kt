@@ -47,7 +47,7 @@ object Config {
         /**
          * JWT 过期时间。
          */
-        var expiresIn: Int = 12 * 60 // 默认2小时过期
+        var expiresIn: Long = 12 * 60 // 默认2小时过期
     }
 
     /**

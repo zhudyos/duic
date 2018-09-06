@@ -20,8 +20,6 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.repository.config.PostgreSQLConfiguration
-import org.joda.time.DateTime
-import org.joda.time.LocalDate
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
@@ -35,6 +33,9 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
 import org.springframework.transaction.support.TransactionTemplate
 import reactor.test.StepVerifier
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.*
 
 /**
@@ -317,17 +318,17 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             appRepository.insert(app).block()
         }
 
-        val updatedAt = LocalDate.parse("2018-01-01").toDate()
+        val updatedAt = Date.from(LocalDate.parse("2018-01-01").atStartOfDay(ZoneId.systemDefault()).toInstant())
         val list = appRepository.findByUpdatedAt(updatedAt).collectList().block()
 
         Assert.assertTrue(list.size >= 30)
 
-        var prevUpdatedAt: DateTime? = null
+        var prevUpdatedAt: Instant? = null
         list.forEach {
             if (prevUpdatedAt != null) {
-                Assert.assertFalse(it.updatedAt!!.isBefore(prevUpdatedAt))
+                Assert.assertFalse(it.updatedAt!!.toInstant().isBefore(prevUpdatedAt))
             }
-            prevUpdatedAt = it.updatedAt
+            prevUpdatedAt = it.updatedAt?.toInstant()
         }
     }
 
@@ -406,16 +407,16 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             appRepository.delete(it, normalUserContext).block()
         }
 
-        val createdAt = LocalDate.parse("2018-01-01").toDate()
+        val createdAt = Date.from(LocalDate.parse("2018-01-01").atStartOfDay(ZoneId.systemDefault()).toInstant())
         val list = appRepository.findDeletedByCreatedAt(createdAt).collectList().block()
         Assert.assertTrue(list.isNotEmpty())
 
-        var prevCreatedAt: DateTime? = null
+        var prevCreatedAt: Instant? = null
         list.forEach {
             if (prevCreatedAt != null) {
-                Assert.assertFalse(it.createdAt!!.isBefore(prevCreatedAt))
+                Assert.assertFalse(it.createdAt!!.toInstant().isBefore(prevCreatedAt))
             }
-            prevCreatedAt = it.createdAt
+            prevCreatedAt = it.createdAt?.toInstant()
         }
     }
 

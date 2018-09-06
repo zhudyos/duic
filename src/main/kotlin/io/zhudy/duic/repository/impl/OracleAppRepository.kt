@@ -6,7 +6,6 @@ import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.*
 import io.zhudy.duic.repository.AbstractTransactionRepository
 import io.zhudy.duic.repository.AppRepository
-import org.joda.time.DateTime
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -294,7 +293,7 @@ class OracleAppRepository(
                         hid = it.getString("id"),
                         updatedBy = it.getString("updated_by") ?: "",
                         content = it.getString("content") ?: "",
-                        updatedAt = it.getTimestamp("created_at")
+                        updatedAt = it.getDate("created_at")
                 ))
             }
         }
@@ -334,7 +333,7 @@ class OracleAppRepository(
                         token = it.getString("token") ?: "",
                         ipLimit = it.getString("ip_limit") ?: "",
                         v = it.getInt("v"),
-                        createdAt = DateTime(it.getTimestamp("created_at")),
+                        createdAt = it.getDate("created_at"),
                         updatedBy = it.getString("updated_by") ?: "",
                         deletedBy = it.getString("deleted_by") ?: "",
                         users = it.getString("users").split(",")
@@ -381,8 +380,8 @@ VALUES(SEQ_DUIC_APP_HISTORY.NEXTVAL,:name,:profile,:description,:token,:ip_limit
             token = rs.getString("token") ?: "",
             ipLimit = rs.getString("ip_limit") ?: "",
             v = rs.getInt("v"),
-            createdAt = DateTime(rs.getTimestamp("created_at")),
-            updatedAt = DateTime(rs.getTimestamp("updated_at")),
+            createdAt = rs.getDate("created_at"),
+            updatedAt = rs.getDate("updated_at"),
             content = rs.getString("content") ?: "",
             users = rs.getString("users").split(",")
     )

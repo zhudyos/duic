@@ -19,7 +19,6 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.server.Application
 import io.zhudy.duic.server.BeansInitializer
-import org.joda.time.DateTime
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -59,8 +58,8 @@ class AppResourceTests {
             profile = profile,
             description = profile,
             v = 1,
-            createdAt = DateTime.now(),
-            updatedAt = DateTime.now(),
+            createdAt = Date(),
+            updatedAt = Date(),
             content = """environments:
   development:
     name: Development setup
@@ -77,8 +76,8 @@ class AppResourceTests {
             name = name,
             profile = profile2,
             v = 2,
-            createdAt = DateTime.now(),
-            updatedAt = DateTime.now(),
+            createdAt = Date(),
+            updatedAt = Date(),
             content = """environments:
   development:
     name: Development setup2

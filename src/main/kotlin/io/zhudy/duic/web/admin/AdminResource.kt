@@ -31,7 +31,6 @@ import io.zhudy.duic.utils.WebUtils
 import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
 import io.zhudy.duic.web.security.userContext
-import org.joda.time.DateTime
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.BodyExtractors
@@ -41,6 +40,9 @@ import org.springframework.web.reactive.function.server.ServerResponse.noContent
 import org.springframework.web.reactive.function.server.ServerResponse.ok
 import org.springframework.web.reactive.function.server.body
 import reactor.core.publisher.Mono
+import java.time.Duration
+import java.time.Instant
+import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -61,8 +63,9 @@ class AdminResource(
      */
     fun login(request: ServerRequest) = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
         userService.login(it.email, it.password).flatMap {
+            val expiresAt = Instant.now().plus(Duration.ofSeconds(Config.Jwt.expiresIn))
             val token = JWT.create().withJWTId(it.email)
-                    .withExpiresAt(DateTime.now().plusMinutes(Config.Jwt.expiresIn).toDate())
+                    .withExpiresAt(Date.from(expiresAt))
                     .sign(jwtAlgorithm)
 
             ok().cookie(

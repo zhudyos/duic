@@ -32,7 +32,6 @@ import io.zhudy.duic.repository.AppRepository
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
-import org.joda.time.DateTime
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -321,8 +320,8 @@ open class MongoAppRepository(
             ipLimit = doc.getString("ip_limit") ?: "",
             description = doc.getString("description"),
             v = doc.getInteger("v"),
-            createdAt = DateTime(doc.getDate("created_at")),
-            updatedAt = DateTime(doc.getDate("updated_at")),
+            createdAt = doc.getDate("created_at"),
+            updatedAt = doc.getDate("updated_at"),
             content = doc.getString("content"),
             users = doc["users"] as List<String>
     )
@@ -337,7 +336,7 @@ open class MongoAppRepository(
             description = doc.getString("description") ?: "",
             content = doc.getString("content") ?: "",
             v = doc.getInteger("v"),
-            createdAt = DateTime(doc.getDate("created_at")),
+            createdAt = doc.getDate("created_at"),
             updatedBy = doc.getString("updated_by") ?: "",
             deletedBy = doc.getString("deleted_by") ?: "",
             users = doc["users"] as List<String>
