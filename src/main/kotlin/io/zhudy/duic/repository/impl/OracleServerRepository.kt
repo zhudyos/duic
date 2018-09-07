@@ -70,8 +70,8 @@ WHEN NOT MATCHED THEN INSERT (ID,HOST,PORT,INIT_AT,ACTIVE_AT) VALUES (s.ID,s.HOS
                 sink.next(Server(
                         host = it.getString("host"),
                         port = it.getInt("port"),
-                        initAt = it.getDate("init_at"),
-                        activeAt = it.getDate("active_at")
+                        initAt = it.getTimestamp("init_at"),
+                        activeAt = it.getTimestamp("active_at")
                 ))
             }
         }

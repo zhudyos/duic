@@ -293,7 +293,7 @@ class OracleAppRepository(
                         hid = it.getString("id"),
                         updatedBy = it.getString("updated_by") ?: "",
                         content = it.getString("content") ?: "",
-                        updatedAt = it.getDate("created_at")
+                        updatedAt = it.getTimestamp("created_at")
                 ))
             }
         }
@@ -333,7 +333,7 @@ class OracleAppRepository(
                         token = it.getString("token") ?: "",
                         ipLimit = it.getString("ip_limit") ?: "",
                         v = it.getInt("v"),
-                        createdAt = it.getDate("created_at"),
+                        createdAt = it.getTimestamp("created_at"),
                         updatedBy = it.getString("updated_by") ?: "",
                         deletedBy = it.getString("deleted_by") ?: "",
                         users = it.getString("users").split(",")
@@ -380,8 +380,8 @@ VALUES(SEQ_DUIC_APP_HISTORY.NEXTVAL,:name,:profile,:description,:token,:ip_limit
             token = rs.getString("token") ?: "",
             ipLimit = rs.getString("ip_limit") ?: "",
             v = rs.getInt("v"),
-            createdAt = rs.getDate("created_at"),
-            updatedAt = rs.getDate("updated_at"),
+            createdAt = rs.getTimestamp("created_at"),
+            updatedAt = rs.getTimestamp("updated_at"),
             content = rs.getString("content") ?: "",
             users = rs.getString("users").split(",")
     )

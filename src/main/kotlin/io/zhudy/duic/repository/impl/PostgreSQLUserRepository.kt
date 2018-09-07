@@ -94,8 +94,8 @@ class PostgreSQLUserRepository(
                     ) {
                         sink.next(User(
                                 email = it.getString(1),
-                                createdAt = it.getDate(2),
-                                updatedAt = it.getDate(3)
+                                createdAt = it.getTimestamp(2),
+                                updatedAt = it.getTimestamp(3)
                         ))
                     }
                     sink.complete()

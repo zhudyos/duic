@@ -308,7 +308,7 @@ open class MySQLAppRepository(
                         hid = it.getString("id"),
                         updatedBy = it.getString("updated_by") ?: "",
                         content = it.getString("content") ?: "",
-                        updatedAt = it.getDate("created_at")
+                        updatedAt = it.getTimestamp("created_at")
                 ))
             }
         }
@@ -348,7 +348,7 @@ open class MySQLAppRepository(
                         token = it.getString("token"),
                         ipLimit = it.getString("ip_limit"),
                         v = it.getInt("v"),
-                        createdAt = it.getDate("created_at"),
+                        createdAt = it.getTimestamp("created_at"),
                         updatedBy = it.getString("updated_by"),
                         deletedBy = it.getString("deleted_by"),
                         users = it.getString("users").split(",")
@@ -362,7 +362,7 @@ open class MySQLAppRepository(
         roTransactionTemplate.execute {
             jdbcTemplate.query("SELECT UPDATED_AT FROM DUIC_APP ORDER BY UPDATED_AT DESC", ResultSetExtractor {
                 if (it.next()) {
-                    sink.success(it.getDate("updated_at").time)
+                    sink.success(it.getTimestamp("updated_at").time)
                 } else {
                     sink.success(0)
                 }
@@ -395,8 +395,8 @@ VALUES(:name,:profile,:description,:token,:ip_limit,:v,:content,:users,:deleted_
             token = rs.getString("token") ?: "",
             ipLimit = rs.getString("ip_limit") ?: "",
             v = rs.getInt("v"),
-            createdAt = rs.getDate("created_at"),
-            updatedAt = rs.getDate("updated_at"),
+            createdAt = rs.getTimestamp("created_at"),
+            updatedAt = rs.getTimestamp("updated_at"),
             content = rs.getString("content") ?: "",
             users = rs.getString("users").split(",")
     )
