@@ -158,7 +158,7 @@ task buildAdmin(type: YarnTask, dependsOn: yarn) {
 
 task copyAdminFiles(type: Copy, dependsOn: buildAdmin) {
     group = "node"
-    from "dist/dist"
+    from "dist"
     include "**/**"
     into "${project.buildDir}/resources/main/public-web-resources"
 }
