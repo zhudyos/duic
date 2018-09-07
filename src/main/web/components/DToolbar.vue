@@ -19,6 +19,9 @@
     <v-toolbar absolute app>
         <v-toolbar-side-icon @click.stop="value = !value"></v-toolbar-side-icon>
         <v-spacer></v-spacer>
+        <v-toolbar-items>
+            <v-btn flat href="/oai.html" target="_blank">OpenAPI 3.0</v-btn>
+        </v-toolbar-items>
         <v-toolbar-items class="hidden-sm-and-down">
             <v-menu offset-y>
                 <v-btn flat slot="activator">{{$store.state.loginEmail}}</v-btn>

@@ -27,6 +27,11 @@ module.exports = {
             entry: 'src/main/web/index.js',
             template: 'src/main/web/templates/index.html',
             filename: 'index.html'
+        },
+        oai: {
+            entry: 'src/main/web/oai.js',
+            template: 'src/main/web/oai.html',
+            filename: 'oai.html'
         }
     },
     devServer: {
