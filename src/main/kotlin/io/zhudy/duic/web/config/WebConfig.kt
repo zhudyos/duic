@@ -22,6 +22,8 @@ import io.zhudy.duic.web.security.AuthorizedHandlerFilter
 import io.zhudy.duic.web.security.RootRoleHandler
 import io.zhudy.duic.web.server.ServerResource
 import io.zhudy.duic.web.v1.AppResource
+import io.zhudy.duic.web.v1.OAIResource
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.CacheControl
@@ -34,6 +36,7 @@ import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
 import org.springframework.web.reactive.function.server.router
 import org.springframework.web.server.WebFilter
+import reactor.core.publisher.Hooks
 import java.util.concurrent.TimeUnit
 
 /**
@@ -44,7 +47,16 @@ import java.util.concurrent.TimeUnit
 class WebConfig(val objectMapper: ObjectMapper,
                 val appResource: AppResource,
                 val adminResource: AdminResource,
-                val serverResource: ServerResource) : WebFluxConfigurer {
+                val serverResource: ServerResource,
+                val oaiResource: OAIResource) : WebFluxConfigurer {
+
+    private val log = LoggerFactory.getLogger(WebConfig::class.java)
+
+    init {
+        Hooks.onErrorDropped {
+            log.error("{}", RuntimeException(it))
+        }
+    }
 
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/api/v1/**")
@@ -67,7 +79,7 @@ class WebConfig(val objectMapper: ObjectMapper,
 
     @Bean
     fun webFilter() = WebFilter { exchange, chain ->
-        exchange.attributes.put(WebConstants.SERVER_WEB_EXCHANGE_ATTR, exchange)
+        exchange.attributes[WebConstants.SERVER_WEB_EXCHANGE_ATTR] = exchange
         chain.filter(exchange)
     }
 
@@ -88,6 +100,8 @@ class WebConfig(val objectMapper: ObjectMapper,
             POST("/apps/refresh", serverResource::refreshApp)
             GET("/last-data-time", serverResource::getLastDataTime)
         }
+
+        GET("/api/oai.yml", oaiResource::index)
     }
 
     @Bean
