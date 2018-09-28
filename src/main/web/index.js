@@ -25,7 +25,6 @@ import {store} from "./store/index"
 import Main from './pages/Main.vue'
 // ===================================================================================================
 import axios from 'axios'
-import Cookies from 'js-cookie'
 
 Vue.use(VueRouter)
 Vue.use(Vuetify)

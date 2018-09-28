@@ -37,9 +37,13 @@ module.exports = {
             }, {
                 from: './src/main/web/statics/fontawesome-free-5.0.10',
                 to: 'fontawesome-free-5.0.10/'
+            }, {
+                from: './src/main/web/assets',
+                to: 'public'
             }])
         ]
     },
+    runtimeCompiler: true,
     pages: {
         index: {
             entry: 'src/main/web/index.js',
