@@ -27,7 +27,7 @@ import org.springframework.transaction.support.TransactionTemplate
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Configuration
-@ImportAutoConfiguration(*[DataSourceAutoConfiguration::class])
+@ImportAutoConfiguration(DataSourceAutoConfiguration::class)
 @ConditionalOnExpression("!T(io.zhudy.duic.DBMS).forName('\${duic.dbms}').isNoSQL")
 class RelationalDBMSConfiguration {
 
