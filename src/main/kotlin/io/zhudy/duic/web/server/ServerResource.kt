@@ -19,12 +19,15 @@ import io.zhudy.duic.Config
 import io.zhudy.duic.domain.ServerInfo
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.service.AppService
+import io.zhudy.duic.service.HealthCheckException
 import io.zhudy.duic.service.ServerService
 import io.zhudy.duic.web.body
 import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse.ok
+import org.springframework.web.reactive.function.server.ServerResponse.status
+import reactor.core.publisher.toMono
 import java.net.InetAddress
 
 /**
@@ -63,5 +66,14 @@ class ServerResource(
      * 返回服务信息。
      */
     fun info(request: ServerRequest) = ok().body(serverService.info(), ServerInfo::class.java)
+
+    /**
+     * 健康检查。
+     */
+    fun health(request: ServerRequest) = serverService.health().flatMap {
+        ok().body(emptyMap<String, String>())
+    }.onErrorResume(HealthCheckException::class.java) {
+        status(it.code).body(mapOf("description" to it.description)).toMono()
+    }
 
 }

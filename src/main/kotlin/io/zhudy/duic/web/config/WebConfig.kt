@@ -87,6 +87,7 @@ class WebConfig(val objectMapper: ObjectMapper,
     fun mainRouter() = router {
         path("/api").nest {
             GET("/info", serverResource::info)
+            GET("/health", serverResource::health)
         }
 
         path("/api/v1").nest {

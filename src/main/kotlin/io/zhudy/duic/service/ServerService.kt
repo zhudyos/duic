@@ -134,4 +134,13 @@ class ServerService(
                 javaVersion = System.getProperty("java.version")
         )
     }
+
+    /**
+     * 服务健康检查。
+     */
+    fun health() = serverRepository.findDbVersion().onErrorResume { e ->
+        // FIXME 需要编写测试用户，针对数据库每个异常单独处理
+        log.error("", e)
+        throw HealthCheckException(503, "数据库不可用")
+    }
 }
