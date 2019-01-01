@@ -32,7 +32,7 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebExceptionHandler
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.ipc.netty.channel.AbortedException
+import reactor.netty.channel.AbortedException
 import java.io.IOException
 
 /**
