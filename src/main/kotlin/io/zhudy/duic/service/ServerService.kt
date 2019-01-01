@@ -16,10 +16,14 @@
 package io.zhudy.duic.service
 
 import io.zhudy.duic.Config
+import io.zhudy.duic.DBMS
+import io.zhudy.duic.DuicVersion
+import io.zhudy.duic.domain.ServerInfo
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.ServerStateDto
 import io.zhudy.duic.repository.ServerRepository
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.ContextClosedEvent
 import org.springframework.context.event.EventListener
@@ -38,7 +42,9 @@ import reactor.core.scheduler.Schedulers
 @Service
 class ServerService(
         val serverRepository: ServerRepository,
-        val webClientBuilder: WebClient.Builder
+        val webClientBuilder: WebClient.Builder,
+        @Value("%{duic.dbms}")
+        val dbms: String
 ) {
 
     private val log = LoggerFactory.getLogger(ServerService::class.java)
@@ -46,6 +52,8 @@ class ServerService(
     companion object {
         private const val PING_DELAY = 30 * 1000L
     }
+
+    private var _dbms = DBMS.forName(dbms)
 
     private val failServerRefreshDto = ServerRefreshDto(lastDataTime = -1)
 
@@ -111,4 +119,19 @@ class ServerService(
                 }
     }
 
+    /**
+     * 返回服务信息。
+     */
+    fun info() = serverRepository.findDbVersion().map {
+        ServerInfo(
+                name = "duic",
+                version = DuicVersion.version,
+                dbName = _dbms.name,
+                dbVersion = it,
+                osName = System.getProperty("os.name"),
+                osVersion = System.getProperty("os.version"),
+                osArch = System.getProperty("os.arch"),
+                javaVersion = System.getProperty("java.version")
+        )
+    }
 }

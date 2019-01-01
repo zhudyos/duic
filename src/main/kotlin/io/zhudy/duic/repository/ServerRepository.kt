@@ -72,4 +72,9 @@ interface ServerRepository {
      * 清理过期服务。
      */
     fun clean(): Mono<*>
+
+    /**
+     * 查询数据库版本。
+     */
+    fun findDbVersion(): Mono<String>
 }

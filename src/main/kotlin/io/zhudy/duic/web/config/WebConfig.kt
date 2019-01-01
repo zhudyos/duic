@@ -85,6 +85,10 @@ class WebConfig(val objectMapper: ObjectMapper,
 
     @Bean
     fun mainRouter() = router {
+        path("/api").nest {
+            GET("/info", serverResource::info)
+        }
+
         path("/api/v1").nest {
             GET("/ssc/{name}/{profile}", appResource::getSpringCloudConfig)
 
@@ -96,7 +100,13 @@ class WebConfig(val objectMapper: ObjectMapper,
             }
         }
 
+        // Deprecated. 请采用 /api/services 路径目录替换该资源接口
         path("/servers").nest {
+            POST("/apps/refresh", serverResource::refreshApp)
+            GET("/last-data-time", serverResource::getLastDataTime)
+        }
+
+        path("/api/servers").nest {
             POST("/apps/refresh", serverResource::refreshApp)
             GET("/last-data-time", serverResource::getLastDataTime)
         }

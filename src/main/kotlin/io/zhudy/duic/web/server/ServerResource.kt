@@ -16,6 +16,7 @@
 package io.zhudy.duic.web.server
 
 import io.zhudy.duic.Config
+import io.zhudy.duic.domain.ServerInfo
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.ServerService
@@ -57,5 +58,10 @@ class ServerResource(
      *
      */
     fun getLastDataTime(request: ServerRequest) = ok().body(ServerRefreshDto(appService.getMemoryLastDataTime()))
+
+    /**
+     * 返回服务信息。
+     */
+    fun info(request: ServerRequest) = ok().body(serverService.info(), ServerInfo::class.java)
 
 }

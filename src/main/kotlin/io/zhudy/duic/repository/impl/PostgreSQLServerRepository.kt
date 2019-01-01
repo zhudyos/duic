@@ -99,4 +99,13 @@ open class PostgreSQLServerRepository(
         }
         it.success(n)
     }
+
+    override fun findDbVersion() = Mono.create<String> {
+        val v = transactionTemplate.execute {
+            val m = jdbcTemplate.queryForMap("SELECT VERSION() AS 'version'", emptyMap<String, Any>())
+            m["version"] as String
+        }
+        it.success(v)
+    }
+
 }

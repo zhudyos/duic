@@ -28,6 +28,7 @@ import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.repository.ServerRepository.Companion.ACTIVE_TIMEOUT
 import io.zhudy.duic.repository.ServerRepository.Companion.CLEAN_BEFORE
 import org.bson.Document
+import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
 import java.time.Instant
@@ -90,4 +91,10 @@ open class MongoServerRepository(
     override fun clean() = serverColl.deleteMany(
             lt("active_at", Date.from(Instant.now().minus(CLEAN_BEFORE)))
     ).toMono()
+
+    override fun findDbVersion(): Mono<String> {
+        return mongo.runCommand(Document("buildinfo", 1)).toMono().map {
+            it.getString("version")
+        }
+    }
 }
