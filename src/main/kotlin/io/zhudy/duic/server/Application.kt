@@ -30,7 +30,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.event.ContextRefreshedEvent
 
 
 /**
@@ -59,10 +58,14 @@ class Application {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            runApplication<Application>(*args) {
+            // spring-boot
+            // https://github.com/zhudyos/duic/issues/17
+            // 搜索 /etc/duic 目录中的配置文件
+            runApplication<Application>("--spring.config.additional-location=/etc/duic/") {
                 setBanner(DuicBanner())
                 addInitializers(BeansInitializer())
             }
+
             // 配置 Sentry
             Sentry.init(Config.sentry.dsn)
         }
