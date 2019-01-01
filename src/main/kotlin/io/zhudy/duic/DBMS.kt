@@ -36,10 +36,6 @@ enum class DBMS(@JvmField val isNoSQL: Boolean = false) {
      * PostgreSQL 数据库。
      */
     PostgreSQL,
-    /**
-     * Oracle 数据库。
-     */
-    Oracle
     ;
 
     companion object {
