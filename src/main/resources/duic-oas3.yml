@@ -102,6 +102,7 @@ paths:
     get:
       tags:
         - apps
+      summary: 获取应用配置状态
       description: |
         获取应用状态。
         该接口会立即返回应用当前配置的状态。
@@ -136,6 +137,7 @@ paths:
     get:
       tags:
         - apps
+      summary: 监控配置状态
       description: |
         监控应用配置状态。
 
@@ -181,6 +183,7 @@ paths:
     get:
       tags:
         - apps
+      summary: 获取配置
       description: 获取应用 profile 的全部配置
       parameters:
         - $ref: '#/components/parameters/AppNamePath'
@@ -207,6 +210,7 @@ paths:
     get:
       tags:
         - apps
+      summary: 获取指定 key 的配置
       description: 获取应用 profile 指定键的配置
       parameters:
         - $ref: '#/components/parameters/AppNamePath'
@@ -239,6 +243,7 @@ paths:
     get:
       tags:
         - spring-cloud
+      summary: 获取 spring-cloud 格式的配置
       description: 返回 spring-cloud-config 配置
       parameters:
         - $ref: '#/components/parameters/AppNamePath'
