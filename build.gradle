@@ -50,7 +50,7 @@ dependencies {
         exclude module: "nio-multipart-parser"
     }
     compile "io.netty:netty-transport-native-epoll:4.1.22.Final:linux-x86_64"
-    compile "org.mongodb:mongodb-driver-reactivestreams:1.7.1"
+    compile "org.mongodb:mongodb-driver-reactivestreams:1.10.0"
 
     compile "com.fasterxml.jackson.module:jackson-module-kotlin:2.9.5"
     compile "com.auth0:java-jwt:3.3.0"

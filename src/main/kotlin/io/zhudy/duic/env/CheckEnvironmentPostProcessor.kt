@@ -14,6 +14,5 @@ class CheckEnvironmentPostProcessor : EnvironmentPostProcessor {
     override fun postProcessEnvironment(env: ConfigurableEnvironment, app: SpringApplication) {
         // FIXME 在这里校验参数
         println(env)
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

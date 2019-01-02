@@ -21,27 +21,45 @@ import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.repository.impl.MongoAppRepository
 import io.zhudy.duic.repository.impl.MongoServerRepository
 import io.zhudy.duic.repository.impl.MongoUserRepository
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.autoconfigure.mongo.MongoProperties
-import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration
+import org.springframework.boot.autoconfigure.mongo.ReactiveMongoClientFactory
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.env.Environment
+import javax.annotation.PreDestroy
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Configuration
-@ImportAutoConfiguration(*[MongoReactiveAutoConfiguration::class])
 @ConditionalOnExpression("T(io.zhudy.duic.DBMS).forName('\${duic.dbms}') == T(io.zhudy.duic.DBMS).MongoDB")
+@EnableConfigurationProperties(MongoProperties::class)
 class MongoConfiguration {
 
+    private var mongo: MongoClient? = null
+
+    @PreDestroy
+    fun destroy() {
+        mongo?.apply {
+            close()
+        }
+    }
+
     @Bean
-    fun duicMongoDatabase(mongoProperties: MongoProperties, mongoClient: MongoClient): MongoDatabase {
-        val dbName = if (mongoProperties.database != null)
-            mongoProperties.database
+    fun mongoClient(properties: MongoProperties, environment: Environment): MongoClient {
+        val factory = ReactiveMongoClientFactory(properties, environment, null)
+        mongo = factory.createMongoClient(null)
+        return mongo!!
+    }
+
+    @Bean
+    fun duicMongoDatabase(properties: MongoProperties, mongoClient: MongoClient): MongoDatabase {
+        val dbName = if (properties.database != null)
+            properties.database
         else
-            ConnectionString(mongoProperties.uri).database
+            ConnectionString(properties.uri).database
         return mongoClient.getDatabase(dbName)
     }
 
