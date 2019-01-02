@@ -1,7 +1,7 @@
 openapi: 3.0.1
 servers:
   - description: DuiC Server
-    url: https://duic.zhudy.io/api/v1
+    url: https://duic.zhudy.io/
 
 info:
   description: DuiC 配置中心 API
@@ -13,12 +13,92 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
 tags:
+  - name: system
+    description: 系统接口
   - name: apps
     description: APP 配置应用 API
   - name: spring-cloud
     description: spring-cloud 配置 API
 paths:
-  /apps/states/{name}/{profile}:
+  /api/info:
+    get:
+      tags:
+        - system
+      summary: 返回 duic 服务基本信息
+      description: 返回 duic 服务基本信息。其中包括部署的 duic 版本信息、数据库版本信息、操作系统信息以及 Java 版本信息。
+      responses:
+        200:
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - name
+                  - version
+                  - db_name
+                  - db_version
+                  - os_name
+                  - os_version
+                  - os_arch
+                  - java_version
+                properties:
+                  name:
+                    type: string
+                    description: duic 名称
+                  version:
+                    type: string
+                    description: duic 版本
+                  db_name:
+                    type: string
+                    description: 使用的数据库名称
+                  db_version:
+                    type: string
+                    description: 使用的数据库版本
+                  os_name:
+                    type: string
+                    description: 部署 duic 操作系统的名称
+                  os_version:
+                    type: string
+                    description: 部署 duic 操作系统的版本
+                  os_arch:
+                    type: string
+                    description: 部署 duic 操作系统的位数
+                  java_version:
+                    type: string
+                    description: 部署 duic 的 Java 版本
+              example: { "name": "duic", "db_name": "MongoDB", "db_version": "4.0.4", "os_name": "Windows 10", "os_version": "10.0", "os_arch": "amd64", "java_version": "1.8.0_121" }
+  /api/health:
+    get:
+      tags:
+        - system
+      summary: 健康检查接口
+      description: |
+        健康检查接口。
+        可通过该接口检查 duic 的可用性。当返回状态码为 `200` 则表示服务可用，
+        返回非 `200` 的错误码都表示服务存在一定的问题并且会返回可用的描述信息，需要及时的跟进并解决问题。
+      responses:
+        200:
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+        503:
+          description: 服务不可用
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - description
+                properties:
+                  description:
+                    type: string
+                    description: 服务不可用的具体描述信息
+              example:
+                description: 数据库不可用
+  /api/v1/apps/states{name}/{profile}:
     get:
       tags:
         - apps
@@ -31,7 +111,7 @@ paths:
         - $ref: '#/components/parameters/ConfigTokenHeader'
       responses:
         200:
-          description: 正确返回
+          description: 成功
           content:
             application/json:
               schema:
@@ -52,7 +132,7 @@ paths:
                 $ref: '#/components/schemas/ErrorRes'
         401:
           description: 认证失败缺少或者错误的 `x-config-token`
-  /apps/watches/{name}/{profile}:
+  /api/v1/apps/watches/{name}/{profile}:
     get:
       tags:
         - apps
@@ -97,7 +177,7 @@ paths:
                 $ref: '#/components/schemas/ErrorRes'
         401:
           description: 认证失败缺少或者错误的 `x-config-token`
-  /apps/{name}/{profile}:
+  /api/v1/apps/{name}/{profile}:
     get:
       tags:
         - apps
@@ -123,7 +203,7 @@ paths:
                 $ref: '#/components/schemas/ErrorRes'
         401:
           description: 认证失败缺少或者错误的 `x-config-token`
-  /apps/{name}/{profile}/{key}:
+  /api/v1/apps/{name}/{profile}/{key}:
     get:
       tags:
         - apps
@@ -155,7 +235,7 @@ paths:
                 $ref: '#/components/schemas/ErrorRes'
         401:
           description: 认证失败缺少或者错误的 `x-config-token`
-  /ssc/{name}/{profile}:
+  /api/v1/ssc/{name}/{profile}:
     get:
       tags:
         - spring-cloud

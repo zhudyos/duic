@@ -15,20 +15,14 @@ import reactor.core.publisher.Mono
 class OAIResource {
 
     private val yaml = Yaml()
-    private val apiData = yaml.load<Map<String, Any>>(ResourceUtils.getURL("classpath:duic-open-api.yml").openStream())
+    private val apiData = yaml.load<Map<String, Any>>(ResourceUtils.getURL("classpath:duic-oas3.yml").openStream())
 
     /**
      *
      */
     fun index(request: ServerRequest): Mono<ServerResponse> {
-        val uri = request.uri()
-        val url = "${uri.scheme}://${uri.rawAuthority}/api/v1"
         val dumpData = apiData.toMutableMap()
-        dumpData["servers"] = listOf(mapOf(
-                "description" to "DuiC Server",
-                "url" to url
-        ))
-
+        dumpData.remove("servers")
         return ok().syncBody(yaml.dump(dumpData))
     }
 

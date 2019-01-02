@@ -59,7 +59,7 @@ class WebConfig(val objectMapper: ObjectMapper,
     }
 
     override fun addCorsMappings(registry: CorsRegistry) {
-        registry.addMapping("/api/v1/**")
+        registry.addMapping("/api/**")
                 .allowedOrigins("*")
                 .allowedMethods("*")
                 .maxAge(TimeUnit.DAYS.toSeconds(7))
