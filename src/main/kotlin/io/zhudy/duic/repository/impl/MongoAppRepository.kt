@@ -290,7 +290,7 @@ open class MongoAppRepository(
                     .subscribeOn(Schedulers.parallel())
                     .map(::mapToApp)
                     .collectList(),
-            appColl.count(q)
+            appColl.countDocuments(q)
                     .toMono()
                     .subscribeOn(Schedulers.parallel())
     ).map {

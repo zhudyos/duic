@@ -112,7 +112,7 @@ open class MongoUserRepository(
                         )
                     }
                     .collectList(),
-            userColl.count()
+            userColl.countDocuments()
                     .toMono()
                     .subscribeOn(Schedulers.parallel())
     ).map {
