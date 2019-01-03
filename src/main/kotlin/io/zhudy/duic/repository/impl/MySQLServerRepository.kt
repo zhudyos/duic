@@ -24,6 +24,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import reactor.core.scheduler.Schedulers
 import java.time.Instant
 import java.util.*
 
@@ -35,6 +36,7 @@ open class MySQLServerRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : ServerRepository, AbstractTransactionRepository(transactionManager) {
 
+    @Suppress("HasPlatformType")
     override fun register(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -47,15 +49,17 @@ open class MySQLServerRepository(
             )
         }
         it.success(n)
-    }
+    }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun unregister(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update("DELETE FROM DUIC_SERVER WHERE ID=:id", mapOf("id" to "${host}_$port"))
         }
         it.success(n)
-    }
+    }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun ping(host: String, port: Int) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -67,8 +71,9 @@ open class MySQLServerRepository(
             )
         }
         it.success(n)
-    }
+    }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findServers() = Flux.create<Server> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
@@ -76,18 +81,19 @@ open class MySQLServerRepository(
                     mapOf(
                             "active_at" to Date.from(Instant.now().minus(ACTIVE_TIMEOUT))
                     )
-            ) {
+            ) { rs ->
                 sink.next(Server(
-                        host = it.getString("host"),
-                        port = it.getInt("port"),
-                        initAt = it.getTimestamp("init_at"),
-                        activeAt = it.getTimestamp("active_at")
+                        host = rs.getString("host"),
+                        port = rs.getInt("port"),
+                        initAt = rs.getTimestamp("init_at"),
+                        activeAt = rs.getTimestamp("active_at")
                 ))
             }
         }
         sink.complete()
-    }
+    }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun clean() = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -98,13 +104,14 @@ open class MySQLServerRepository(
             )
         }
         it.success(n)
-    }
+    }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findDbVersion() = Mono.create<String> {
         val v = transactionTemplate.execute {
             val m = jdbcTemplate.queryForMap("SELECT VERSION() AS 'version'", emptyMap<String, Any>())
             m["version"] as String
         }
         it.success(v)
-    }
+    }.subscribeOn(Schedulers.elastic())
 }

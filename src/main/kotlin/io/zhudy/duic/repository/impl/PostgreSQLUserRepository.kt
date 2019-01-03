@@ -36,6 +36,7 @@ class PostgreSQLUserRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : UserRepository, AbstractTransactionRepository(transactionManager) {
 
+    @Suppress("HasPlatformType")
     override fun insert(user: User) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -49,6 +50,7 @@ class PostgreSQLUserRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun delete(email: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -59,6 +61,7 @@ class PostgreSQLUserRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun updatePassword(email: String, password: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -69,14 +72,15 @@ class PostgreSQLUserRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findByEmail(email: String) = Mono.create<User> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
                     """SELECT EMAIL,PASSWORD FROM DUIC_USER WHERE EMAIL=:email""",
                     mapOf("email" to email),
-                    ResultSetExtractor {
-                        if (it.next()) {
-                            sink.success(User(it.getString(1), it.getString(2)))
+                    ResultSetExtractor { rs ->
+                        if (rs.next()) {
+                            sink.success(User(rs.getString(1), rs.getString(2)))
                         } else {
                             sink.success()
                         }
@@ -85,17 +89,18 @@ class PostgreSQLUserRepository(
         }
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findPage(pageable: Pageable) = Mono.zip(
             Flux.create<User> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
                             """SELECT EMAIL,CREATED_AT,UPDATED_AT FROM DUIC_USER LIMIT :limit OFFSET :offset""",
                             mapOf("offset" to pageable.offset, "limit" to pageable.size)
-                    ) {
+                    ) { rs ->
                         sink.next(User(
-                                email = it.getString(1),
-                                createdAt = it.getTimestamp(2),
-                                updatedAt = it.getTimestamp(3)
+                                email = rs.getString(1),
+                                createdAt = rs.getTimestamp(2),
+                                updatedAt = rs.getTimestamp(3)
                         ))
                     }
                     sink.complete()
@@ -115,10 +120,11 @@ class PostgreSQLUserRepository(
         Page(it.t1, it.t2, pageable)
     }
 
+    @Suppress("HasPlatformType")
     override fun findAllEmail() = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("""SELECT EMAIL FROM DUIC_USER""") {
-                sink.next(it.getString(1))
+            jdbcTemplate.query("""SELECT EMAIL FROM DUIC_USER""") { rs ->
+                sink.next(rs.getString(1))
             }
             sink.complete()
         }

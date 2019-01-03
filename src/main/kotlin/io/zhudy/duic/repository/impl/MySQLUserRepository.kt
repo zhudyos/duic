@@ -36,6 +36,7 @@ class MySQLUserRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : UserRepository, AbstractTransactionRepository(transactionManager) {
 
+    @Suppress("HasPlatformType")
     override fun insert(user: User) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -46,6 +47,7 @@ class MySQLUserRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun delete(email: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -56,6 +58,7 @@ class MySQLUserRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun updatePassword(email: String, password: String) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -66,14 +69,15 @@ class MySQLUserRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findByEmail(email: String) = Mono.create<User> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT EMAIL,PASSWORD FROM DUIC_USER WHERE EMAIL=:email",
                     mapOf("email" to email),
-                    ResultSetExtractor {
-                        if (it.next()) {
-                            sink.success(User(it.getString(1), it.getString(2)))
+                    ResultSetExtractor { rs ->
+                        if (rs.next()) {
+                            sink.success(User(rs.getString(1), rs.getString(2)))
                         } else {
                             sink.success()
                         }
@@ -82,6 +86,7 @@ class MySQLUserRepository(
         }
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findPage(pageable: Pageable) = Mono.zip(
             Flux.create<User> { sink ->
                 roTransactionTemplate.execute {
@@ -112,6 +117,7 @@ class MySQLUserRepository(
         Page(it.t1, it.t2, pageable)
     }
 
+    @Suppress("HasPlatformType")
     override fun findAllEmail() = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query("SELECT EMAIL FROM DUIC_USER") {

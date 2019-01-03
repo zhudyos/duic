@@ -55,6 +55,7 @@ open class MongoUserRepository(
     /**
      *
      */
+    @Suppress("HasPlatformType")
     override fun insert(user: User) = userColl.insertOne(Document(
             mapOf(
                     "_id" to ObjectId().toString(),
@@ -68,6 +69,7 @@ open class MongoUserRepository(
     /**
      *
      */
+    @Suppress("HasPlatformType")
     override fun delete(email: String) = userColl.deleteOne(eq("email", email))
             .toMono()
             .map { it.deletedCount.toInt() }
@@ -75,6 +77,7 @@ open class MongoUserRepository(
     /**
      *
      */
+    @Suppress("HasPlatformType")
     override fun updatePassword(email: String, password: String) = userColl.updateOne(
             eq("email", email),
             combine(
@@ -87,6 +90,7 @@ open class MongoUserRepository(
     /**
      *
      */
+    @Suppress("HasPlatformType")
     override fun findByEmail(email: String): Mono<User> = userColl.find(eq("email", email))
             .first()
             .toMono()
@@ -97,6 +101,7 @@ open class MongoUserRepository(
                 )
             }
 
+    @Suppress("HasPlatformType")
     override fun findPage(pageable: Pageable) = Mono.zip(
             userColl.find()
                     .projection(exclude("password"))
@@ -122,6 +127,7 @@ open class MongoUserRepository(
     /**
      *
      */
+    @Suppress("HasPlatformType")
     override fun findAllEmail() = userColl.find()
             .projection(include("email"))
             .toFlux()

@@ -77,6 +77,7 @@ open class MongoServerRepository(
             Updates.set("active_at", Date())
     ).toMono()
 
+    @Suppress("HasPlatformType")
     override fun findServers() = serverColl.find(
             gte("active_at", Date.from(Instant.now().minus(ACTIVE_TIMEOUT)))
     ).toFlux().map {

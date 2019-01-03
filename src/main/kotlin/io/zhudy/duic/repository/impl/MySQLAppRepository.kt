@@ -39,6 +39,7 @@ open class MySQLAppRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : AppRepository, AbstractTransactionRepository(transactionManager) {
 
+    @Suppress("HasPlatformType")
     override fun insert(app: App) = Mono.create<Int> {
         val n = transactionTemplate.execute {
             jdbcTemplate.update(
@@ -58,6 +59,7 @@ open class MySQLAppRepository(
         it.success(n)
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun delete(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
         Mono.create<Int> { sink ->
             val n = transactionTemplate.execute {
@@ -73,14 +75,15 @@ open class MySQLAppRepository(
         }.subscribeOn(Schedulers.elastic())
     }
 
+    @Suppress("HasPlatformType")
     override fun <T> findOne(name: String, profile: String) = Mono.create<App> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile",
                     mapOf("name" to name, "profile" to profile),
-                    ResultSetExtractor {
-                        if (it.next()) {
-                            sink.success(mapToApp(it))
+                    ResultSetExtractor { rs ->
+                        if (rs.next()) {
+                            sink.success(mapToApp(rs))
                         } else {
                             sink.success()
                         }
@@ -89,6 +92,7 @@ open class MySQLAppRepository(
         }
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun update(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
         Mono.create<Int> { sink ->
             val n = transactionTemplate.execute {
@@ -119,6 +123,7 @@ open class MySQLAppRepository(
         }.subscribeOn(Schedulers.elastic())
     }
 
+    @Suppress("HasPlatformType")
     override fun updateContent(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
         Mono.create<Int> { sink ->
             val v = transactionTemplate.execute {
@@ -147,23 +152,25 @@ open class MySQLAppRepository(
         }.subscribeOn(Schedulers.elastic())
     }
 
+    @Suppress("HasPlatformType")
     override fun findAll() = Flux.create<App> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT * FROM DUIC_APP ORDER BY UPDATED_AT") {
-                sink.next(mapToApp(it))
+            jdbcTemplate.query("SELECT * FROM DUIC_APP ORDER BY UPDATED_AT") { rs ->
+                sink.next(mapToApp(rs))
             }
         }
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findPage(pageable: Pageable) = Mono.zip(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
                     jdbcTemplate.query(
                             "SELECT * FROM DUIC_APP LIMIT :offset,:limit",
                             mapOf("offset" to pageable.offset, "limit" to pageable.size)
-                    ) {
-                        sink.next(mapToApp(it))
+                    ) { rs ->
+                        sink.next(mapToApp(rs))
                     }
                 }
                 sink.complete()
@@ -182,6 +189,7 @@ open class MySQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
+    @Suppress("HasPlatformType")
     override fun findPageByUser(pageable: Pageable, userContext: UserContext) = Mono.zip(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
@@ -192,8 +200,8 @@ open class MySQLAppRepository(
                                     "offset" to pageable.offset,
                                     "limit" to pageable.size
                             )
-                    ) {
-                        sink.next(mapToApp(it))
+                    ) { rs ->
+                        sink.next(mapToApp(rs))
                     }
                 }
                 sink.complete()
@@ -212,6 +220,7 @@ open class MySQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
+    @Suppress("HasPlatformType")
     override fun searchPage(q: String, pageable: Pageable) = Mono.zip(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
@@ -228,8 +237,8 @@ open class MySQLAppRepository(
                                     "offset" to pageable.offset,
                                     "limit" to pageable.size
                             )
-                    ) {
-                        sink.next(mapToApp(it))
+                    ) { rs ->
+                        sink.next(mapToApp(rs))
                     }
                 }
                 sink.complete()
@@ -249,6 +258,7 @@ open class MySQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
+    @Suppress("HasPlatformType")
     override fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext) = Mono.zip(
             Flux.create<App> { sink ->
                 roTransactionTemplate.execute {
@@ -265,8 +275,8 @@ open class MySQLAppRepository(
                                     "offset" to pageable.offset,
                                     "limit" to pageable.size
                             )
-                    ) {
-                        sink.next(mapToApp(it))
+                    ) { rs ->
+                        sink.next(mapToApp(rs))
                     }
                 }
                 sink.complete()
@@ -286,83 +296,89 @@ open class MySQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
+    @Suppress("HasPlatformType")
     override fun findByUpdatedAt(updateAt: Date) = Flux.create<App> { sink ->
         transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP WHERE UPDATED_AT > :updated_at ORDER BY UPDATED_AT",
                     mapOf("updated_at" to updateAt)
-            ) {
-                sink.next(mapToApp(it))
+            ) { rs ->
+                sink.next(mapToApp(rs))
             }
         }
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findLast50History(name: String, profile: String) = Flux.create<AppContentHistory> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile ORDER BY CREATED_AT DESC LIMIT 0,50",
                     mapOf("name" to name, "profile" to profile)
-            ) {
+            ) { rs ->
                 sink.next(AppContentHistory(
-                        hid = it.getString("id"),
-                        updatedBy = it.getString("updated_by") ?: "",
-                        content = it.getString("content") ?: "",
-                        updatedAt = it.getTimestamp("created_at")
+                        hid = rs.getString("id"),
+                        updatedBy = rs.getString("updated_by") ?: "",
+                        content = rs.getString("content") ?: "",
+                        updatedAt = rs.getTimestamp("created_at")
                 ))
             }
         }
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findAllNames() = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT NAME FROM DUIC_APP") {
-                sink.next(it.getString("name"))
+            jdbcTemplate.query("SELECT NAME FROM DUIC_APP") { rs ->
+                sink.next(rs.getString("name"))
             }
         }
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findProfilesByName(name: String) = Flux.create<String> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT PROFILE FROM DUIC_APP WHERE NAME=:name", mapOf("name" to name)) {
-                sink.next(it.getString("profile"))
+            jdbcTemplate.query("SELECT PROFILE FROM DUIC_APP WHERE NAME=:name", mapOf("name" to name)) { rs ->
+                sink.next(rs.getString("profile"))
             }
         }
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findDeletedByCreatedAt(createdAt: Date) = Flux.create<AppHistory> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP_HISTORY WHERE CREATED_AT > :created_at AND DELETED_BY IS NOT NULL AND DELETED_BY != '' ORDER BY CREATED_AT",
                     mapOf("created_at" to createdAt)
-            ) {
+            ) { rs ->
                 sink.next(AppHistory(
-                        id = it.getString("id"),
-                        name = it.getString("name"),
-                        profile = it.getString("profile"),
-                        description = it.getString("description"),
-                        content = it.getString("content"),
-                        token = it.getString("token"),
-                        ipLimit = it.getString("ip_limit"),
-                        v = it.getInt("v"),
-                        createdAt = it.getTimestamp("created_at"),
-                        updatedBy = it.getString("updated_by"),
-                        deletedBy = it.getString("deleted_by"),
-                        users = it.getString("users").split(",")
+                        id = rs.getString("id"),
+                        name = rs.getString("name"),
+                        profile = rs.getString("profile"),
+                        description = rs.getString("description"),
+                        content = rs.getString("content"),
+                        token = rs.getString("token"),
+                        ipLimit = rs.getString("ip_limit"),
+                        v = rs.getInt("v"),
+                        createdAt = rs.getTimestamp("created_at"),
+                        updatedBy = rs.getString("updated_by"),
+                        deletedBy = rs.getString("deleted_by"),
+                        users = rs.getString("users").split(",")
                 ))
             }
         }
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
+    @Suppress("HasPlatformType")
     override fun findLastDataTime() = Mono.create<Long> { sink ->
         roTransactionTemplate.execute {
-            jdbcTemplate.query("SELECT UPDATED_AT FROM DUIC_APP ORDER BY UPDATED_AT DESC", ResultSetExtractor {
-                if (it.next()) {
-                    sink.success(it.getTimestamp("updated_at").time)
+            jdbcTemplate.query("SELECT UPDATED_AT FROM DUIC_APP ORDER BY UPDATED_AT DESC", ResultSetExtractor { rs ->
+                if (rs.next()) {
+                    sink.success(rs.getTimestamp("updated_at").time)
                 } else {
                     sink.success(0)
                 }

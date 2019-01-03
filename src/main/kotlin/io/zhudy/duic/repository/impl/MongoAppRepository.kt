@@ -95,6 +95,7 @@ open class MongoAppRepository(
      * @param app 应用配置信息
      * @param userContext 用户上下文
      */
+    @Suppress("HasPlatformType")
     override fun delete(app: App, userContext: UserContext) = findOne<Any>(app.name, app.profile).flatMap { dbApp ->
         appColl.deleteOne(and(eq("name", app.name), eq("profile", app.profile)))
                 .toMono()
@@ -177,6 +178,7 @@ open class MongoAppRepository(
     /**
      * 返回所有应用配置信息，并且按更新时间 `updated_at` 升序排列。
      */
+    @Suppress("HasPlatformType")
     override fun findAll() = appColl.find().sort(ascending("updated_at")).toFlux().map(::mapToApp)
 
     /**
@@ -227,6 +229,7 @@ open class MongoAppRepository(
      *
      * @param updateAt 应用更新时间
      */
+    @Suppress("HasPlatformType")
     override fun findByUpdatedAt(updateAt: Date) = appColl
             .find(gt("updated_at", updateAt))
             .sort(ascending("updated_at"))
@@ -238,6 +241,7 @@ open class MongoAppRepository(
      * @param name 应用名称
      * @param profile 应用配置
      */
+    @Suppress("HasPlatformType")
     override fun findLast50History(name: String, profile: String) = appHisColl
             .find(and(eq("name", name), eq("profile", profile)))
             .sort(descending("created_at"))
@@ -259,6 +263,7 @@ open class MongoAppRepository(
     /**
      * 返回应用名称下所有的应用配置名称。
      */
+    @Suppress("HasPlatformType")
     override fun findProfilesByName(name: String) = appColl
             .find(eq("name", name))
             .projection(include("profile"))
@@ -270,12 +275,14 @@ open class MongoAppRepository(
      *
      * @param createdAt 删除时间
      */
+    @Suppress("HasPlatformType")
     override fun findDeletedByCreatedAt(createdAt: Date) = appHisColl
             .find(and(gt("created_at", createdAt), ne("deleted_by", "")))
             .sort(ascending("created_at"))
             .toFlux()
             .map(::mapToAppHistory)
 
+    @Suppress("HasPlatformType")
     override fun findLastDataTime() = appColl.find()
             .projection(include("updated_at"))
             .sort(descending("updated_at"))
