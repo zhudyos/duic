@@ -15,7 +15,6 @@
  */
 package io.zhudy.duic.server
 
-import io.sentry.Sentry
 import io.zhudy.duic.Config
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
@@ -68,9 +67,6 @@ class Application {
                 setBanner(DuicBanner())
                 addInitializers(BeansInitializer())
             }
-
-            // 配置 Sentry
-            Sentry.init(Config.sentry.dsn)
         }
     }
 }
