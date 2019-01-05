@@ -24,14 +24,7 @@
         </encoder>
     </appender>
 
-    <appender name="SENTRY" class="io.sentry.logback.SentryAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
-        </filter>
-    </appender>
-
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="SENTRY"/>
     </root>
 </configuration>
