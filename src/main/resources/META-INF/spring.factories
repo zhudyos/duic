@@ -1,1 +1,0 @@
-org.springframework.boot.env.EnvironmentPostProcessor=io.zhudy.duic.env.CheckEnvironmentPostProcessor
