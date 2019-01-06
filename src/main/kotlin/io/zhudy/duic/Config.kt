@@ -38,13 +38,6 @@ object Config {
      * 管理控制台 JWT 生成、管理信息。
      */
     var jwt = Jwt
-    /**
-     * Open-source error tracking that helps developers monitor and fix crashes in real time.
-     * Iterate continuously. Boost efficiency. Improve user experience.
-     *
-     * [https://sentry.io]
-     */
-    var sentry = Sentry
 
     object Jwt {
         /**
@@ -55,10 +48,6 @@ object Config {
          * JWT 过期时间。
          */
         var expiresIn: Long = 12 * 60 // 默认2小时过期
-    }
-
-    object Sentry {
-        var dsn: String = "noop://localhost?async=false"
     }
 
     /**
