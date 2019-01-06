@@ -67,6 +67,8 @@ class Application {
                 setBanner(DuicBanner())
                 addInitializers(BeansInitializer())
             }
+            println("duic start successful.")
         }
+
     }
 }
