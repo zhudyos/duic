@@ -5,6 +5,7 @@ buildscript {
         springBootVersion = "2.1.1.RELEASE"
         jacksonVersion = "2.9.7"
         reactorVersion = "3.2.3.RELEASE"
+        liquibaseVersion = "3.6.2"
     }
 
     repositories {
@@ -59,9 +60,9 @@ dependencies {
     compile "com.auth0:java-jwt:3.3.0"
     compile "org.springframework.security:spring-security-crypto:5.0.4.RELEASE"
 
-    compile "org.liquibase:liquibase-core:3.6.1"
-    compile "com.zaxxer:HikariCP:3.1.0"
-    compile "org.mariadb.jdbc:mariadb-java-client:2.2.3"
+    compile "org.liquibase:liquibase-core:$liquibaseVersion"
+    compile "com.zaxxer:HikariCP:3.3.0"
+    compile "mysql:mysql-connector-java:8.0.13"
     compile "org.postgresql:postgresql:42.2.2"
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
