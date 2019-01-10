@@ -15,20 +15,17 @@
  */
 package io.zhudy.duic.web.server
 
-import io.zhudy.duic.Config
 import io.zhudy.duic.domain.ServerInfo
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.HealthCheckException
 import io.zhudy.duic.service.ServerService
 import io.zhudy.duic.web.body
-import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse.ok
 import org.springframework.web.reactive.function.server.ServerResponse.status
 import reactor.core.publisher.toMono
-import java.net.InetAddress
 
 /**
  *`/servers`。
@@ -37,18 +34,9 @@ import java.net.InetAddress
  */
 @Controller
 class ServerResource(
-        serverProperties: ServerProperties,
         val serverService: ServerService,
         val appService: AppService
 ) {
-
-    init {
-        Config.server = Config.Server(
-                host = InetAddress.getLocalHost().hostName,
-                port = serverProperties.port,
-                sslEnabled = serverProperties.ssl?.isEnabled ?: false
-        )
-    }
 
     /**
      *
