@@ -17,7 +17,6 @@
 scheduling:
   enabled: false
 
-spring:
-  data:
-    mongodb:
-      uri: mongodb://127.0.0.1:27017/duic-unit-test
+duic:
+  mongodb:
+    url: mongodb://127.0.0.1:27017/duic-unit-test
