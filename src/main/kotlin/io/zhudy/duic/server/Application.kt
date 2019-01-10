@@ -15,19 +15,25 @@
  */
 package io.zhudy.duic.server
 
+import io.zhudy.duic.ApplicationUnusableEvent
+import io.zhudy.duic.ApplicationUsableEvent
 import io.zhudy.duic.Config
+import org.springframework.boot.ExitCodeGenerator
+import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration
+import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.runApplication
+import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
+import java.net.InetAddress
 
 
 /**
@@ -41,7 +47,6 @@ import org.springframework.context.annotation.Bean
         ],
         exclude = [
             MongoReactiveAutoConfiguration::class,
-            DataSourceAutoConfiguration::class,
             RestTemplateAutoConfiguration::class,
             ErrorWebFluxAutoConfiguration::class,
             CodecsAutoConfiguration::class,
@@ -54,7 +59,16 @@ class Application {
 
     @Bean("io.zhudy.duic.Config")
     @ConfigurationProperties(prefix = "duic")
-    fun config() = Config
+    fun config(serverProperties: ServerProperties): Config {
+        val c = Config
+        c.server = Config.Server(
+                host = InetAddress.getLocalHost().hostName,
+                port = serverProperties.port,
+                sslEnabled = serverProperties.ssl?.isEnabled ?: false
+        )
+
+        return c
+    }
 
     companion object {
 
@@ -66,8 +80,22 @@ class Application {
             runApplication<Application>("--spring.config.additional-location=/etc/duic/") {
                 setBanner(DuicBanner())
                 addInitializers(BeansInitializer())
+
+                val usable = ApplicationListener<ApplicationUsableEvent> {
+                    println("""
+====================================================================================
+//                           duic start successful                                //
+====================================================================================
+""")
+                }
+
+
+                val unusable = ApplicationListener<ApplicationUnusableEvent> { event ->
+                    SpringApplication.exit(event.applicationContext, ExitCodeGenerator { 1 })
+                }
+
+                addListeners(usable, unusable)
             }
-            println("duic start successful.")
         }
 
     }
