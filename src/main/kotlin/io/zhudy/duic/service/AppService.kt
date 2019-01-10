@@ -15,6 +15,9 @@
  */
 package io.zhudy.duic.service
 
+import com.github.benmanes.caffeine.cache.CacheWriter
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.RemovalCause
 import io.zhudy.duic.*
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Page
@@ -29,8 +32,16 @@ import io.zhudy.duic.service.ip.SectionIpChecker
 import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
 import io.zhudy.duic.vo.RequestConfigVo
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.ApplicationEvent
+import org.springframework.context.event.ApplicationEventMulticaster
+import org.springframework.context.event.EventListener
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -39,13 +50,12 @@ import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.MonoSink
+import reactor.core.scheduler.Schedulers
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.thread
-import kotlin.concurrent.withLock
 
 /**
  * 应用配置逻辑处理实现。
@@ -56,19 +66,33 @@ import kotlin.concurrent.withLock
 class AppService(
         val appRepository: AppRepository,
         val serverRepository: ServerRepository,
-        val webClientBuilder: WebClient.Builder
+        val webClientBuilder: WebClient.Builder,
+        val applicationEventMulticaster: ApplicationEventMulticaster
 ) {
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
 
-    private val appCaches = ConcurrentHashMap<String, CachedApp>()
-
-    private val watchStateMonoSinkTimeout = 30 * 1000
-    private val watchStateLock = ReentrantLock()
-    private val watchStateCond = watchStateLock.newCondition()
-    private val watchStateMonoSinks = ConcurrentHashMap<String, MutableList<WatchStateMonoSink>>()
+    private val watchStateTimeout = 30 * 1000
+    private val watchStateSinks = ConcurrentLinkedQueue<WatchStateSink>()
     private val updateAppQueue = LinkedBlockingQueue<String>()
-    private var minWatchStateMs = 0L
+
+    private val appCaches = Caffeine.newBuilder().writer(object : CacheWriter<String, CachedApp> {
+        override fun write(key: String, value: CachedApp) {
+            watchStateSinks.parallelStream().filter {
+                it.name != value.name && it.profiles.indexOf(value.profile) <= 0
+            }.forEach { wss ->
+
+                configState0(wss.name, wss.profiles).subscribeOn(Schedulers.parallel()).subscribe {
+                    watchStateSinks.remove(wss)
+                    wss.sink.success(it)
+                    wss.done = true
+                }
+            }
+        }
+
+        override fun delete(key: String, value: CachedApp?, cause: RemovalCause) {
+        }
+    }).build<String, CachedApp>()
 
     @Volatile
     private var lastDataTime: Date? = null
@@ -91,15 +115,61 @@ class AppService(
     /**
      * 客户端监控状态的缓存对象。
      */
-    private data class WatchStateMonoSink(
-            val monoSink: MonoSink<String>,
-            val configVo: RequestConfigVo,
+    private data class WatchStateSink(
+            val sink: MonoSink<String>,
+            val name: String,
+            val profiles: Array<String>,
             val state: String,
-            val initTime: Long
-    )
+            val startTime: Long,
 
-    init {
-        initResponseWatchState()
+            /**
+             * 如果 `done` 为 `true` 表示该操作已经成功完成，应该即时清理内存信息。
+             */
+            @Volatile
+            var done: Boolean = false
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as WatchStateSink
+
+            if (sink != other.sink) return false
+            if (name != other.name) return false
+            if (!profiles.contentEquals(other.profiles)) return false
+            if (state != other.state) return false
+            if (startTime != other.startTime) return false
+            if (done != other.done) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = sink.hashCode()
+            result = 31 * result + name.hashCode()
+            result = 31 * result + profiles.contentHashCode()
+            result = 31 * result + state.hashCode()
+            result = 31 * result + startTime.hashCode()
+            result = 31 * result + done.hashCode()
+            return result
+        }
+    }
+
+    @EventListener
+    fun listenSpringEvent(event: ApplicationEvent) {
+        if (event is ApplicationReadyEvent) {
+            val cdl = CountDownLatch(1)
+            serverRepository.findDbVersion().subscribe { cdl.countDown() }
+
+            val s = try {
+                cdl.await(3, TimeUnit.SECONDS)
+            } catch (e: InterruptedException) {
+                false
+            }
+
+            val e = if (s) ApplicationUsableEvent(event.applicationContext) else ApplicationUnusableEvent(event.applicationContext)
+            applicationEventMulticaster.multicastEvent(e)
+        }
     }
 
     @Scheduled(initialDelay = 0,
@@ -117,7 +187,7 @@ class AppService(
         }.doFinally {
             log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
         }.subscribe {
-            appCaches.remove(localKey(it.name, it.profile))
+            appCaches.invalidate(localKey(it.name, it.profile))
             lastAppHistoryCreatedAt = it.createdAt!!
         }
     }
@@ -127,6 +197,7 @@ class AppService(
      *
      * @return 配置最后的更新时间戳（毫秒）
      */
+    @Suppress("HasPlatformType")
     fun refresh() = Mono.create<Long> { sink ->
         // 更新 APP 配置信息
         if (lastDataTime == null) {
@@ -140,8 +211,9 @@ class AppService(
         }.doOnComplete {
             sink.success(lastDataTime?.time ?: 0L)
         }.subscribe {
+            // 刷新缓存配置
             val k = localKey(it.name, it.profile)
-            appCaches[k] = mapToCachedApp(it)
+            appCaches.put(k, mapToCachedApp(it))
             lastDataTime = it.updatedAt
 
             updateAppQueue.offer(k)
@@ -166,6 +238,7 @@ class AppService(
     /**
      * 删除应用。
      */
+    @Suppress("HasPlatformType")
     fun delete(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.delete(app, userContext)
     }
@@ -173,6 +246,7 @@ class AppService(
     /**
      * 更新应用。
      */
+    @Suppress("HasPlatformType")
     fun update(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.update(app, userContext)
     }
@@ -215,27 +289,37 @@ class AppService(
     /**
      * 监控配置状态。
      */
+    @Suppress("HasPlatformType")
     fun watchConfigState(vo: RequestConfigVo, oldState: String) = getConfigState(vo).flatMap { state ->
         if (state != oldState) {
             return@flatMap Mono.just(state)
         }
         Mono.create<String> { sink ->
-            val ws = WatchStateMonoSink(sink, vo, state, System.currentTimeMillis())
+            // FIXME 这里存在安全隐患，如果客户端无限提交监控状态请求，会让服务器内存无限增长，需要优化
+            val wss = WatchStateSink(
+                    sink = sink,
+                    name = vo.name,
+                    profiles = vo.profiles.toTypedArray(),
+                    state = state,
+                    startTime = System.currentTimeMillis()
+            )
 
-            watchStateLock.withLock {
-                vo.profiles.forEach {
-                    val k = localKey(vo.name, it)
-                    val a = watchStateMonoSinks[k] ?: mutableListOf()
-                    a.add(ws)
-
-                    watchStateMonoSinks[k] = a
-                }
-
-                if (minWatchStateMs == 0L) {
-                    minWatchStateMs = ws.initTime
-                    watchStateCond.signalAll()
+            val job = GlobalScope.launch(start = CoroutineStart.LAZY) {
+                while (true) {
+                    val elapsedTime = System.currentTimeMillis() - wss.startTime
+                    // 超过最大等等时间，响应当前最新状态
+                    if (elapsedTime >= watchStateTimeout) {
+                        watchStateSinks.remove(wss)
+                        sink.success(state)
+                        wss.done = true
+                        break
+                    }
+                    delay(1000)
                 }
             }
+
+            watchStateSinks.add(wss)
+            job.start()
         }
     }
 
@@ -368,16 +452,16 @@ class AppService(
     }
 
     private fun loadAndCheckApps(vo: RequestConfigVo) = Flux.merge(vo.profiles.map {
-        loadOne(vo.name, it).doOnNext {
-            if (it.ipLimit.isNotEmpty()) {
+        loadOne(vo.name, it).doOnNext { app ->
+            if (app.ipLimit.isNotEmpty()) {
                 // 校验访问 IP
                 if (vo.clientIpv4.isEmpty()) {
-                    throw BizCodeException(BizCode.Classic.C_403, "${it.name}/${it.profile} 禁止访问")
+                    throw BizCodeException(BizCode.Classic.C_403, "${app.name}/${app.profile} 禁止访问")
                 }
 
                 val ipl = IpUtils.ipv4ToLong(vo.clientIpv4)
                 var r = false
-                for (limit in it.ipLimit) {
+                for (limit in app.ipLimit) {
                     r = limit.check(ipl)
                     if (r) {
                         break
@@ -385,28 +469,39 @@ class AppService(
                 }
 
                 if (!r) {
-                    throw BizCodeException(BizCode.Classic.C_403, "${it.name}/${it.profile} 禁止 ${vo.clientIpv4} 访问")
+                    throw BizCodeException(BizCode.Classic.C_403, "${app.name}/${app.profile} 禁止 ${vo.clientIpv4} 访问")
                 }
             }
 
-            if (it.token.isNotEmpty() && !vo.configTokens.contains(it.token)) {
-                throw BizCodeException(BizCode.Classic.C_401, "${it.name}/${it.profile} 认证失败")
+            if (app.token.isNotEmpty() && !vo.configTokens.contains(app.token)) {
+                throw BizCodeException(BizCode.Classic.C_401, "${app.name}/${app.profile} 认证失败")
             }
         }
     }).collectList()
 
     private fun loadOne(name: String, profile: String): Mono<CachedApp> {
         val k = localKey(name, profile)
-        return Mono.justOrEmpty<CachedApp>(appCaches[k])
+        return Mono.justOrEmpty<CachedApp>(appCaches.getIfPresent(k))
                 .switchIfEmpty(
                         findOne(name, profile).map {
-                            val ca = mapToCachedApp(it)
-                            appCaches[k] = ca
-                            ca
+                            val c = mapToCachedApp(it)
+                            appCaches.put(k, c)
+                            c
                         }.switchIfEmpty(Mono.create {
                             it.error(BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile"))
                         })
                 )
+    }
+
+    private fun configState0(name: String, profiles: Array<String>): Mono<String> {
+        val sources = profiles.map { loadOne(name, it) }
+        return Flux.concat(sources).collectList().map { apps ->
+            val state = StringBuilder()
+            apps.forEach { app ->
+                state.append(app.v)
+            }
+            state.toString()
+        }
     }
 
     private fun mergeProps(apps: List<CachedApp>): Map<Any, Any> {
@@ -439,9 +534,9 @@ class AppService(
 
                 val m = (o as? Map<Any, Any>)?.toMutableMap() ?: hashMapOf()
                 mergeProps(m, v.toMutableMap() as MutableMap<Any, Any>, field)
-                a.put(k, m)
+                a[k] = m
             } else {
-                a.put(k, v)
+                a[k] = v
             }
         }
     }
@@ -461,7 +556,7 @@ class AppService(
                 key = if (key.startsWith("[")) {
                     path + key
                 } else {
-                    path + '.' + key
+                    "$path.$key"
                 }
             }
 
@@ -480,7 +575,7 @@ class AppService(
                         buildFlattenedMap(result, mapOf("[$count]" to o), key)
                     }
                 }
-                else -> result.put(key, value)
+                else -> result[key] = value
             }
         }
     }
@@ -514,74 +609,6 @@ class AppService(
     }
 
     private fun localKey(name: String, profile: String) = "${name}_$profile"
-
-    private fun initResponseWatchState() {
-        thread(isDaemon = true, name = "response-watch-app-state") {
-            while (true) {
-                try {
-                    val k = updateAppQueue.take()
-                    val a = watchStateLock.withLock {
-                        watchStateMonoSinks.remove(k)
-                    }
-
-                    a?.forEach { stateMonoSink ->
-                        try {
-                            getConfigState(stateMonoSink.configVo).subscribe {
-                                stateMonoSink.monoSink.success(it)
-                            }
-                        } catch (e: Exception) {
-                            stateMonoSink.monoSink.error(e)
-                        }
-                    }
-                } catch (e: Exception) {
-                    log.error("通知更新状态错误", e)
-                }
-            }
-        }
-
-        thread(isDaemon = true, name = "default-response-watch-app-state") {
-            while (true) {
-                try {
-                    watchStateLock.withLock {
-
-                        if (minWatchStateMs != 0L) {
-                            watchStateCond.await(System.currentTimeMillis() - minWatchStateMs, TimeUnit.MILLISECONDS)
-                        } else {
-                            watchStateCond.await()
-                        }
-
-                        var t = 0L
-
-                        watchStateMonoSinks.entries.forEach { entry ->
-                            val mlist = entry.value
-
-                            mlist.toList().forEach {
-                                val to = it.initTime + watchStateMonoSinkTimeout
-                                if (to <= System.currentTimeMillis()) {
-                                    it.monoSink.success(it.state)
-
-                                    // 清理
-                                    if (mlist.size <= 1) {
-                                        watchStateMonoSinks.remove(entry.key)
-                                    } else {
-                                        mlist.remove(it)
-                                    }
-                                } else {
-                                    if (t == 0L || it.initTime < t) {
-                                        t = it.initTime
-                                    }
-                                }
-                            }
-                        }
-
-                        minWatchStateMs = t
-                    }
-                } catch (e: Exception) {
-                    log.error("默认状态响应错误", e)
-                }
-            }
-        }
-    }
 
     // 刷新集群配置
     private fun refreshClusterConfig() {
