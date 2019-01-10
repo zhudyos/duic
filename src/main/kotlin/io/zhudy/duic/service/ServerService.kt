@@ -24,15 +24,15 @@ import io.zhudy.duic.dto.ServerStateDto
 import io.zhudy.duic.repository.ServerRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.context.event.ApplicationReadyEvent
-import org.springframework.context.event.ContextClosedEvent
-import org.springframework.context.event.EventListener
+import org.springframework.context.annotation.DependsOn
 import org.springframework.http.MediaType
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
+import javax.annotation.PostConstruct
+import javax.annotation.PreDestroy
 
 /**
  * 集群服务管理。
@@ -40,6 +40,7 @@ import reactor.core.scheduler.Schedulers
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
+@DependsOn("io.zhudy.duic.Config")
 class ServerService(
         val serverRepository: ServerRepository,
         val webClientBuilder: WebClient.Builder,
@@ -58,20 +59,20 @@ class ServerService(
     private val failServerRefreshDto = ServerRefreshDto(lastDataTime = -1)
 
     /**
-     * 监听 [ApplicationReadyEvent] 事件，服务启动成功后会自动注册当前服务。
+     * 服务启动成功后会自动注册当前服务。
      */
-    @EventListener(classes = [ApplicationReadyEvent::class])
-    fun register() {
+    @PostConstruct
+    fun init() {
         serverRepository.register(Config.server.host, Config.server.port).doOnError {
             log.error("register 服务失败: ${Config.server.host}:${Config.server.port}", it)
         }.subscribe()
     }
 
     /**
-     * 监听 [ContextClosedEvent] 事件，服务停止后会自动下线当前服务。
+     * 服务停止后会自动下线当前服务。
      */
-    @EventListener(classes = [ContextClosedEvent::class])
-    fun unregister() {
+    @PreDestroy
+    fun destroy() {
         serverRepository.register(Config.server.host, Config.server.port).doOnError {
             log.error("unregister 服务失败: ${Config.server.host}:${Config.server.port}", it)
         }.subscribe()
