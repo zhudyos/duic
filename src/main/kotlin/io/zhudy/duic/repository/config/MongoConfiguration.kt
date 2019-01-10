@@ -17,18 +17,19 @@ package io.zhudy.duic.repository.config
 
 import com.mongodb.ConnectionString
 import com.mongodb.reactivestreams.client.MongoClient
+import com.mongodb.reactivestreams.client.MongoClients
 import com.mongodb.reactivestreams.client.MongoDatabase
 import io.zhudy.duic.repository.impl.MongoAppRepository
 import io.zhudy.duic.repository.impl.MongoServerRepository
 import io.zhudy.duic.repository.impl.MongoUserRepository
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.MongoProperties
-import org.springframework.boot.autoconfigure.mongo.ReactiveMongoClientFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.env.Environment
-import javax.annotation.PreDestroy
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -36,31 +37,21 @@ import javax.annotation.PreDestroy
 @Configuration
 @ConditionalOnExpression("T(io.zhudy.duic.DBMS).forName('\${duic.dbms}') == T(io.zhudy.duic.DBMS).MongoDB")
 @EnableConfigurationProperties(MongoProperties::class)
-class MongoConfiguration {
+@EnableAutoConfiguration(exclude = [DataSourceAutoConfiguration::class])
+class MongoConfiguration(
+        @Value("%{duic.mongodb.url}")
+        private val connectionUrl: String
+) {
 
-    private var mongo: MongoClient? = null
-
-    @PreDestroy
-    fun destroy() {
-        mongo?.apply {
-            close()
-        }
+    @Bean(destroyMethod = "close")
+    fun mongoClient(): MongoClient {
+        return MongoClients.create(connectionUrl)
     }
 
     @Bean
-    fun mongoClient(properties: MongoProperties, environment: Environment): MongoClient {
-        val factory = ReactiveMongoClientFactory(properties, environment, null)
-        mongo = factory.createMongoClient(null)
-        return mongo!!
-    }
-
-    @Bean
-    fun duicMongoDatabase(properties: MongoProperties, mongoClient: MongoClient): MongoDatabase {
-        val dbName = if (properties.database != null)
-            properties.database
-        else
-            ConnectionString(properties.uri).database
-        return mongoClient.getDatabase(dbName)
+    fun duicMongoDatabase(mongoClient: MongoClient): MongoDatabase {
+        val database = ConnectionString(connectionUrl).database
+        return mongoClient.getDatabase(database)
     }
 
     @Bean
