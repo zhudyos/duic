@@ -22,11 +22,11 @@ import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.repository.UserRepository
-import org.springframework.boot.context.event.ApplicationReadyEvent
-import org.springframework.context.event.EventListener
+import org.springframework.context.annotation.DependsOn
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
+import javax.annotation.PostConstruct
 
 /**
  * 用户管理。
@@ -34,11 +34,12 @@ import reactor.core.publisher.Mono
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
+@DependsOn("io.zhudy.duic.Config")
 class UserService(val userRepository: UserRepository,
                   val passwordEncoder: PasswordEncoder) {
 
-    @EventListener
-    fun listenContextStarted(event: ApplicationReadyEvent) {
+    @PostConstruct
+    fun initRootUser() {
         userRepository.findByEmail(Config.rootEmail).hasElement().subscribe {
             if (!it) {
                 insert(User(email = Config.rootEmail, password = Config.rootPassword)).subscribe()
