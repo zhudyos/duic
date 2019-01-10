@@ -48,6 +48,9 @@ repositories {
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib"
     compile "org.jetbrains.kotlin:kotlin-reflect"
+    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0"
+    
+    compile "com.github.ben-manes.caffeine:caffeine:2.6.2"
 
     compile("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion") {
         exclude module: "hibernate-validator"
