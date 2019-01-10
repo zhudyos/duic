@@ -25,7 +25,7 @@
     <context:property-placeholder location="file:config/mysql.properties" ignore-resource-not-found="true"/>
 
     <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
-        <property name="driverClassName" value="org.mariadb.jdbc.Driver"/>
+        <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
         <property name="autoCommit" value="false"/>
         <property name="jdbcUrl"
                   value="${jdbc.url:jdbc:mysql://127.0.0.1:3306/duic-unit-test?autoReconnect=true&amp;useServerPrepStmts=true}"/>
