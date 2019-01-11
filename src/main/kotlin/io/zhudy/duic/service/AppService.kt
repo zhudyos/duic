@@ -32,8 +32,8 @@ import io.zhudy.duic.service.ip.SectionIpChecker
 import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
 import io.zhudy.duic.vo.RequestConfigVo
-import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.bson.types.ObjectId
@@ -72,7 +72,7 @@ class AppService(
 
     private val log = LoggerFactory.getLogger(AppService::class.java)
 
-    private val watchStateTimeout = 30 * 1000
+    private val watchStateTimeout = 30 * 1000L
     private val watchStateSinks = ConcurrentLinkedQueue<WatchStateSink>()
     private val updateAppQueue = LinkedBlockingQueue<String>()
 
@@ -85,6 +85,7 @@ class AppService(
                 configState0(wss.name, wss.profiles).subscribeOn(Schedulers.parallel()).subscribe {
                     watchStateSinks.remove(wss)
                     wss.sink.success(it)
+                    wss.timeoutJob?.cancel()
                     wss.done = true
                 }
             }
@@ -126,7 +127,8 @@ class AppService(
              * 如果 `done` 为 `true` 表示该操作已经成功完成，应该即时清理内存信息。
              */
             @Volatile
-            var done: Boolean = false
+            var done: Boolean = false,
+            var timeoutJob: Job? = null
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -304,22 +306,14 @@ class AppService(
                     startTime = System.currentTimeMillis()
             )
 
-            val job = GlobalScope.launch(start = CoroutineStart.LAZY) {
-                while (true) {
-                    val elapsedTime = System.currentTimeMillis() - wss.startTime
-                    // 超过最大等等时间，响应当前最新状态
-                    if (elapsedTime >= watchStateTimeout) {
-                        watchStateSinks.remove(wss)
-                        sink.success(state)
-                        wss.done = true
-                        break
-                    }
-                    delay(1000)
-                }
+            wss.timeoutJob = GlobalScope.launch {
+                delay(watchStateTimeout)
+                watchStateSinks.remove(wss)
+                sink.success(state)
+                wss.done = true
             }
 
             watchStateSinks.add(wss)
-            job.start()
         }
     }
 
