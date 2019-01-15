@@ -100,7 +100,7 @@ class ServerService(
         webClientBuilder.baseUrl("$schema://${s.host}:${s.port}")
                 .build()
                 .get()
-                .uri("/servers/last-data-time")
+                .uri("/api/servers/last-data-time")
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus({ !it.is2xxSuccessful }, {
@@ -140,7 +140,6 @@ class ServerService(
      * 服务健康检查。
      */
     fun health() = serverRepository.findDbVersion().onErrorResume { e ->
-        // FIXME 需要编写测试用户，针对数据库每个异常单独处理
         log.error("", e)
         throw HealthCheckException(503, "数据库不可用")
     }
