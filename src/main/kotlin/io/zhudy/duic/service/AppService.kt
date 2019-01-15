@@ -15,9 +15,7 @@
  */
 package io.zhudy.duic.service
 
-import com.github.benmanes.caffeine.cache.CacheWriter
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.RemovalCause
 import io.zhudy.duic.*
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Page
@@ -76,24 +74,8 @@ class AppService(
     private val watchStateSinks = ConcurrentLinkedQueue<WatchStateSink>()
     private val updateAppQueue = LinkedBlockingQueue<String>()
 
-    private val appCaches = Caffeine.newBuilder().writer(object : CacheWriter<String, CachedApp> {
-        override fun write(key: String, value: CachedApp) {
-            watchStateSinks.parallelStream().filter {
-                it.name != value.name && it.profiles.indexOf(value.profile) <= 0
-            }.forEach { wss ->
-
-                configState0(wss.name, wss.profiles).subscribeOn(Schedulers.parallel()).subscribe {
-                    watchStateSinks.remove(wss)
-                    wss.sink.success(it)
-                    wss.timeoutJob?.cancel()
-                    wss.done = true
-                }
-            }
-        }
-
-        override fun delete(key: String, value: CachedApp?, cause: RemovalCause) {
-        }
-    }).build<String, CachedApp>()
+    // 配置缓存
+    private val appCaches = Caffeine.newBuilder().build<String, CachedApp>()
 
     @Volatile
     private var lastDataTime: Date? = null
@@ -215,10 +197,26 @@ class AppService(
         }.subscribe {
             // 刷新缓存配置
             val k = localKey(it.name, it.profile)
-            appCaches.put(k, mapToCachedApp(it))
+            val app = mapToCachedApp(it)
+            appCaches.put(k, app)
             lastDataTime = it.updatedAt
-
             updateAppQueue.offer(k)
+
+            // 更新成功通知客户端最新的状态
+            watchStateSinks.parallelStream()
+                    .filter { e ->
+                        e.name == app.name && e.profiles.indexOf(app.profile) >= 0
+                    }
+                    .forEach { wss ->
+                        configState0(wss.name, wss.profiles)
+                                .subscribeOn(Schedulers.parallel())
+                                .subscribe { state ->
+                                    watchStateSinks.remove(wss)
+                                    wss.sink.success(state)
+                                    wss.timeoutJob?.cancel()
+                                    wss.done = true
+                                }
+                    }
         }
     }
 
