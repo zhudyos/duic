@@ -20,8 +20,6 @@ logging:
     liquibase: error
 
 spring:
-  pid:
-    file: /tmp/duic/duic.pid
   reactor:
     stacktrace-mode:
       enabled: true
