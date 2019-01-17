@@ -32,11 +32,8 @@ dist/
 config/application-test\.yml
 config/application\.yml
 config/postgresql\.properties
-
 config/application-postgresql\.yml
-
 config/oracle\.properties
-
 config/application-oracle\.yml
-
 config/mysql\.properties
+application\.pid
