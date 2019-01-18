@@ -17,8 +17,10 @@ package io.zhudy.duic.web.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.mongodb.DuplicateKeyException
+import io.github.resilience4j.ratelimiter.RequestNotPermitted
 import io.zhudy.duic.BizCode
 import io.zhudy.duic.BizCodeException
+import io.zhudy.duic.BizCodes
 import io.zhudy.duic.web.MissingRequestParameterException
 import io.zhudy.duic.web.RequestParameterFormatException
 import org.slf4j.LoggerFactory
@@ -90,6 +92,13 @@ class GlobalWebExceptionHandler(
                 mapOf(
                         "code" to BizCode.Classic.C_500.code,
                         "message" to e.rootCause?.message
+                )
+            }
+            is RequestNotPermitted -> {
+                status = 429
+                mapOf(
+                        "code" to BizCodes.C_1429.code,
+                        "message" to e.message
                 )
             }
             else -> {

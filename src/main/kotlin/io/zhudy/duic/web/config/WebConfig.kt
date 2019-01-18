@@ -16,6 +16,7 @@
 package io.zhudy.duic.web.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.github.resilience4j.ratelimiter.RateLimiter
 import io.zhudy.duic.web.WebConstants
 import io.zhudy.duic.web.admin.AdminResource
 import io.zhudy.duic.web.security.AuthorizedHandlerFilter
@@ -24,6 +25,7 @@ import io.zhudy.duic.web.server.ServerResource
 import io.zhudy.duic.web.v1.AppResource
 import io.zhudy.duic.web.v1.OAIResource
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.CacheControl
@@ -34,6 +36,8 @@ import org.springframework.web.reactive.config.CorsRegistry
 import org.springframework.web.reactive.config.EnableWebFlux
 import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
+import org.springframework.web.reactive.function.server.RouterFunction
+import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.router
 import org.springframework.web.server.WebFilter
 import reactor.core.publisher.Hooks
@@ -48,7 +52,9 @@ class WebConfig(val objectMapper: ObjectMapper,
                 val appResource: AppResource,
                 val adminResource: AdminResource,
                 val serverResource: ServerResource,
-                val oaiResource: OAIResource) : WebFluxConfigurer {
+                val oaiResource: OAIResource,
+                val rateLimiterProvider: ObjectProvider<RateLimiter>
+) : WebFluxConfigurer {
 
     private val log = LoggerFactory.getLogger(WebConfig::class.java)
 
@@ -84,35 +90,44 @@ class WebConfig(val objectMapper: ObjectMapper,
     }
 
     @Bean
-    fun mainRouter() = router {
-        path("/api").nest {
-            GET("/info", serverResource::info)
-            GET("/health", serverResource::health)
-        }
-
-        path("/api/v1").nest {
-            GET("/ssc/{name}/{profile}", appResource::getSpringCloudConfig)
-
-            path("/apps").nest {
-                GET("/states/{name}/{profile}", appResource::getConfigState)
-                GET("/watches/{name}/{profile}", appResource::watchConfigState)
-                GET("/{name}/{profile}", appResource::getConfigByNameProfile)
-                GET("/{name}/{profile}/{key}", appResource::getConfigByNameProfileKey)
+    fun mainRouter(): RouterFunction<ServerResponse> {
+        val rf = router {
+            path("/api").nest {
+                GET("/info", serverResource::info)
+                GET("/health", serverResource::health)
             }
+
+            path("/api/v1").nest {
+                GET("/ssc/{name}/{profile}", appResource::getSpringCloudConfig)
+
+                path("/apps").nest {
+                    GET("/states/{name}/{profile}", appResource::getConfigState)
+                    GET("/watches/{name}/{profile}", appResource::watchConfigState)
+                    GET("/{name}/{profile}", appResource::getConfigByNameProfile)
+                    GET("/{name}/{profile}/{key}", appResource::getConfigByNameProfileKey)
+                }
+            }
+
+            // Deprecated. 请采用 /api/services 路径目录替换该资源接口
+            path("/servers").nest {
+                POST("/apps/refresh", serverResource::refreshApp)
+                GET("/last-data-time", serverResource::getLastDataTime)
+            }
+
+            path("/api/servers").nest {
+                POST("/apps/refresh", serverResource::refreshApp)
+                GET("/last-data-time", serverResource::getLastDataTime)
+            }
+
+            GET("/api/oai.yml", oaiResource::index)
         }
 
-        // Deprecated. 请采用 /api/services 路径目录替换该资源接口
-        path("/servers").nest {
-            POST("/apps/refresh", serverResource::refreshApp)
-            GET("/last-data-time", serverResource::getLastDataTime)
+        // 当启用限流时，添加限流过滤器
+        val rateLimiter = rateLimiterProvider.ifAvailable
+        if (rateLimiter != null) {
+            return rf.filter(RateLimiterHandlerFilter(rateLimiter))
         }
-
-        path("/api/servers").nest {
-            POST("/apps/refresh", serverResource::refreshApp)
-            GET("/last-data-time", serverResource::getLastDataTime)
-        }
-
-        GET("/api/oai.yml", oaiResource::index)
+        return rf
     }
 
     @Bean
@@ -155,6 +170,6 @@ class WebConfig(val objectMapper: ObjectMapper,
                 GET("/", adminResource::loadServerStates)
             }
         }
-    }.filter(AuthorizedHandlerFilter())
+    }.filter(AuthorizedHandlerFilter())!!
 
 }

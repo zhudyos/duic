@@ -38,6 +38,7 @@ import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.ApplicationEvent
+import org.springframework.context.annotation.DependsOn
 import org.springframework.context.event.ApplicationEventMulticaster
 import org.springframework.context.event.EventListener
 import org.springframework.http.MediaType.APPLICATION_JSON
@@ -61,6 +62,7 @@ import java.util.concurrent.TimeUnit
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
+@DependsOn("io.zhudy.duic.Config")
 class AppService(
         val appRepository: AppRepository,
         val serverRepository: ServerRepository,
@@ -68,9 +70,15 @@ class AppService(
         val applicationEventMulticaster: ApplicationEventMulticaster
 ) {
 
+    private val reliableLog = LoggerFactory.getLogger("reliable")
     private val log = LoggerFactory.getLogger(AppService::class.java)
 
     private val watchStateTimeout = 30 * 1000L
+    private val watchRequestLimit = Config.concurrent.watchRequestLimit
+    /**
+     * 监控请求告警阀值。
+     */
+    private val watchReqWarnThreshold = (watchRequestLimit * Config.concurrent.warnRateThreshold).toInt()
     private val watchStateSinks = ConcurrentLinkedQueue<WatchStateSink>()
     private val updateAppQueue = LinkedBlockingQueue<String>()
 
@@ -294,8 +302,37 @@ class AppService(
         if (state != oldState) {
             return@flatMap Mono.just(state)
         }
+
+        if (watchRequestLimit >= 1) {
+            val s = watchStateSinks.size
+
+            // 如果监控请求达到单实例请求上限，直接拒绝该请求。
+            // 收到该错误信息时，应该及时增加更多实例或者增加请求上限。
+            if (s >= watchRequestLimit) {
+                reliableLog.error("watch-config-state" +
+                        "\n The request has reached the upper limit." +
+                        "\n Adjust the number of application instances or increase the maximum request limit." +
+                        "\n [watchRequestLimit={}]",
+                        watchRequestLimit
+                )
+                throw BizCodeException(BizCodes.C_1429, "Supporting maximum request $watchRequestLimit.")
+            }
+
+            // 如果监控请求达到预设的阀值，打印警告信息提示。
+            // 收到该警告信息里应该及时观察服务的可用性，在必要时应该增加更多实例或增加请求上限。
+            if (s >= watchReqWarnThreshold) {
+                reliableLog.warn("watch-config-state" +
+                        "\n The request has reached the expected threshold." +
+                        "\n Be prepared to adjust the number of application instances or increase the maximum request limit." +
+                        "\n [watchRequestLimit={}, warnRateThreshold={}, watchReqWarnThreshold={}]",
+                        watchRequestLimit,
+                        Config.concurrent.warnRateThreshold,
+                        watchReqWarnThreshold
+                )
+            }
+        }
+
         Mono.create<String> { sink ->
-            // FIXME 这里存在安全隐患，如果客户端无限提交监控状态请求，会让服务器内存无限增长，需要优化
             val wss = WatchStateSink(
                     sink = sink,
                     name = vo.name,
@@ -306,9 +343,17 @@ class AppService(
 
             wss.timeoutJob = GlobalScope.launch {
                 delay(watchStateTimeout)
+
                 watchStateSinks.remove(wss)
-                sink.success(state)
                 wss.done = true
+
+                sink.success(state)
+
+                // FIXME 处理结束的时间超过，预设的超时时间时，及时报警
+                val endTime = System.currentTimeMillis()
+                val secs = TimeUnit.MILLISECONDS.toSeconds(endTime - wss.startTime)
+                if (secs > watchStateTimeout) {
+                }
             }
 
             watchStateSinks.add(wss)
