@@ -75,7 +75,7 @@ class Application {
     }
 
     @Bean
-    @ConditionalOnExpression("\${duic.concurrent.request-limit} >= 1")
+    @ConditionalOnExpression("\${duic.concurrent.request-limit-for-period} >= 1")
     fun rateLimiter(config: Config): RateLimiter {
         val c = RateLimiterConfig.custom()
                 .timeoutDuration(Duration.ofMillis(100))
