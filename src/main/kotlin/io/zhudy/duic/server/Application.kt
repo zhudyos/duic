@@ -15,12 +15,15 @@
  */
 package io.zhudy.duic.server
 
+import io.github.resilience4j.ratelimiter.RateLimiter
+import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.zhudy.duic.ApplicationUnusableEvent
 import io.zhudy.duic.ApplicationUsableEvent
 import io.zhudy.duic.Config
 import org.springframework.boot.ExitCodeGenerator
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration
@@ -34,6 +37,7 @@ import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationListener
 import org.springframework.context.annotation.Bean
 import java.net.InetAddress
+import java.time.Duration
 
 
 /**
@@ -68,6 +72,17 @@ class Application {
         )
 
         return c
+    }
+
+    @Bean
+    @ConditionalOnExpression("\${duic.concurrent.request-limit} >= 1")
+    fun rateLimiter(config: Config): RateLimiter {
+        val c = RateLimiterConfig.custom()
+                .timeoutDuration(Duration.ofMillis(100))
+                .limitRefreshPeriod(Duration.ofSeconds(1))
+                .limitForPeriod(config.concurrent.requestLimitForPeriod)
+                .build()
+        return RateLimiter.of("web-rate-limiter", c)
     }
 
     companion object {
