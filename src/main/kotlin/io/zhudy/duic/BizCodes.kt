@@ -30,11 +30,13 @@ enum class BizCodes(override val code: Int, override val msg: String, override v
     C_1004(1004, "修改 app content 失败, 数据版本不一致"),
     C_1005(1005, "数据类型不一致无法合并"),
     C_1006(1006, "app content 不是有效的 yaml 格式"),
+    C_1429(1429, "监控请求达到上限"),
 
     // 用户错误码
     C_2000(2000, "用户不存在"),
     C_2001(2001, "密码不匹配"),
     C_2002(2002, "ROOT 用户禁止删除", 403),
     C_2003(2003, "ROOT 用户禁止重置密码", 403)
+
     ;
 }
