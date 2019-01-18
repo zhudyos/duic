@@ -62,21 +62,21 @@ class AdminResource(
      * 登录.
      */
     fun login(request: ServerRequest) = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
-        userService.login(it.email, it.password).flatMap {
-            val expiresAt = Instant.now().plus(Duration.ofSeconds(Config.Jwt.expiresIn))
-            val token = JWT.create().withJWTId(it.email)
+        userService.login(it.email, it.password).flatMap { user ->
+            val expiresAt = Instant.now().plus(Duration.ofSeconds(Config.jwt.expiresIn))
+            val token = JWT.create().withJWTId(user.email)
                     .withExpiresAt(Date.from(expiresAt))
                     .sign(jwtAlgorithm)
 
             ok().cookie(
                     ResponseCookie.from("token", token)
-                            .maxAge(Config.Jwt.expiresIn.toLong())
+                            .maxAge(Config.jwt.expiresIn)
                             .httpOnly(true)
                             .path("/")
                             .build()
             ).cookie(
-                    ResponseCookie.from("email", it.email)
-                            .maxAge(Config.Jwt.expiresIn.toLong())
+                    ResponseCookie.from("email", user.email)
+                            .maxAge(Config.jwt.expiresIn)
                             .path("/")
                             .build()
             ).build()
