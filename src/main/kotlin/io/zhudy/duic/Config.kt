@@ -37,9 +37,13 @@ object Config {
     /**
      * 管理控制台 JWT 生成、管理信息。
      */
-    var jwt = Jwt
+    var jwt = Jwt()
+    /**
+     * 服务并发限制。
+     */
+    val concurrent = Concurrent()
 
-    object Jwt {
+    class Jwt {
         /**
          * JWT 生成密钥。
          */
@@ -57,5 +61,27 @@ object Config {
      * @property port 服务端口
      * @property sslEnabled 是否启用 SSL
      */
-    class Server(val host: String, val port: Int, val sslEnabled: Boolean)
+    class Server(
+            val host: String,
+            val port: Int,
+            val sslEnabled: Boolean
+    )
+
+    /**
+     * 服务并发限制。
+     */
+    class Concurrent {
+        /**
+         * 服务在一个周期内最大支持的并发请求。
+         */
+        var requestLimitForPeriod: Int = -1
+        /**
+         * 服务最大支持的并发监控请求。
+         */
+        var watchRequestLimit: Int = -1
+        /**
+         * 请求达到一定的比例时进行告警。
+         */
+        var warnRateThreshold: Float = 0.8f
+    }
 }
