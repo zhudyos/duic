@@ -44,8 +44,8 @@ enum class DBMS(@JvmField val isNoSQL: Boolean = false) {
          *
          */
         @JvmStatic
-        fun forName(name: String) = DBMS.values().first {
+        fun forName(name: String) = DBMS.values().firstOrNull {
             it.name.toLowerCase() == name.toLowerCase()
-        }
+        } ?: throw IllegalArgumentException("not found dbms: $name")
     }
 }
