@@ -22,7 +22,6 @@ import io.zhudy.duic.Config
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.server.Application
-import io.zhudy.duic.server.BeansInitializer
 import io.zhudy.duic.service.UserService
 import org.bson.Document
 import org.junit.After
@@ -32,7 +31,6 @@ import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.reactive.server.WebTestClient
 import reactor.core.publisher.Mono
@@ -45,7 +43,6 @@ import java.util.*
 @RunWith(SpringRunner::class)
 @ActiveProfiles("mongodb", "test")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = [BeansInitializer::class])
 class AdminResourceTests {
 
     @Autowired

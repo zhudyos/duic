@@ -18,7 +18,6 @@ package io.zhudy.duic.web.v1
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.server.Application
-import io.zhudy.duic.server.BeansInitializer
 import org.junit.After
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,7 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit4.SpringRunner
 import org.springframework.test.web.reactive.server.WebTestClient
 import reactor.core.publisher.Mono
@@ -41,7 +39,6 @@ import java.util.*
 @RunWith(SpringRunner::class)
 @ActiveProfiles("mongodb", "test")
 @SpringBootTest(classes = [Application::class], webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ContextConfiguration(initializers = [BeansInitializer::class])
 class AppResourceTests {
 
     @SpyBean
