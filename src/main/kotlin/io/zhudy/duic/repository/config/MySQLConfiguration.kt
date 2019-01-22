@@ -25,6 +25,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.transaction.PlatformTransactionManager
 
 /**
+ * `MySQL` 配置。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Configuration

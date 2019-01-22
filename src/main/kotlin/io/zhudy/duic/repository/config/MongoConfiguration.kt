@@ -32,6 +32,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
+ * `MongoDB` 配置。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Configuration
