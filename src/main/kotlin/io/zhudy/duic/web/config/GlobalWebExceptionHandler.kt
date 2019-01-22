@@ -38,6 +38,8 @@ import reactor.netty.channel.AbortedException
 import java.io.IOException
 
 /**
+ * Web 异常处理器。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Component
