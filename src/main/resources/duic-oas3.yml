@@ -27,7 +27,7 @@ paths:
       summary: 返回 duic 服务基本信息
       description: 返回 duic 服务基本信息。其中包括部署的 duic 版本信息、数据库版本信息、操作系统信息以及 Java 版本信息。
       responses:
-        200:
+        '200':
           description: 成功
           content:
             application/json:
@@ -78,13 +78,13 @@ paths:
         可通过该接口检查 duic 的可用性。当返回状态码为 `200` 则表示服务可用，
         返回非 `200` 的错误码都表示服务存在一定的问题并且会返回可用的描述信息，需要及时的跟进并解决问题。
       responses:
-        200:
+        '200':
           description: 成功
           content:
             application/json:
               schema:
                 type: object
-        503:
+        '503':
           description: 服务不可用
           content:
             application/json:
@@ -98,7 +98,7 @@ paths:
                     description: 服务不可用的具体描述信息
               example:
                 description: 数据库不可用
-  /api/v1/apps/states{name}/{profile}:
+  /api/v1/apps/states/{name}/{profile}:
     get:
       tags:
         - apps
@@ -111,7 +111,7 @@ paths:
         - $ref: '#/components/parameters/AppProfilePath'
         - $ref: '#/components/parameters/ConfigTokenHeader'
       responses:
-        200:
+        '200':
           description: 成功
           content:
             application/json:
@@ -123,7 +123,7 @@ paths:
                   state:
                     type: string
                     example: "45"
-        400:
+        '400':
           description: |
             业务错误码及错误描述
             + `1000` 未找到应用配置
@@ -131,8 +131,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRes'
-        401:
+        '401':
           description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
   /api/v1/apps/watches/{name}/{profile}:
     get:
       tags:
@@ -157,7 +161,7 @@ paths:
           description: 客户端当前的 state 状态值
           required: true
       responses:
-        200:
+        '200':
           description: 正确返回
           content:
             application/json:
@@ -169,7 +173,7 @@ paths:
                   state:
                     type: string
                     example: "45"
-        400:
+        '400':
           description: |
             业务错误码及错误描述
             + `1000` 未找到应用配置
@@ -177,8 +181,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRes'
-        401:
+        '401':
           description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
   /api/v1/apps/{name}/{profile}:
     get:
       tags:
@@ -190,13 +198,13 @@ paths:
         - $ref: '#/components/parameters/AppProfilePath'
         - $ref: '#/components/parameters/ConfigTokenHeader'
       responses:
-        200:
+        '200':
           description: 正确返回
           content:
             application/json:
               schema:
                 type: object
-        400:
+        '400':
           description: |
             业务错误码及错误描述
             + `1000` 未找到应用配置
@@ -204,8 +212,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRes'
-        401:
+        '401':
           description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
   /api/v1/apps/{name}/{profile}/{key}:
     get:
       tags:
@@ -223,13 +235,13 @@ paths:
           schema:
             type: string
       responses:
-        200:
+        '200':
           description: 正确返回
           content:
             application/json:
               schema:
                 type: object
-        400:
+        '400':
           description: |
             业务错误码及错误描述
             + `1000` 未找到应用配置
@@ -237,8 +249,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRes'
-        401:
+        '401':
           description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
   /api/v1/ssc/{name}/{profile}:
     get:
       tags:
@@ -250,13 +266,13 @@ paths:
         - $ref: '#/components/parameters/AppProfilePath'
         - $ref: '#/components/parameters/ConfigTokenHeader'
       responses:
-        200:
+        '200':
           description: 正确返回
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/SpringCloudRes'
-        400:
+        '400':
           description: |
             业务错误码及错误描述
             + `1000` 未找到应用配置
@@ -264,8 +280,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorRes'
-        401:
+        '401':
           description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
 components:
   parameters:
     AppNamePath:
