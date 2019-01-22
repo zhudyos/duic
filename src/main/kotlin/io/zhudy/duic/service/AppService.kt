@@ -343,16 +343,19 @@ class AppService(
 
             wss.timeoutJob = GlobalScope.launch {
                 delay(watchStateTimeout)
-
                 watchStateSinks.remove(wss)
                 wss.done = true
 
                 sink.success(state)
 
-                // FIXME 处理结束的时间超过，预设的超时时间时，及时报警
                 val endTime = System.currentTimeMillis()
-                val secs = TimeUnit.MILLISECONDS.toSeconds(endTime - wss.startTime)
-                if (secs > watchStateTimeout) {
+                val elapsedSeconds = TimeUnit.MILLISECONDS.toSeconds(endTime - wss.startTime)
+                if (elapsedSeconds > watchStateTimeout) {
+                    reliableLog.warn("watch-config-state" +
+                            "\n Task processing timeout: [expectedSeconds={}, elapsedSeconds={}]",
+                            watchStateTimeout,
+                            elapsedSeconds
+                    )
                 }
             }
 
