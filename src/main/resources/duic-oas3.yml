@@ -319,6 +319,7 @@ components:
       properties:
         code:
           type: integer
+          format: int32
           example: 400
         message:
           type: string
@@ -356,3 +357,4 @@ components:
           example: test_dev
         source:
           type: object
+          additionalProperties: true
