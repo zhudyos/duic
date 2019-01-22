@@ -37,7 +37,6 @@ import kotlinx.coroutines.launch
 import org.bson.types.ObjectId
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.event.ApplicationReadyEvent
-import org.springframework.context.ApplicationEvent
 import org.springframework.context.annotation.DependsOn
 import org.springframework.context.event.ApplicationEventMulticaster
 import org.springframework.context.event.EventListener
@@ -147,21 +146,24 @@ class AppService(
         }
     }
 
-    @EventListener
-    fun listenSpringEvent(event: ApplicationEvent) {
-        if (event is ApplicationReadyEvent) {
-            val cdl = CountDownLatch(1)
-            serverRepository.findDbVersion().subscribe { cdl.countDown() }
+    /**
+     * `spring` 启动成功后立即校验数据库信息，如果数据库 3 秒未响应则返回错误。
+     *
+     * @see ApplicationReadyEvent
+     */
+    @EventListener(ApplicationReadyEvent::class)
+    fun springReadyEvent(event: ApplicationReadyEvent) {
+        val cdl = CountDownLatch(1)
+        serverRepository.findDbVersion().subscribe { cdl.countDown() }
 
-            val s = try {
-                cdl.await(3, TimeUnit.SECONDS)
-            } catch (e: InterruptedException) {
-                false
-            }
-
-            val e = if (s) ApplicationUsableEvent(event.applicationContext) else ApplicationUnusableEvent(event.applicationContext)
-            applicationEventMulticaster.multicastEvent(e)
+        val s = try {
+            cdl.await(3, TimeUnit.SECONDS)
+        } catch (e: InterruptedException) {
+            false
         }
+
+        val e = if (s) ApplicationUsableEvent(event.applicationContext) else ApplicationUnusableEvent(event.applicationContext)
+        applicationEventMulticaster.multicastEvent(e)
     }
 
     @Scheduled(initialDelay = 0,
