@@ -23,7 +23,7 @@ package io.zhudy.duic.web
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Suppress("MemberVisibilityCanPrivate")
+@Suppress("MemberVisibilityCanBePrivate")
 class MissingRequestParameterException(val where: String,
                                        val parameter: String) : RuntimeException("""缺少参数 "$parameter" 在 "$where" 中""") {
 

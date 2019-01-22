@@ -24,7 +24,7 @@ package io.zhudy.duic.web
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Suppress("MemberVisibilityCanPrivate")
+@Suppress("MemberVisibilityCanBePrivate")
 class RequestParameterFormatException(val where: String,
                                       val parameter: String,
                                       val msg: String) : RuntimeException("[$where] 中参数 [$parameter] $msg") {
