@@ -8,4 +8,5 @@ import org.springframework.context.ApplicationEvent
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
+@Suppress("MemberVisibilityCanBePrivate")
 class ApplicationUsableEvent(val applicationContext: ApplicationContext) : ApplicationEvent(applicationContext)
