@@ -272,9 +272,7 @@ class AppService(
         return checkPermission(app.name, app.profile, userContext).flatMap {
             appRepository.updateContent(app, userContext)
         }.flatMap { v ->
-            refresh().map {
-                v
-            }
+            refresh().map { v }
         }.doOnSuccess {
             // 刷新集群配置
             refreshClusterConfig()
@@ -284,14 +282,13 @@ class AppService(
     /**
      * 获取配置状态。
      */
-    fun getConfigState(vo: RequestConfigVo): Mono<String> {
-        return loadAndCheckApps(vo).map { apps ->
-            val state = StringBuilder()
-            apps.forEach {
-                state.append(it.v)
-            }
-            state.toString()
+    @Suppress("HasPlatformType")
+    fun getConfigState(vo: RequestConfigVo) = loadAndCheckApps(vo).map { apps ->
+        val state = StringBuilder()
+        apps.forEach {
+            state.append(it.v)
         }
+        state.toString()
     }
 
     /**
