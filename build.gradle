@@ -67,7 +67,9 @@ dependencies {
 
     compile "org.liquibase:liquibase-core:$liquibaseVersion"
     compile "com.zaxxer:HikariCP:3.3.0"
-    compile "mysql:mysql-connector-java:8.0.13"
+    compile("mysql:mysql-connector-java:8.0.14") {
+        exclude module: "protobuf-java"
+    }
     compile "org.postgresql:postgresql:42.2.2"
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
