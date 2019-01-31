@@ -85,22 +85,20 @@
                 })
             },
             initEditor() {
-                window.require.config({paths: {'vs': '/monaco-editor/min/vs'}})
-                window.require(['vs/editor/editor.main'], () => {
-                    let e = monaco.editor.create(this.$refs.codeEditor, {
-                        value: this.app.content,
-                        theme: 'vs-dark',
-                        language: 'yaml',
-                        mouseWheelZoom: true
-                    })
-
-                    e.getModel().updateOptions({
-                        tabSize: 2
-                    })
-                    e.onDidChangeModelContent(this.changeContent)
-                    e.focus()
-                    this.editor = e
+                let e = monaco.editor.create(this.$refs.codeEditor, {
+                    value: this.app.content,
+                    theme: 'vs-dark',
+                    language: 'yaml',
+                    mouseWheelZoom: true
                 })
+
+                e.getModel().updateOptions({
+                    tabSize: 2
+                })
+                e.onDidChangeModelContent(this.changeContent)
+                e.focus()
+
+                this.editor = e
             },
             changeContent() {
                 this.submitBtnDisabled = false

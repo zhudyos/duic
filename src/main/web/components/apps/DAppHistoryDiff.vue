@@ -117,15 +117,12 @@
         },
         methods: {
             initEditor() {
-                window.require.config({paths: {'vs': '/monaco-editor/0.11.1/min/vs'}})
-                window.require(['vs/editor/editor.main'], () => {
-                    var e = monaco.editor.createDiffEditor(this.$refs.codeEditor, {
-                        theme: 'vs-dark',
-                        readOnly: true
-                    })
-                    this.editor = e
-                    this.renderDiffContent()
-                });
+                let e = monaco.editor.createDiffEditor(this.$refs.codeEditor, {
+                    theme: 'vs-dark',
+                    readOnly: true
+                })
+                this.editor = e
+                this.renderDiffContent()
             },
             renderDiffContent() {
                 let left = this.left
