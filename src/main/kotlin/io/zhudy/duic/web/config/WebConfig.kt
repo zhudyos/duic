@@ -78,9 +78,15 @@ class WebConfig(val objectMapper: ObjectMapper,
     }
 
     override fun addResourceHandlers(registry: ResourceHandlerRegistry) {
+        // 单页应用，对 html 资源不进行缓存
+        registry.addResourceHandler("/*.html")
+                .addResourceLocations("classpath:/public-web-resources/")
+                .setCacheControl(CacheControl.noCache())
+
+        // 缓存 js css img 等静态资源
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/public-web-resources/")
-                .setCacheControl(CacheControl.maxAge(1, TimeUnit.DAYS))
+                .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS))
     }
 
     @Bean
