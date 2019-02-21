@@ -27,9 +27,7 @@
     <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
         <property name="driverClassName" value="org.postgresql.Driver"/>
         <property name="autoCommit" value="false"/>
-        <property name="jdbcUrl" value="${jdbc.url:jdbc:postgresql://127.0.0.1:5432/duic-unit-test}"/>
-        <property name="username" value="${jdbc.username:postgres}"/>
-        <property name="password" value="${jdbc.password:''}"/>
+        <property name="jdbcUrl" value="${duic.postgresql.url:jdbc:postgresql://@127.0.0.1:5432/duic-unit-test?user=postgres&amp;password=}"/>
     </bean>
 
     <import resource="classpath:relational-dbms-spring.xml"/>

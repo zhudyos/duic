@@ -86,4 +86,10 @@ class PostgreSQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
         val servers = serverRepository.findServers().collectList().block()
         assertTrue(servers.isNotEmpty())
     }
+
+    @Test
+    fun findDbVersion() {
+        val version = serverRepository.findDbVersion().block()
+        assertTrue(version.isNotEmpty())
+    }
 }
