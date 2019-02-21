@@ -19,6 +19,7 @@ import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.repository.config.MySQLConfiguration
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
@@ -33,8 +34,8 @@ import org.springframework.transaction.support.TransactionTemplate
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @ContextHierarchy(*[
-ContextConfiguration(locations = ["classpath:mysql-spring.xml"]),
-ContextConfiguration(classes = [MySQLConfiguration::class])
+    ContextConfiguration(locations = ["classpath:mysql-spring.xml"]),
+    ContextConfiguration(classes = [MySQLConfiguration::class])
 ])
 @TestPropertySource(properties = ["duic.dbms=MySQL"])
 class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
@@ -85,4 +86,11 @@ class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
         val servers = serverRepository.findServers().collectList().block()
         // assertTrue(servers.isNotEmpty())
     }
+
+    @Test
+    fun findDbVersion() {
+        val version = serverRepository.findDbVersion().block()
+        assertTrue(version.isNotEmpty())
+    }
+
 }

@@ -27,10 +27,7 @@
     <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource">
         <property name="driverClassName" value="com.mysql.cj.jdbc.Driver"/>
         <property name="autoCommit" value="false"/>
-        <property name="jdbcUrl"
-                  value="${jdbc.url:jdbc:mysql://127.0.0.1:3306/duic-unit-test?autoReconnect=true&amp;useServerPrepStmts=true}"/>
-        <property name="username" value="${jdbc.username:root}"/>
-        <property name="password" value="${jdbc.password:}"/>
+        <property name="jdbcUrl" value="${duic.mysql.url:jdbc:mysql://root:@127.0.0.1:3306/duic-unit-test?autoReconnect=true&amp;useServerPrepStmts=true}"/>
     </bean>
 
     <import resource="classpath:relational-dbms-spring.xml"/>
