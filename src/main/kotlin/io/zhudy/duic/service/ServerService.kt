@@ -83,11 +83,11 @@ class ServerService(
      */
     @Scheduled(initialDelay = PING_DELAY, fixedDelay = PING_DELAY)
     fun clockPing() {
-        serverRepository.clean()
-                .subscribeOn(Schedulers.parallel())
-                .subscribe()
-
-        serverRepository.ping(Config.server.host, Config.server.port)
+        serverRepository
+                .ping(Config.server.host, Config.server.port)
+                .flatMap {
+                    serverRepository.clean()
+                }
                 .subscribe()
     }
 
