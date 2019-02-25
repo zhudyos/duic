@@ -29,6 +29,7 @@ import org.springframework.http.MediaType
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import javax.annotation.PostConstruct
@@ -94,7 +95,7 @@ class ServerService(
     /**
      * 加载集群服务中配置最后更新的状态。
      */
-    fun loadServerStates() = serverRepository.findServers().flatMapSequential { s ->
+    fun loadServerStates(): Flux<ServerStateDto> = serverRepository.findServers().flatMapSequential { s ->
         val server = Config.server
         val schema = if (server.sslEnabled) "https" else "http"
         webClientBuilder.baseUrl("$schema://${s.host}:${s.port}")
@@ -123,7 +124,7 @@ class ServerService(
     /**
      * 返回服务信息。
      */
-    fun info() = serverRepository.findDbVersion().map {
+    fun info(): Mono<ServerInfo> = serverRepository.findDbVersion().map {
         ServerInfo(
                 name = "duic",
                 version = DuicVersion.version,
@@ -139,8 +140,8 @@ class ServerService(
     /**
      * 服务健康检查。
      */
-    fun health() = serverRepository.findDbVersion().onErrorResume { e ->
+    fun health(): Mono<String> = serverRepository.findDbVersion().onErrorResume { e ->
         log.error("", e)
-        throw HealthCheckException(503, "数据库不可用")
+        throw HealthCheckException(503, "$_dbms health check failed")
     }
 }
