@@ -63,7 +63,10 @@ class ServerResource(
     fun health(request: ServerRequest): Mono<ServerResponse> = serverService.health().flatMap {
         ok().body(mapOf("status" to "UP"))
     }.onErrorResume(HealthCheckException::class.java) {
-        status(it.code).body(mapOf("description" to it.description)).toMono()
+        status(it.code).body(mapOf(
+                "status" to "DOWN",
+                "description" to it.description
+        )).toMono()
     }
 
 }

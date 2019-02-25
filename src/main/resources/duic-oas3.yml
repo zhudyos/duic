@@ -84,6 +84,13 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                    description: 可用状态
         '503':
           description: 服务不可用
           content:
@@ -91,10 +98,16 @@ paths:
               schema:
                 type: object
                 required:
+                  - status
                   - description
                 properties:
+                  status:
+                    type: string
+                    example: DOWN
+                    description: 不可用状态
                   description:
                     type: string
+                    example: MongoDB health check failed
                     description: 服务不可用的具体描述信息
               example:
                 description: 数据库不可用
