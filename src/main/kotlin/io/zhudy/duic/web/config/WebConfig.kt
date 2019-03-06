@@ -32,7 +32,9 @@ import org.springframework.http.CacheControl
 import org.springframework.http.codec.ServerCodecConfigurer
 import org.springframework.http.codec.json.Jackson2JsonDecoder
 import org.springframework.http.codec.json.Jackson2JsonEncoder
-import org.springframework.web.reactive.config.CorsRegistry
+import org.springframework.web.cors.CorsConfiguration
+import org.springframework.web.cors.reactive.CorsWebFilter
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 import org.springframework.web.reactive.config.EnableWebFlux
 import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
@@ -64,13 +66,6 @@ class WebConfig(val objectMapper: ObjectMapper,
         }
     }
 
-    override fun addCorsMappings(registry: CorsRegistry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins("*")
-                .allowedMethods("*")
-                .maxAge(TimeUnit.DAYS.toSeconds(7))
-    }
-
     override fun configureHttpMessageCodecs(configurer: ServerCodecConfigurer) {
         val defaults = configurer.defaultCodecs()
         defaults.jackson2JsonDecoder(Jackson2JsonDecoder(objectMapper))
@@ -87,6 +82,19 @@ class WebConfig(val objectMapper: ObjectMapper,
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/public-web-resources/")
                 .setCacheControl(CacheControl.maxAge(7, TimeUnit.DAYS))
+    }
+
+    @Bean
+    fun corsWebFilter(): CorsWebFilter {
+        val c = CorsConfiguration()
+        c.addAllowedOrigin(CorsConfiguration.ALL)
+        c.addAllowedMethod(CorsConfiguration.ALL)
+        c.addAllowedHeader(CorsConfiguration.ALL)
+        c.maxAge = 1800
+
+        val source = UrlBasedCorsConfigurationSource()
+        source.registerCorsConfiguration("/api/**", c)
+        return CorsWebFilter(source)
     }
 
     @Bean
