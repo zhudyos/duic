@@ -24,6 +24,7 @@ import io.zhudy.duic.BizCodes
 import io.zhudy.duic.web.MissingRequestParameterException
 import io.zhudy.duic.web.RequestParameterFormatException
 import org.slf4j.LoggerFactory
+import org.springframework.core.NestedExceptionUtils
 import org.springframework.core.NestedRuntimeException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -34,8 +35,7 @@ import org.springframework.web.server.ServerWebExchange
 import org.springframework.web.server.WebExceptionHandler
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import reactor.netty.channel.AbortedException
-import java.io.IOException
+
 
 /**
  * Web 异常处理器。
@@ -47,14 +47,13 @@ class GlobalWebExceptionHandler(
         val objectMapper: ObjectMapper
 ) : WebExceptionHandler {
 
+    private val disconnectedClientExceptions = setOf("ClientAbortException", "EOFException", "EofException")
     private val log = LoggerFactory.getLogger(WebExceptionHandler::class.java)
 
     override fun handle(exchange: ServerWebExchange, e: Throwable): Mono<Void> {
         val response = exchange.response
         if (response.isCommitted) {
-            val b = e is IOException
-                    || e is AbortedException
-            if (!b) {
+            if (!isDisconnectedClientError(e)) {
                 log.error("unhandled exception", e)
             }
             return Mono.empty()
@@ -121,4 +120,11 @@ class GlobalWebExceptionHandler(
         }
         return Mono.empty()
     }
+
+    private fun isDisconnectedClientError(ex: Throwable): Boolean {
+        val message = NestedExceptionUtils.getMostSpecificCause(ex).message ?: ""
+        val className = ex.javaClass.simpleName
+        return message.contains("broken pipe", true) || disconnectedClientExceptions.contains(className)
+    }
+
 }
