@@ -70,6 +70,7 @@ class AppService(
 ) {
 
     private val reliableLog = LoggerFactory.getLogger("reliable")
+    private val acLog = LoggerFactory.getLogger("app.change")
     private val log = LoggerFactory.getLogger(AppService::class.java)
 
     private val watchStateTimeout = 30 * 1000L
@@ -276,6 +277,8 @@ class AppService(
         }.flatMap { v ->
             refresh().map { v }
         }.doOnSuccess {
+            acLog.info("APP_CONFIG_CHANGED [name: {}, profile: {}, updated_by: {}, content: {}]", app.name, app.profile, userContext.email, app.content)
+
             // 刷新集群配置
             refreshClusterConfig()
         }
