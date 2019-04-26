@@ -277,7 +277,7 @@ class AppService(
         }.flatMap { v ->
             refresh().map { v }
         }.doOnSuccess {
-            acLog.info("APP_CONFIG_CHANGED [name: {}, profile: {}, updated_by: {}, content: {}]", app.name, app.profile, userContext.email, app.content)
+            acLog.info("APP_CONFIG_CHANGED [name: {}, profile: {}, updated_by: {}]", app.name, app.profile, userContext.email, app.content)
 
             // 刷新集群配置
             refreshClusterConfig()
