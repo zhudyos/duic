@@ -71,6 +71,7 @@ dependencies {
         exclude module: "protobuf-java"
     }
     compile "org.postgresql:postgresql:42.2.2"
+    compile "org.simplejavamail:simple-java-mail:5.1.6"
 
     testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
     testCompile "io.projectreactor:reactor-test:$reactorVersion"

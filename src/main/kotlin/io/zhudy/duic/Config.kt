@@ -42,6 +42,10 @@ object Config {
      * 服务并发限制。
      */
     val concurrent = Concurrent()
+    /**
+     * 邮件通知。
+     */
+    val notifyEmail = NotifyEmail()
 
     class Jwt {
         /**
@@ -83,5 +87,13 @@ object Config {
          * 请求达到一定的比例时进行告警。
          */
         var warnRateThreshold: Float = 0.8f
+    }
+
+    class NotifyEmail {
+        var smtpHost = ""
+        var smtpPort = 25
+        var fromEmail = ""
+        var fromPassword = ""
+        var toEmail = ""
     }
 }

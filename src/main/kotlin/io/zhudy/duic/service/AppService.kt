@@ -35,7 +35,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.bson.types.ObjectId
+import org.simplejavamail.email.EmailBuilder
+import org.simplejavamail.mailer.Mailer
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.annotation.DependsOn
 import org.springframework.context.event.ApplicationEventMulticaster
@@ -49,6 +52,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.MonoSink
 import reactor.core.scheduler.Schedulers
+import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
@@ -66,7 +70,8 @@ class AppService(
         val appRepository: AppRepository,
         val serverRepository: ServerRepository,
         val webClientBuilder: WebClient.Builder,
-        val applicationEventMulticaster: ApplicationEventMulticaster
+        val applicationEventMulticaster: ApplicationEventMulticaster,
+        val mailerProvider: ObjectProvider<Mailer>
 ) {
 
     private val reliableLog = LoggerFactory.getLogger("reliable")
@@ -277,6 +282,25 @@ class AppService(
         }.flatMap { v ->
             refresh().map { v }
         }.doOnSuccess {
+            mailerProvider.ifAvailable {
+                val email = EmailBuilder.startingBlank()
+                        .from(Config.notifyEmail.fromEmail)
+                        .to(Config.notifyEmail.toEmail)
+                        .withSubject("${userContext.email} 修改了配置 ${app.name}/${app.profile}")
+                        .withHTMLText("""
+                            <ul>
+                                <li>name: ${app.name}</li>
+                                <li>profile: ${app.profile}</li>
+                                <li>updated_by: ${userContext.email}</li>
+                                <li>time: ${OffsetDateTime.now()}</li>
+                            </ul>
+                            <p>配置内容</p>
+                            <pre>${app.content}</pre>
+                        """.trimIndent())
+                        .buildEmail()
+                it.sendMail(email, true)
+            }
+
             acLog.info("APP_CONFIG_CHANGED [name: {}, profile: {}, updated_by: {}]", app.name, app.profile, userContext.email, app.content)
 
             // 刷新集群配置
