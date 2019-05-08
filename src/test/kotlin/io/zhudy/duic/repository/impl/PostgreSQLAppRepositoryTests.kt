@@ -180,8 +180,8 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         appRepository.insert(app).block()
 
         app.content = "a: a"
-        val v = appRepository.updateContent(app, normalUserContext).block()
-        Assert.assertEquals(app.v + 1, v)
+        val dbApp = appRepository.updateContent(app, normalUserContext).block()
+        Assert.assertEquals(app.v, dbApp.v)
 
         jdbcTemplate.query(
                 "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
