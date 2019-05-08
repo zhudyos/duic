@@ -288,10 +288,10 @@ class AppService(
                         .mergeOriginalRevised(true)
                         .inlineDiffByWord(true)
                         .oldTag {
-                            if (it) """<del style="background-color: #ffeef0;">""" else "</del>"
+                            if (it) """<del style="background-color: #fdb8c0;">""" else "</del>"
                         }
                         .newTag {
-                            if (it) """<span style="background-color: #e6ffed;">""" else "</span>"
+                            if (it) """<span style="background-color: #acf2bd;">""" else "</span>"
                         }
                         .build()
 
