@@ -34,6 +34,7 @@ apply plugin: "idea"
 apply plugin: "jacoco"
 apply plugin: "kotlin"
 apply plugin: "kotlin-spring"
+apply plugin: "project-report"
 apply plugin: "org.springframework.boot"
 apply plugin: "com.github.hierynomus.license"
 apply plugin: "com.bmuschko.docker-remote-api"
@@ -46,35 +47,36 @@ repositories {
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib"
-    compile "org.jetbrains.kotlin:kotlin-reflect"
-    compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0"
-    
-    compile "com.github.ben-manes.caffeine:caffeine:2.6.2"
-    compile "io.github.resilience4j:resilience4j-ratelimiter:0.13.2"
-    compile "io.github.resilience4j:resilience4j-reactor:0.13.2"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation "org.jetbrains.kotlin:kotlin-reflect"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0"
+    implementation "org.yaml:snakeyaml:1.24"
+    implementation "com.github.ben-manes.caffeine:caffeine:2.6.2"
+    implementation "io.github.resilience4j:resilience4j-ratelimiter:0.13.2"
+    implementation "io.github.resilience4j:resilience4j-reactor:0.13.2"
 
-    compile("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion") {
+    implementation("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion") {
         exclude module: "hibernate-validator"
         exclude module: "nio-multipart-parser"
     }
-    compile "org.mongodb:mongodb-driver-reactivestreams:1.10.0"
+    implementation "org.mongodb:mongodb-driver-reactivestreams:1.10.0"
 
-    compile "org.springframework:spring-jdbc:$springVersion"
-    compile "com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion"
-    compile "com.auth0:java-jwt:3.3.0"
-    compile "org.springframework.security:spring-security-crypto:5.0.4.RELEASE"
+    implementation "org.springframework:spring-jdbc:$springVersion"
+    implementation "com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion"
+    implementation "com.auth0:java-jwt:3.3.0"
+    implementation "org.springframework.security:spring-security-crypto:5.0.4.RELEASE"
 
-    compile "org.liquibase:liquibase-core:$liquibaseVersion"
-    compile "com.zaxxer:HikariCP:3.3.0"
-    compile("mysql:mysql-connector-java:8.0.14") {
+    implementation "org.liquibase:liquibase-core:$liquibaseVersion"
+    implementation "com.zaxxer:HikariCP:3.3.0"
+    implementation("mysql:mysql-connector-java:8.0.14") {
         exclude module: "protobuf-java"
     }
-    compile "org.postgresql:postgresql:42.2.2"
-    compile "org.simplejavamail:simple-java-mail:5.1.6"
+    implementation "org.postgresql:postgresql:42.2.2"
+    implementation "org.simplejavamail:simple-java-mail:5.1.6"
+    implementation "io.github.java-diff-utils:java-diff-utils:4.0"
 
-    testCompile "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
-    testCompile "io.projectreactor:reactor-test:$reactorVersion"
+    testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
+    testImplementation "io.projectreactor:reactor-test:$reactorVersion"
 
     apt "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
 }
