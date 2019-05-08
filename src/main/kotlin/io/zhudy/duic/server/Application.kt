@@ -21,13 +21,10 @@ import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.zhudy.duic.ApplicationUnusableEvent
 import io.zhudy.duic.ApplicationUsableEvent
 import io.zhudy.duic.Config
-import org.simplejavamail.mailer.Mailer
-import org.simplejavamail.mailer.MailerBuilder
 import org.springframework.boot.ExitCodeGenerator
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
@@ -110,14 +107,6 @@ class Application {
         return RateLimiter.of("web-rate-limiter", c)
     }
 
-    @Bean
-    @ConditionalOnProperty("duic.notify-email.enabled")
-    fun mailer(config: Config): Mailer {
-        return MailerBuilder
-                .withSMTPServer(config.notifyEmail.smtpHost, config.notifyEmail.smtpPort, config.notifyEmail.fromEmail, config.notifyEmail.fromPassword)
-                .buildMailer()
-    }
-
     companion object {
 
         @JvmStatic
@@ -125,7 +114,7 @@ class Application {
             // spring-boot
             // https://github.com/zhudyos/duic/issues/17
             // 搜索 /etc/duic 目录中的配置文件
-            runApplication<Application>("--spring.config.additional-location=/etc/duic/") {
+            runApplication<Application>("--spring.config.name=duic,application", "--spring.config.additional-location=/etc/duic/") {
                 setBanner(DuicBanner())
 
                 val usable = ApplicationListener<ApplicationUsableEvent> {

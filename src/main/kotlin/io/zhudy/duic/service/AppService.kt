@@ -16,6 +16,7 @@
 package io.zhudy.duic.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.difflib.text.DiffRowGenerator
 import io.zhudy.duic.*
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Page
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import org.bson.types.ObjectId
 import org.simplejavamail.email.EmailBuilder
 import org.simplejavamail.mailer.Mailer
+import org.simplejavamail.mailer.MailerBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.context.event.ApplicationReadyEvent
@@ -279,30 +281,60 @@ class AppService(
 
         return checkPermission(app.name, app.profile, userContext).flatMap {
             appRepository.updateContent(app, userContext)
-        }.flatMap { v ->
-            refresh().map { v }
+        }.doOnSuccess { dbApp ->
+            Mono.defer {
+                val generator = DiffRowGenerator.create()
+                        .showInlineDiffs(true)
+                        .mergeOriginalRevised(true)
+                        .inlineDiffByWord(true)
+                        .oldTag {
+                            if (it) """<del style="background-color: #ffeef0;">""" else "</del>"
+                        }
+                        .newTag {
+                            if (it) """<span style="background-color: #e6ffed;">""" else "</span>"
+                        }
+                        .build()
+
+                val rows = generator.generateDiffRows(dbApp.content.lines(), app.content.lines())
+                val html = StringBuilder()
+                html.apply {
+                    append("<p>修改应用信息：</p>")
+                    append("<ul>")
+                    append("<li>应用名称（name）：").append(app.name).append("</li>")
+                    append("<li>应用环境（profile）：").append(app.profile).append("</li>")
+                    append("<li>修改人（updated_by）：").append(userContext.email).append("</li>")
+                    append("<li>修改时间（updated_at）：").append(OffsetDateTime.now()).append("</li>")
+                    append("</ul>")
+                }
+
+                html.apply {
+                    append("<p>修改配置信息：</p>")
+                    append("<pre>")
+                    rows.forEach {
+                        appendln(it.oldLine)
+                    }
+                    append("</pre>")
+                }
+
+                val mailer = Config.monitorEmail.smtp.run {
+                    MailerBuilder.withSMTPServer(host, port, username, password).buildMailer()
+                }
+
+                val email = Config.monitorEmail.run {
+                    EmailBuilder.startingBlank()
+                            .from(fromAddress)
+                            .to(toAddress)
+                            .withSubject("${userContext.email} 修改了配置 ${app.name}/${app.profile}")
+                            .withHTMLText(html.toString())
+                            .buildEmail()
+                }
+                mailer.sendMail(email, true)
+
+                Mono.just(dbApp)
+            }.subscribeOn(Schedulers.elastic()).subscribe()
+        }.flatMap { dbApp ->
+            refresh().map { dbApp.v + 1 }
         }.doOnSuccess {
-            mailerProvider.ifAvailable {
-                val email = EmailBuilder.startingBlank()
-                        .from(Config.notifyEmail.fromEmail)
-                        .to(Config.notifyEmail.toEmail)
-                        .withSubject("${userContext.email} 修改了配置 ${app.name}/${app.profile}")
-                        .withHTMLText("""
-                            <ul>
-                                <li>name: ${app.name}</li>
-                                <li>profile: ${app.profile}</li>
-                                <li>updated_by: ${userContext.email}</li>
-                                <li>time: ${OffsetDateTime.now()}</li>
-                            </ul>
-                            <p>配置内容</p>
-                            <pre>${app.content}</pre>
-                        """.trimIndent())
-                        .buildEmail()
-                it.sendMail(email, true)
-            }
-
-            acLog.info("APP_CONFIG_CHANGED [name: {}, profile: {}, updated_by: {}]", app.name, app.profile, userContext.email, app.content)
-
             // 刷新集群配置
             refreshClusterConfig()
         }

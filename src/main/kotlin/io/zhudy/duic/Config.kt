@@ -43,9 +43,9 @@ object Config {
      */
     val concurrent = Concurrent()
     /**
-     * 邮件通知。
+     * 监控配置改变的邮箱配置。
      */
-    val notifyEmail = NotifyEmail()
+    val monitorEmail = MonitorEmail()
 
     class Jwt {
         /**
@@ -89,11 +89,32 @@ object Config {
         var warnRateThreshold: Float = 0.8f
     }
 
-    class NotifyEmail {
-        var smtpHost = ""
-        var smtpPort = 25
-        var fromEmail = ""
-        var fromPassword = ""
-        var toEmail = ""
+    /**
+     * 监控配置改变的邮箱信息。
+     */
+    class MonitorEmail {
+        /**
+         * 是否启用配置监控。
+         */
+        var enabled = false
+        /**
+         * `smtp` 服务配置。
+         */
+        val smtp = Smtp()
+        /**
+         * 邮件发送人。
+         */
+        var fromAddress = ""
+        /**
+         * 邮件发送目标。
+         */
+        var toAddress = ""
+    }
+
+    class Smtp {
+        var host = ""
+        var port = 25
+        var username: String? = null
+        var password: String? = null
     }
 }

@@ -64,9 +64,9 @@ interface AppRepository {
      *
      * @param app 更新的应用配置信息
      * @param userContext 用户上下文
-     * @return 当前应用版本
+     * @return 历史版本的应用配置信息
      */
-    fun updateContent(app: App, userContext: UserContext): Mono<Int>
+    fun updateContent(app: App, userContext: UserContext): Mono<App>
 
     /**
      * 返回所有应用配置信息，并且按更新时间 `updated_at` 升序排列。

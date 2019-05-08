@@ -125,8 +125,8 @@ class PostgreSQLAppRepository(
 
     @Suppress("HasPlatformType")
     override fun updateContent(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
-        Mono.create<Int> { sink ->
-            val v = transactionTemplate.execute {
+        Mono.create<App> { sink ->
+            transactionTemplate.execute {
                 val n = jdbcTemplate.update(
                         "UPDATE DUIC_APP SET CONTENT=:content,V=V+1,UPDATED_AT=NOW() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
                         mapOf(
@@ -145,10 +145,8 @@ class PostgreSQLAppRepository(
                 }
 
                 insertHistory(dbApp, false, userContext)
-
-                app.v + 1
             }
-            sink.success(v)
+            sink.success(dbApp)
         }.subscribeOn(Schedulers.elastic())
     }
 

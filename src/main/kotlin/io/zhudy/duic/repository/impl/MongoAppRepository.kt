@@ -148,9 +148,9 @@ open class MongoAppRepository(
      *
      * @param app 更新的应用配置信息
      * @param userContext 用户上下文
-     * @return 当前应用版本
+     * @return 历史版本的应用配置信息
      */
-    override fun updateContent(app: App, userContext: UserContext): Mono<Int> {
+    override fun updateContent(app: App, userContext: UserContext): Mono<App> {
         val updatedAt = Date()
         val q = and(eq("name", app.name), eq("profile", app.profile), eq("v", app.v))
         val u = combine(
@@ -169,9 +169,7 @@ open class MongoAppRepository(
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 }
                 insertHistory(dbApp, false, userContext)
-            }.map {
-                app.v + 1
-            }
+            }.map { dbApp }
         }
     }
 
