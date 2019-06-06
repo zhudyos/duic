@@ -128,9 +128,8 @@ tasks.withType(com.hierynomus.gradle.license.tasks.LicenseCheck) {
 }
 
 test {
-    testLogging {
-        exceptionFormat "full"
-    }
+    testLogging.showStandardStreams = true
+    testLogging.exceptionFormat = "full"
     exclude "**/Oracle*RepositoryTests*"
 }
 
