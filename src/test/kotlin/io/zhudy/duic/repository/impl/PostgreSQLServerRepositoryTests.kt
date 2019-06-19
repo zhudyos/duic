@@ -17,39 +17,49 @@ package io.zhudy.duic.repository.impl
 
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.repository.config.PostgreSQLConfiguration
-import org.junit.After
-import org.junit.Assert
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.ContextHierarchy
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ContextHierarchy(*[
-ContextConfiguration(locations = ["classpath:postgresql-spring.xml"]),
-ContextConfiguration(classes = [PostgreSQLConfiguration::class])
+@SpringBootTest(classes = [DBMSRepositoryApplication::class])
+@OverrideAutoConfiguration(enabled = false)
+@ActiveProfiles("test", "postgresql")
+@ImportAutoConfiguration(classes = [
+    DataSourceAutoConfiguration::class,
+    DataSourceTransactionManagerAutoConfiguration::class,
+    JdbcTemplateAutoConfiguration::class,
+    PostgreSQLConfiguration::class,
+    LiquibaseAutoConfiguration::class
 ])
-@TestPropertySource(properties = ["duic.dbms=PostgreSQL"])
-class PostgreSQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
+class PostgreSQLServerRepositoryTests {
 
     @Autowired
-    lateinit var transactionTemplate: TransactionTemplate
+    lateinit var transactionManager: PlatformTransactionManager
     @Autowired
     lateinit var jdbcTemplate: NamedParameterJdbcTemplate
     @Autowired
     lateinit var serverRepository: ServerRepository
 
-    @After
+    @AfterEach
     fun clean() {
-        transactionTemplate.execute {
+        TransactionTemplate(transactionManager).execute {
             jdbcTemplate.update("DELETE FROM DUIC_SERVER", EmptySqlParameterSource.INSTANCE)
         }
     }
@@ -57,7 +67,7 @@ class PostgreSQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
     @Test
     fun register() {
         val n = serverRepository.register("localhost", 1234).block()
-        Assert.assertEquals(1, n)
+        assertEquals(1, n)
     }
 
     @Test
@@ -70,14 +80,14 @@ class PostgreSQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
     fun unregister() {
         serverRepository.register("localhost", 1234).block()
         val n = serverRepository.unregister("localhost", 1234).block()
-        Assert.assertEquals(1, n)
+        assertEquals(1, n)
     }
 
     @Test
     fun ping() {
         serverRepository.register("localhost", 1234).block()
         val n = serverRepository.ping("localhost", 1234).block()
-        Assert.assertEquals(1, n)
+        assertEquals(1, n)
     }
 
     @Test

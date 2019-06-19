@@ -138,13 +138,15 @@ tasks.withType(com.hierynomus.gradle.license.tasks.LicenseCheck) {
 }
 
 test {
-    testLogging.showStandardStreams = true
-    testLogging.exceptionFormat = "full"
-    exclude "**/Oracle*RepositoryTests*"
+    useJUnitPlatform()
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = "full"
+    }
 }
 
 jacoco {
-    toolVersion = '0.7.9'
+    toolVersion = "0.8.3"
 }
 
 jacocoTestReport {

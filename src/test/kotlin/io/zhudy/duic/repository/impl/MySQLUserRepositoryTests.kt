@@ -1,33 +1,23 @@
-/**
- * Copyright 2017-2019 the original author or authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package io.zhudy.duic.repository.impl
 
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.repository.config.MySQLConfiguration
-import org.junit.After
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.ContextHierarchy
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import reactor.test.StepVerifier
 import java.util.*
@@ -35,23 +25,28 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ContextHierarchy(*[
-ContextConfiguration(locations = ["classpath:mysql-spring.xml"]),
-ContextConfiguration(classes = [MySQLConfiguration::class])
+@SpringBootTest(classes = [DBMSRepositoryApplication::class])
+@OverrideAutoConfiguration(enabled = false)
+@ActiveProfiles("test", "mysql")
+@ImportAutoConfiguration(classes = [
+    DataSourceAutoConfiguration::class,
+    DataSourceTransactionManagerAutoConfiguration::class,
+    JdbcTemplateAutoConfiguration::class,
+    MySQLConfiguration::class,
+    LiquibaseAutoConfiguration::class
 ])
-@TestPropertySource(properties = ["duic.dbms=MySQL"])
-class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
+class MySQLUserRepositoryTests {
 
     @Autowired
-    lateinit var transactionTemplate: TransactionTemplate
+    lateinit var transactionManager: PlatformTransactionManager
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
     @Autowired
     lateinit var userRepository: UserRepository
 
-    @After
+    @AfterEach
     fun clean() {
-        transactionTemplate.execute {
+        TransactionTemplate(transactionManager).execute {
             jdbcTemplate.execute("DELETE FROM DUIC_USER")
         }
     }
@@ -151,7 +146,7 @@ class MySQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
         }
 
         val list = userRepository.findAllEmail().collectList().block()
-        assertTrue(list.isNotEmpty())
+        assertTrue(list.size == 30)
     }
 
 }

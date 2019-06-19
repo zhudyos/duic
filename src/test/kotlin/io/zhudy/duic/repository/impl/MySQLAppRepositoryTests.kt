@@ -20,17 +20,21 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.repository.config.MySQLConfiguration
-import org.junit.After
-import org.junit.Assert.*
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.jdbc.core.ResultSetExtractor
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.ContextHierarchy
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import reactor.test.StepVerifier
 import java.time.Instant
@@ -41,26 +45,25 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ContextHierarchy(*[
-ContextConfiguration(locations = ["classpath:mysql-spring.xml"]),
-ContextConfiguration(classes = [MySQLConfiguration::class])
+@SpringBootTest(classes = [DBMSRepositoryApplication::class])
+@OverrideAutoConfiguration(enabled = false)
+@ActiveProfiles("test", "mysql")
+@ImportAutoConfiguration(classes = [
+    DataSourceAutoConfiguration::class,
+    DataSourceTransactionManagerAutoConfiguration::class,
+    JdbcTemplateAutoConfiguration::class,
+    MySQLConfiguration::class,
+    LiquibaseAutoConfiguration::class
 ])
-@TestPropertySource(properties = ["duic.dbms=MySQL"])
-class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
+class MySQLAppRepositoryTests {
 
     @Autowired
-    lateinit var transactionTemplate: TransactionTemplate
+    lateinit var transactionManager: PlatformTransactionManager
     @Autowired
     lateinit var jdbcTemplate: NamedParameterJdbcTemplate
     @Autowired
     lateinit var appRepository: AppRepository
 
-    val rootUserContext = object : UserContext {
-        override val email: String
-            get() = "root@unit-test.com"
-        override val isRoot: Boolean
-            get() = false
-    }
     val normalUserContext = object : UserContext {
         override val email: String
             get() = "a@unit-test.com"
@@ -68,9 +71,9 @@ class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             get() = false
     }
 
-    @After
+    @AfterEach
     fun clean() {
-        transactionTemplate.execute {
+        TransactionTemplate(transactionManager).execute {
             jdbcTemplate.update("DELETE FROM DUIC_APP", EmptySqlParameterSource.INSTANCE)
             jdbcTemplate.update("DELETE FROM DUIC_APP_HISTORY", EmptySqlParameterSource.INSTANCE)
         }
@@ -104,19 +107,6 @@ class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         StepVerifier.create(appRepository.delete(app, normalUserContext))
                 .expectNext(1)
                 .verifyComplete()
-
-        jdbcTemplate.query(
-                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
-                mapOf(
-                        "name" to app.name,
-                        "profile" to app.profile
-                ),
-                ResultSetExtractor {
-                    assertTrue(it.next())
-                    assertEquals(app.users.joinToString(","), it.getString("users"))
-                    assertEquals(normalUserContext.email, it.getString("deleted_by"))
-                }
-        )
     }
 
     @Test
@@ -153,19 +143,6 @@ class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         StepVerifier.create(appRepository.update(app, normalUserContext))
                 .expectNext(app.v)
                 .verifyComplete()
-
-        jdbcTemplate.query(
-                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
-                mapOf(
-                        "name" to app.name,
-                        "profile" to app.profile
-                ),
-                ResultSetExtractor {
-                    assertTrue(it.next())
-                    assertEquals(app.users.joinToString(","), it.getString("users"))
-                    assertEquals(normalUserContext.email, it.getString("updated_by"))
-                }
-        )
     }
 
     @Test
@@ -182,20 +159,6 @@ class MySQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         app.content = "a: a"
         val dbApp = appRepository.updateContent(app, normalUserContext).block()
         assertEquals(app.v, dbApp.v)
-
-        jdbcTemplate.query(
-                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
-                mapOf(
-                        "name" to app.name,
-                        "profile" to app.profile
-                ),
-                ResultSetExtractor {
-                    assertTrue(it.next())
-                    assertEquals(app.users.joinToString(","), it.getString("users"))
-                    assertEquals(normalUserContext.email, it.getString("updated_by"))
-                    assertEquals(app.v, it.getInt("v"))
-                }
-        )
     }
 
     @Test
