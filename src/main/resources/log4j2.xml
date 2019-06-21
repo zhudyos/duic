@@ -16,15 +16,16 @@
     limitations under the License.
 
 -->
-<configuration>
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <charset>UTF-8</charset>
-            <pattern>%d%X{requestId} %-5level %logger{35} - %msg%n</pattern>
-        </encoder>
-    </appender>
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d%X{requestId} %-5level [%t] %logger{35} - %msg%n"/>
+        </Console>
+    </Appenders>
 
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-    </root>
-</configuration>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="CONSOLE"/>
+        </Root>
+    </Loggers>
+</Configuration>

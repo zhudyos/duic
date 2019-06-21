@@ -42,6 +42,15 @@ ext {
     resilience4jVersion = "0.16.0"
 }
 
+configurations {
+    all {
+        exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
+        exclude group: "ch.qos.logback"
+        exclude module: "hibernate-validator"
+        exclude module: "nio-multipart-parser"
+    }
+}
+
 dependencyManagement {
     imports {
         mavenBom "io.projectreactor:reactor-bom:Californium-SR9"
@@ -60,10 +69,8 @@ dependencies {
     implementation "io.github.resilience4j:resilience4j-ratelimiter:$resilience4jVersion"
     implementation "io.github.resilience4j:resilience4j-reactor:$resilience4jVersion"
 
-    implementation("org.springframework.boot:spring-boot-starter-webflux") {
-        exclude module: "hibernate-validator"
-        exclude module: "nio-multipart-parser"
-    }
+    implementation "org.springframework.boot:spring-boot-starter-webflux"
+    implementation "org.springframework.boot:spring-boot-starter-log4j2"
     implementation "org.springframework:spring-jdbc"
     implementation "com.fasterxml.jackson.module:jackson-module-kotlin"
     implementation "org.mongodb:mongodb-driver-reactivestreams:1.11.0"
@@ -80,6 +87,8 @@ dependencies {
         exclude module: "protobuf-java"
     }
     implementation "org.postgresql:postgresql:42.2.2"
+
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.11.2"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api"
     testImplementation "org.junit.jupiter:junit-jupiter-engine"
