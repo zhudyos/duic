@@ -12,11 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.test.context.ActiveProfiles
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootTest(classes = [UserService::class])
+@ActiveProfiles("test")
 @OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration(classes = [
     BasicConfiguration::class
