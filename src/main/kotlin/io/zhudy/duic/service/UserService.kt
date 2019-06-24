@@ -40,6 +40,10 @@ class UserService(val userRepository: UserRepository,
 
     @PostConstruct
     fun initRootUser() {
+        if (!Config.enabledAutoRegRoot) {
+            return
+        }
+
         userRepository.findByEmail(Config.rootEmail).hasElement().subscribe {
             if (!it) {
                 insert(User(email = Config.rootEmail, password = Config.rootPassword)).subscribe()

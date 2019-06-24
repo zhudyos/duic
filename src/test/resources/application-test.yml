@@ -18,6 +18,9 @@ scheduling:
   enabled: false
 
 duic:
+  # 禁用自动注册用户功能
+  enabled-auto-reg-root: false
+  dbms: none
   mongodb:
     url: mongodb://127.0.0.1:27017/duic-unit-test
   mysql:
