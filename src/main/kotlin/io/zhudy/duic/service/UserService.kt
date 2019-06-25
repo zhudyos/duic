@@ -62,7 +62,7 @@ class UserService(val userRepository: UserRepository,
      */
     fun login(email: String, password: String): Mono<User> {
         return userRepository.findByEmail(email).single().map {
-            if (!passwordEncoder.matches(password, it!!.password)) {
+            if (!passwordEncoder.matches(password, it.password)) {
                 throw BizCodeException(BizCodes.C_2001)
             }
             it
