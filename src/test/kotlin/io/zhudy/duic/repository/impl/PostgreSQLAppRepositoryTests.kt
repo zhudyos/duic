@@ -45,14 +45,13 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [DBMSRepositoryApplication::class])
+@SpringBootTest(classes = [PostgreSQLConfiguration::class])
 @OverrideAutoConfiguration(enabled = false)
 @ActiveProfiles("test", "postgresql")
 @ImportAutoConfiguration(classes = [
     DataSourceAutoConfiguration::class,
     DataSourceTransactionManagerAutoConfiguration::class,
     JdbcTemplateAutoConfiguration::class,
-    PostgreSQLConfiguration::class,
     LiquibaseAutoConfiguration::class
 ])
 class PostgreSQLAppRepositoryTests {

@@ -38,14 +38,13 @@ import org.springframework.transaction.support.TransactionTemplate
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [DBMSRepositoryApplication::class])
+@SpringBootTest(classes = [MySQLConfiguration::class])
 @OverrideAutoConfiguration(enabled = false)
 @ActiveProfiles("test", "mysql")
 @ImportAutoConfiguration(classes = [
     DataSourceAutoConfiguration::class,
     DataSourceTransactionManagerAutoConfiguration::class,
     JdbcTemplateAutoConfiguration::class,
-    MySQLConfiguration::class,
     LiquibaseAutoConfiguration::class
 ])
 class MySQLServerRepositoryTests {
