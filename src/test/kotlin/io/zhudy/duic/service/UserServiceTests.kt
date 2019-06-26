@@ -1,14 +1,13 @@
 package io.zhudy.duic.service
 
-import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.config.BasicConfiguration
 import io.zhudy.duic.domain.User
+import io.zhudy.duic.expectError
 import io.zhudy.duic.repository.UserRepository
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
-import org.mockito.Mockito
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.web.ServerProperties
@@ -16,6 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.ActiveProfiles
 import reactor.core.publisher.Mono
@@ -34,17 +34,14 @@ import reactor.test.StepVerifier
 @EnableConfigurationProperties(ServerProperties::class)
 class UserServiceTests {
 
+    // ====================================== MOCK ============================================//
     @MockBean
     lateinit var userRepository: UserRepository
-    @Autowired
+    @SpyBean
     lateinit var passwordEncoder: PasswordEncoder
+    // ====================================== MOCK ============================================//
     @Autowired
     lateinit var userService: UserService
-
-    @AfterEach
-    fun clearMocks() {
-        Mockito.framework().clearInlineMocks()
-    }
 
     @Test
     fun login() {
@@ -70,13 +67,7 @@ class UserServiceTests {
 
         val rs = userService.login(email, password)
         StepVerifier.create(rs)
-                .expectErrorMatches {
-                    if (it is BizCodeException) {
-                        it.bizCode == BizCodes.C_2000
-                    } else {
-                        false
-                    }
-                }
+                .expectError(BizCodes.C_2000)
                 .verify()
     }
 
@@ -92,13 +83,59 @@ class UserServiceTests {
 
         val rs = userService.login(email, password)
         StepVerifier.create(rs)
-                .expectErrorMatches {
-                    if (it is BizCodeException) {
-                        it.bizCode == BizCodes.C_2001
-                    } else {
-                        false
-                    }
-                }
+                .expectError(BizCodes.C_2001)
+                .verify()
+    }
+
+    @Test
+    fun insert() {
+        val email = "kevinz@weghst.com"
+        val password = "hello"
+        val user = User(
+                email = email,
+                password = password
+        )
+        given(userRepository.insert(user)).willReturn(Mono.empty())
+
+        val rs = userService.insert(user)
+        StepVerifier.create(rs)
+                .expectComplete()
+                .verify()
+    }
+
+    @Test
+    fun updatePassword() {
+        val email = "kevinz@weghst.com"
+        val oldPassword = "hello"
+        val newPassword = "new-hello"
+
+        val mockUser = User(
+                email = email,
+                password = passwordEncoder.encode(oldPassword)
+        )
+        given(userRepository.findByEmail(email)).willReturn(mockUser.toMono())
+        given(userRepository.updatePassword(anyString(), anyString())).willReturn(Mono.empty())
+
+        val rs = userService.updatePassword(email, oldPassword, newPassword)
+        StepVerifier.create(rs)
+                .verifyComplete()
+    }
+
+    @Test
+    fun `updatePassword password not matches`() {
+        val email = "kevinz@weghst.com"
+        val oldPassword = "hello"
+        val newPassword = "new-hello"
+
+        val mockUser = User(
+                email = email,
+                password = passwordEncoder.encode("$oldPassword-error")
+        )
+        given(userRepository.findByEmail(email)).willReturn(mockUser.toMono())
+
+        val rs = userService.updatePassword(email, oldPassword, newPassword)
+        StepVerifier.create(rs)
+                .expectError(BizCodes.C_2001)
                 .verify()
     }
 

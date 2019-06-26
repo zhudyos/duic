@@ -74,7 +74,6 @@ class PostgreSQLUserRepositoryTests {
         )
 
         StepVerifier.create(userRepository.insert(user))
-                .expectNext(1)
                 .verifyComplete()
     }
 
@@ -88,7 +87,6 @@ class PostgreSQLUserRepositoryTests {
         userRepository.insert(user).block()
 
         StepVerifier.create(userRepository.delete(user.email))
-                .expectNext(1)
                 .verifyComplete()
     }
 
@@ -102,7 +100,6 @@ class PostgreSQLUserRepositoryTests {
         userRepository.insert(user).block()
 
         StepVerifier.create(userRepository.updatePassword(user.email, "hello"))
-                .expectNext(1)
                 .verifyComplete()
     }
 
