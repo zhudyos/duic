@@ -98,21 +98,21 @@ class UserService(val userRepository: UserRepository,
     /**
      * 删除用户。
      */
-    fun delete(email: String): Mono<*> {
+    fun delete(email: String): Mono<Void> = Mono.defer {
         if (email == Config.rootEmail) {
             throw BizCodeException(BizCodes.C_2002)
         }
-        return userRepository.delete(email)
+        userRepository.delete(email)
     }
 
     /**
      * 重置密码。
      */
-    fun resetPassword(dto: ResetPasswordDto): Mono<*> {
+    fun resetPassword(dto: ResetPasswordDto): Mono<Void> = Mono.defer {
         if (dto.email == Config.rootEmail) {
             throw BizCodeException(BizCodes.C_2003)
         }
-        return userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
+        userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
     }
 
     /**
