@@ -86,9 +86,9 @@ class UserService(val userRepository: UserRepository,
      * @param oldPassword 原密码
      * @param newPassword 新密码
      */
-    fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Int> {
+    fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Void> {
         return userRepository.findByEmail(email).single().flatMap {
-            if (passwordEncoder.matches(oldPassword, it?.password)) {
+            if (passwordEncoder.matches(oldPassword, it.password)) {
                 return@flatMap userRepository.updatePassword(email, passwordEncoder.encode(newPassword))
             }
             throw BizCodeException(BizCodes.C_2001)

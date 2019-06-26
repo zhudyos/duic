@@ -55,42 +55,37 @@ open class MongoUserRepository(
     /**
      *
      */
-    @Suppress("HasPlatformType")
-    override fun insert(user: User) = userColl.insertOne(Document(
-            mapOf(
-                    "_id" to ObjectId().toString(),
-                    "email" to user.email,
-                    "password" to user.password,
-                    "created_at" to Date(),
-                    "updated_at" to Date()
+    override fun insert(user: User): Mono<Void> = userColl.insertOne(
+            Document(
+                    mapOf(
+                            "_id" to ObjectId().toString(),
+                            "email" to user.email,
+                            "password" to user.password,
+                            "created_at" to Date(),
+                            "updated_at" to Date()
+                    )
             )
-    )).toMono()
+    ).toMono().then()
 
     /**
      *
      */
-    @Suppress("HasPlatformType")
-    override fun delete(email: String) = userColl.deleteOne(eq("email", email))
-            .toMono()
-            .map { it.deletedCount.toInt() }
+    override fun delete(email: String): Mono<Void> = userColl.deleteOne(eq("email", email)).toMono().then()
 
     /**
      *
      */
-    @Suppress("HasPlatformType")
-    override fun updatePassword(email: String, password: String) = userColl.updateOne(
+    override fun updatePassword(email: String, password: String): Mono<Void> = userColl.updateOne(
             eq("email", email),
             combine(
                     set("password", password),
                     set("updated_at", Date())
-            ))
-            .toMono()
-            .map { it.modifiedCount.toInt() }
+            )
+    ).toMono().then()
 
     /**
      *
      */
-    @Suppress("HasPlatformType")
     override fun findByEmail(email: String): Mono<User> = userColl.find(eq("email", email))
             .first()
             .toMono()

@@ -31,17 +31,17 @@ interface UserRepository {
     /**
      * 添加一个新用户。
      */
-    fun insert(user: User): Mono<*>
+    fun insert(user: User): Mono<Void>
 
     /**
      * 删除一个用户。
      */
-    fun delete(email: String): Mono<Int>
+    fun delete(email: String): Mono<Void>
 
     /**
      * 更新用户密码。
      */
-    fun updatePassword(email: String, password: String): Mono<Int>
+    fun updatePassword(email: String, password: String): Mono<Void>
 
     /**
      * 根据邮箱查询用户信息。

@@ -36,37 +36,35 @@ class MySQLUserRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : UserRepository, AbstractTransactionRepository(transactionManager) {
 
-    @Suppress("HasPlatformType")
-    override fun insert(user: User) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun insert(user: User): Mono<Void> = Mono.defer {
+        transactionTemplate.execute {
             jdbcTemplate.update(
                     "INSERT INTO DUIC_USER(EMAIL,PASSWORD,CREATED_AT) VALUES(:email,:password,NOW())",
                     mapOf("email" to user.email, "password" to user.password)
             )
         }
-        it.success(n)
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun delete(email: String) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun delete(email: String): Mono<Void> = Mono.defer {
+        transactionTemplate.execute {
             jdbcTemplate.update(
                     "DELETE FROM DUIC_USER WHERE EMAIL=:email",
                     mapOf("email" to email)
             )
         }
-        it.success(n)
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun updatePassword(email: String, password: String) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun updatePassword(email: String, password: String): Mono<Void> = Mono.defer {
+        transactionTemplate.execute {
             jdbcTemplate.update(
                     "UPDATE DUIC_USER SET PASSWORD=:password,UPDATED_AT=now() WHERE EMAIL=:email",
                     mapOf("email" to email, "password" to password)
             )
         }
-        it.success(n)
+
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
     @Suppress("HasPlatformType")
