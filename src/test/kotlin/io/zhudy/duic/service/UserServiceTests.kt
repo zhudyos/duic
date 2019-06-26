@@ -1,11 +1,16 @@
 package io.zhudy.duic.service
 
 import io.zhudy.duic.BizCodes
+import io.zhudy.duic.Config
 import io.zhudy.duic.config.BasicConfiguration
+import io.zhudy.duic.domain.Page
+import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
+import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.expectError
 import io.zhudy.duic.repository.UserRepository
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +24,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.context.ActiveProfiles
 import reactor.core.publisher.Mono
+import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
 import reactor.test.StepVerifier
 
@@ -42,6 +48,16 @@ class UserServiceTests {
     // ====================================== MOCK ============================================//
     @Autowired
     lateinit var userService: UserService
+
+    @Test
+    fun initRootUser() {
+        Config.enabledAutoRegRoot = true
+        given(userRepository.findByEmail(Config.rootEmail)).willReturn(Mono.empty())
+        given(userRepository.insert(any() ?: User())).willReturn(Mono.empty())
+
+        userService.initRootUser()
+        Config.enabledAutoRegRoot = false
+    }
 
     @Test
     fun login() {
@@ -118,7 +134,8 @@ class UserServiceTests {
 
         val rs = userService.updatePassword(email, oldPassword, newPassword)
         StepVerifier.create(rs)
-                .verifyComplete()
+                .expectComplete()
+                .verify()
     }
 
     @Test
@@ -139,4 +156,76 @@ class UserServiceTests {
                 .verify()
     }
 
+    @Test
+    fun delete() {
+        val email = "junit@weghst.com"
+        given(userRepository.delete(email)).willReturn(Mono.empty())
+
+        val rs = userService.delete(email)
+        StepVerifier.create(rs)
+                .verifyComplete()
+    }
+
+    @Test
+    fun `delete root user`() {
+        val rs = userService.delete(Config.rootEmail)
+        StepVerifier.create(rs)
+                .expectError(BizCodes.C_2002)
+                .verify()
+    }
+
+    @Test
+    fun resetPassword() {
+        val dto = ResetPasswordDto(
+                email = "junit@weghst.com",
+                password = "hello"
+        )
+        given(userRepository.updatePassword(anyString(), anyString())).willReturn(Mono.empty())
+
+        val rs = userService.resetPassword(dto)
+        StepVerifier.create(rs)
+                .expectComplete()
+                .verify()
+    }
+
+    @Test
+    fun `resetPassword root user`() {
+        val dto = ResetPasswordDto(
+                email = Config.rootEmail,
+                password = "hello"
+        )
+        given(userRepository.updatePassword(anyString(), anyString())).willReturn(Mono.empty())
+
+        val rs = userService.resetPassword(dto)
+        StepVerifier.create(rs)
+                .expectError(BizCodes.C_2003)
+                .verify()
+    }
+
+    @Test
+    fun findPage() {
+        val pageable = Pageable()
+        val page = Page<User>(
+                pageable = pageable
+        )
+        given(userRepository.findPage(pageable)).willReturn(page.toMono())
+
+        val rs = userService.findPage(pageable)
+        StepVerifier.create(rs)
+                .expectNext(page)
+                .expectComplete()
+                .verify()
+    }
+
+    @Test
+    fun findAllEmail() {
+        val emails = arrayOf("kevinz@weghst.com")
+        given(userRepository.findAllEmail()).willReturn(emails.toFlux())
+
+        val rs = userService.findAllEmail()
+        StepVerifier.create(rs)
+                .expectNext(*emails)
+                .expectComplete()
+                .verify()
+    }
 }
