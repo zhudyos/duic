@@ -18,10 +18,12 @@ package io.zhudy.duic.service
 import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
+import io.zhudy.duic.annotation.NoIntegrationTest
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.repository.UserRepository
+import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -38,12 +40,17 @@ import javax.annotation.PostConstruct
 class UserService(val userRepository: UserRepository,
                   val passwordEncoder: PasswordEncoder) {
 
-    @PostConstruct
-    fun initRootUser() {
-        if (!Config.enabledAutoRegRoot) {
-            return
-        }
+    @NoIntegrationTest
+    @Configuration
+    inner class Lifecycle {
 
+        @PostConstruct
+        fun init() {
+            this@UserService.initRootUser()
+        }
+    }
+
+    fun initRootUser() {
         userRepository.findByEmail(Config.rootEmail).hasElement().subscribe {
             if (!it) {
                 insert(User(email = Config.rootEmail, password = Config.rootPassword)).subscribe()

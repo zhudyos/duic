@@ -15,8 +15,7 @@
  */
 package io.zhudy.duic.repository.impl
 
-import com.mongodb.client.model.Filters.gte
-import com.mongodb.client.model.Filters.lt
+import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.IndexModel
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.UpdateOptions
@@ -57,45 +56,56 @@ open class MongoServerRepository(
         ))
     }
 
-    override fun register(host: String, port: Int) = serverColl.updateOne(
-            Document("_id", "${host}_$port"),
-            Document("\$set", mapOf(
-                    "host" to host,
-                    "port" to port,
-                    "init_at" to Date(),
-                    "active_at" to Date()
-            )),
-            UpdateOptions().upsert(true)
-    ).toMono()
+    override fun register(host: String, port: Int): Mono<Void> = serverColl
+            .updateOne(
+                    eq("_id", "${host}_$port"),
+                    Document("\$set", mapOf(
+                            "host" to host,
+                            "port" to port,
+                            "init_at" to Date(),
+                            "active_at" to Date()
+                    )),
+                    UpdateOptions().upsert(true)
+            )
+            .toMono()
+            .then()
 
-    override fun unregister(host: String, port: Int) = serverColl.deleteOne(
-            Document("_id", "${host}_$port")
-    ).toMono()
+    override fun unregister(host: String, port: Int): Mono<Void> = serverColl
+            .deleteOne(eq("_id", "${host}_$port"))
+            .toMono()
+            .then()
 
-    override fun ping(host: String, port: Int) = serverColl.updateOne(
-            Document("_id", "${host}_$port"),
-            Updates.set("active_at", Date())
-    ).toMono()
+    override fun ping(host: String, port: Int): Mono<Void> = serverColl
+            .updateOne(
+                    Document("_id", "${host}_$port"),
+                    Updates.set("active_at", Date())
+            )
+            .toMono()
+            .then()
 
     @Suppress("HasPlatformType")
-    override fun findServers() = serverColl.find(
-            gte("active_at", Date.from(Instant.now().minus(ACTIVE_TIMEOUT)))
-    ).toFlux().map {
-        Server(
-                host = it.getString("host"),
-                port = it.getInteger("port"),
-                initAt = it.getDate("init_at"),
-                activeAt = it.getDate("active_at")
-        )
-    }
+    override fun findServers() = serverColl
+            .find(
+                    gte("active_at", Date.from(Instant.now().minus(ACTIVE_TIMEOUT)))
+            )
+            .toFlux()
+            .map {
+                Server(
+                        host = it.getString("host"),
+                        port = it.getInteger("port"),
+                        initAt = it.getDate("init_at"),
+                        activeAt = it.getDate("active_at")
+                )
+            }
 
-    override fun clean() = serverColl.deleteMany(
-            lt("active_at", Date.from(Instant.now().minus(CLEAN_BEFORE)))
-    ).toMono()
+    override fun clean(): Mono<Void> = serverColl
+            .deleteMany(
+                    lt("active_at", Date.from(Instant.now().minus(CLEAN_BEFORE)))
+            )
+            .toMono()
+            .then()
 
-    override fun findDbVersion(): Mono<String> {
-        return mongo.runCommand(Document("buildinfo", 1)).toMono().map {
-            it.getString("version")
-        }
-    }
+    override fun findDbVersion(): Mono<String> = mongo.runCommand(Document("buildinfo", 1))
+            .toMono()
+            .map { it.getString("version") }
 }

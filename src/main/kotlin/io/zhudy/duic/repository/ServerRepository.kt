@@ -31,12 +31,12 @@ interface ServerRepository {
         /**
          * 服务超时时间为1分钟。
          */
-        val ACTIVE_TIMEOUT = Duration.ofMinutes(1)
+        val ACTIVE_TIMEOUT: Duration = Duration.ofMinutes(1)
 
         /**
          * 删除2分钟未活跃的服务。
          */
-        val CLEAN_BEFORE = Duration.ofMinutes(2)
+        val CLEAN_BEFORE: Duration = Duration.ofMinutes(2)
     }
 
     /**
@@ -45,7 +45,7 @@ interface ServerRepository {
      * @param host 服务主机
      * @param port 服务端口
      */
-    fun register(host: String, port: Int): Mono<*>
+    fun register(host: String, port: Int): Mono<Void>
 
     /**
      * 下线集群服务。
@@ -53,7 +53,7 @@ interface ServerRepository {
      * @param host 服务主机
      * @param port 服务端口
      */
-    fun unregister(host: String, port: Int): Mono<*>
+    fun unregister(host: String, port: Int): Mono<Void>
 
     /**
      * 服务心跳。
@@ -61,7 +61,7 @@ interface ServerRepository {
      * @param host 服务主机
      * @param port 服务端口
      */
-    fun ping(host: String, port: Int): Mono<*>
+    fun ping(host: String, port: Int): Mono<Void>
 
     /**
      * 返回集群服务列表。
@@ -71,7 +71,7 @@ interface ServerRepository {
     /**
      * 清理过期服务。
      */
-    fun clean(): Mono<*>
+    fun clean(): Mono<Void>
 
     /**
      * 查询数据库版本。

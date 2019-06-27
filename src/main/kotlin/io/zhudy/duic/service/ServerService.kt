@@ -18,12 +18,14 @@ package io.zhudy.duic.service
 import io.zhudy.duic.Config
 import io.zhudy.duic.DBMS
 import io.zhudy.duic.DuicVersion
+import io.zhudy.duic.annotation.NoIntegrationTest
 import io.zhudy.duic.domain.ServerInfo
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.ServerStateDto
 import io.zhudy.duic.repository.ServerRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.http.MediaType
 import org.springframework.scheduling.annotation.Scheduled
@@ -59,24 +61,47 @@ class ServerService(
 
     private val failServerRefreshDto = ServerRefreshDto(lastDataTime = -1)
 
-    /**
-     * 服务启动成功后会自动注册当前服务。
-     */
-    @PostConstruct
-    fun init() {
-        serverRepository.register(Config.server.host, Config.server.port).doOnError {
-            log.error("register 服务失败: ${Config.server.host}:${Config.server.port}", it)
-        }.subscribe()
+    @NoIntegrationTest
+    @Configuration
+    inner class Lifecycle {
+
+        /**
+         * 服务启动成功后会自动注册当前服务。
+         */
+        @PostConstruct
+        fun init() {
+            this@ServerService.register()
+        }
+
+        /**
+         * 服务停止后会自动下线当前服务。
+         */
+        @PreDestroy
+        fun destroy() {
+            this@ServerService.unregister()
+        }
     }
 
     /**
-     * 服务停止后会自动下线当前服务。
+     * 注册当前服务。
      */
-    @PreDestroy
-    fun destroy() {
-        serverRepository.register(Config.server.host, Config.server.port).doOnError {
-            log.error("unregister 服务失败: ${Config.server.host}:${Config.server.port}", it)
-        }.subscribe()
+    fun register() {
+        serverRepository.register(Config.server.host, Config.server.port)
+                .doOnError {
+                    log.error("register 服务失败: ${Config.server.host}:${Config.server.port}", it)
+                }
+                .subscribe()
+    }
+
+    /**
+     * 清除当前已注册的服务。
+     */
+    fun unregister() {
+        serverRepository.unregister(Config.server.host, Config.server.port)
+                .doOnError {
+                    log.error("unregister 服务失败: ${Config.server.host}:${Config.server.port}", it)
+                }
+                .subscribe()
     }
 
     /**
@@ -86,9 +111,7 @@ class ServerService(
     fun clockPing() {
         serverRepository
                 .ping(Config.server.host, Config.server.port)
-                .flatMap {
-                    serverRepository.clean()
-                }
+                .then(serverRepository.clean())
                 .subscribe()
     }
 

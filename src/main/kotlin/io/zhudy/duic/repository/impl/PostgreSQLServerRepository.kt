@@ -36,9 +36,8 @@ open class PostgreSQLServerRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : ServerRepository, AbstractTransactionRepository(transactionManager) {
 
-    @Suppress("HasPlatformType")
-    override fun register(host: String, port: Int) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun register(host: String, port: Int): Mono<Void> = Mono.defer {
+        transactionTemplate.execute {
             jdbcTemplate.update(
                     "INSERT INTO DUIC_SERVER(ID,HOST,PORT,INIT_AT,ACTIVE_AT) VALUES(:id,:host,:port,now(),now()) ON CONFLICT (ID) DO UPDATE SET INIT_AT=now(),ACTIVE_AT=NOW()",
                     mapOf(
@@ -48,20 +47,20 @@ open class PostgreSQLServerRepository(
                     )
             )
         }
-        it.success(n)
+
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun unregister(host: String, port: Int) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun unregister(host: String, port: Int): Mono<Void> = Mono.defer {
+        transactionTemplate.execute {
             jdbcTemplate.update("DELETE FROM DUIC_SERVER WHERE ID=:id", mapOf("id" to "${host}_$port"))
         }
-        it.success(n)
+
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun ping(host: String, port: Int) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun ping(host: String, port: Int): Mono<Void> = Mono.defer {
+        transactionTemplate.execute {
             jdbcTemplate.update(
                     "UPDATE DUIC_SERVER SET ACTIVE_AT=:active_at WHERE ID=:id",
                     mapOf(
@@ -70,11 +69,11 @@ open class PostgreSQLServerRepository(
                     )
             )
         }
-        it.success(n)
+
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findServers() = Flux.create<Server> { sink ->
+    override fun findServers(): Flux<Server> = Flux.create<Server> { sink ->
         roTransactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT HOST,PORT,INIT_AT,ACTIVE_AT FROM DUIC_SERVER WHERE ACTIVE_AT >= :active_at",
@@ -93,9 +92,8 @@ open class PostgreSQLServerRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun clean() = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun clean(): Mono<Void> = Mono.defer {
+        transactionTemplate.execute {
             jdbcTemplate.update(
                     "DELETE FROM DUIC_SERVER WHERE ACTIVE_AT<=:active_at",
                     mapOf(
@@ -103,15 +101,16 @@ open class PostgreSQLServerRepository(
                     )
             )
         }
-        it.success(n)
+
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findDbVersion() = Mono.create<String> {
+    override fun findDbVersion(): Mono<String> = Mono.create<String> {
         val v = transactionTemplate.execute {
             val m = jdbcTemplate.queryForMap("SELECT VERSION()", emptyMap<String, Any>())
             m["version"] as String
         }
+
         it.success(v)
     }.subscribeOn(Schedulers.elastic())
 
