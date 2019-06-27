@@ -96,8 +96,7 @@ internal class ServerServiceTests {
 
         val rs = serverService.loadServerStates()
         StepVerifier.create(rs)
-                .expectNextMatches { it.lastDataTime > 0L }
-                .expectNextMatches { it.lastDataTime == -1L }
+                .expectNextCount(2)
                 .expectComplete()
                 .verify()
 
