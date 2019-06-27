@@ -30,6 +30,7 @@ import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import org.bson.Document
 import org.bson.types.ObjectId
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -49,23 +50,24 @@ open class MongoUserRepository(
     init {
         userColl.createIndexes(listOf(
                 IndexModel(Document("email", 1), IndexOptions().background(true).unique(true))
-        )).toMono().subscribe()
+        ))
+                .toMono()
+                .subscribe()
     }
 
     /**
      *
      */
-    override fun insert(user: User): Mono<Void> = userColl.insertOne(
-            Document(
-                    mapOf(
-                            "_id" to ObjectId().toString(),
-                            "email" to user.email,
-                            "password" to user.password,
-                            "created_at" to Date(),
-                            "updated_at" to Date()
-                    )
-            )
-    ).toMono().then()
+    override fun insert(user: User): Mono<Void> = userColl
+            .insertOne(Document(mapOf(
+                    "_id" to ObjectId().toString(),
+                    "email" to user.email,
+                    "password" to user.password,
+                    "created_at" to Date(),
+                    "updated_at" to Date()
+            )))
+            .toMono()
+            .then()
 
     /**
      *
@@ -80,8 +82,9 @@ open class MongoUserRepository(
             combine(
                     set("password", password),
                     set("updated_at", Date())
-            )
-    ).toMono().then()
+            ))
+            .toMono()
+            .then()
 
     /**
      *
@@ -96,8 +99,7 @@ open class MongoUserRepository(
                 )
             }
 
-    @Suppress("HasPlatformType")
-    override fun findPage(pageable: Pageable) = Mono.zip(
+    override fun findPage(pageable: Pageable): Mono<Page<User>> = Mono.zip(
             userColl.find()
                     .projection(exclude("password"))
                     .skip(pageable.offset)
@@ -112,6 +114,7 @@ open class MongoUserRepository(
                         )
                     }
                     .collectList(),
+
             userColl.countDocuments()
                     .toMono()
                     .subscribeOn(Schedulers.parallel())
@@ -119,11 +122,7 @@ open class MongoUserRepository(
         Page(it.t1, it.t2.toInt(), pageable)
     }
 
-    /**
-     *
-     */
-    @Suppress("HasPlatformType")
-    override fun findAllEmail() = userColl.find()
+    override fun findAllEmail(): Flux<String> = userColl.find()
             .projection(include("email"))
             .toFlux()
             .map { it.getString("email") }
