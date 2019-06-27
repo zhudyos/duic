@@ -27,12 +27,6 @@ object Config {
      */
     lateinit var server: Server
     /**
-     * 是否自动注册 `ROOT` 用户。
-     *
-     * 主要应用于单元测试环境，在非单元测试环境下，应该一起保持为 `true`。
-     */
-    var enabledAutoRegRoot = true
-    /**
      * 超级管理员用户名。
      */
     var rootEmail: String = ""
