@@ -38,7 +38,7 @@ import reactor.test.StepVerifier
     BasicConfiguration::class
 ])
 @EnableConfigurationProperties(ServerProperties::class)
-class UserServiceTests {
+internal class UserServiceTests {
 
     // ====================================== MOCK ============================================//
     @MockBean
@@ -50,13 +50,11 @@ class UserServiceTests {
     lateinit var userService: UserService
 
     @Test
-    fun initRootUser() {
-        Config.enabledAutoRegRoot = true
+    fun init() {
         given(userRepository.findByEmail(Config.rootEmail)).willReturn(Mono.empty())
         given(userRepository.insert(any() ?: User())).willReturn(Mono.empty())
 
-        userService.initRootUser()
-        Config.enabledAutoRegRoot = false
+        userService.Lifecycle().init()
     }
 
     @Test

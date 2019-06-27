@@ -18,8 +18,6 @@ package io.zhudy.duic.repository.impl
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.repository.config.MySQLConfiguration
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
@@ -34,6 +32,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import reactor.test.StepVerifier
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -65,41 +64,56 @@ class MySQLServerRepositoryTests {
 
     @Test
     fun register() {
-        val n = serverRepository.register("localhost", 1234).block()
-        assertEquals(1, n)
+        val rs = serverRepository.register("localhost", 1234)
+        StepVerifier.create(rs)
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun registerOnExists() {
-        serverRepository.register("localhost", 1234).block()
-        serverRepository.register("localhost", 1234).block()
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.register("localhost", 1234)
+        StepVerifier.create(rs1.concatWith(rs2))
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun unregister() {
-        serverRepository.register("localhost", 1234).block()
-        val n = serverRepository.unregister("localhost", 1234).block()
-        assertEquals(1, n)
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.unregister("localhost", 1234)
+        StepVerifier.create(rs1.then(rs2))
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun ping() {
-        serverRepository.register("localhost", 1234).block()
-        val n = serverRepository.ping("localhost", 1234).block()
-        assertEquals(1, n)
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.ping("localhost", 1234)
+        StepVerifier.create(rs1.then(rs2))
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun findServers() {
-        serverRepository.register("localhost", 1234).block()
-        val servers = serverRepository.findServers().collectList().block()
-        assertTrue(servers.isNotEmpty())
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.findServers()
+        StepVerifier.create(rs1.thenMany(rs2))
+                .expectNextCount(1)
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun findDbVersion() {
-        val version = serverRepository.findDbVersion().block()
-        assertTrue(version.isNotEmpty())
+        val rs = serverRepository.findDbVersion()
+        StepVerifier.create(rs)
+                .expectNextMatches { it.isNotEmpty() }
+                .expectComplete()
+                .verify()
     }
 
 }
