@@ -145,7 +145,7 @@ class WebConfig(val objectMapper: ObjectMapper,
     }
 
     @Bean
-    fun adminRouter() = router {
+    fun adminRouter(): RouterFunction<ServerResponse> = router {
         path("/api/admins").nest {
             POST("/login", adminResource::login)
             GET("/user/root", adminResource::rootUser)
@@ -184,6 +184,6 @@ class WebConfig(val objectMapper: ObjectMapper,
                 GET("/", adminResource::loadServerStates)
             }
         }
-    }.filter(AuthorizedHandlerFilter())!!
+    }.filter(AuthorizedHandlerFilter())
 
 }
