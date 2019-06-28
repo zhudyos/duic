@@ -33,14 +33,4 @@ abstract class AbstractTransactionRepository(
     protected val transactionTemplate: TransactionTemplate
         get() = TransactionTemplate(transactionManager)
 
-    /**
-     * 返回一个只读事务模板实例。
-     */
-    protected val roTransactionTemplate: TransactionTemplate
-        get() {
-            val t = transactionTemplate
-            t.isReadOnly = true
-            return t
-        }
-
 }

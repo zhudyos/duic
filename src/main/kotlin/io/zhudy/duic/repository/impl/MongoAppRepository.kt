@@ -74,8 +74,8 @@ open class MongoAppRepository(
      *
      * @param app 应用配置信息
      */
-    override fun insert(app: App) = appColl.insertOne(Document(
-            mapOf(
+    override fun insert(app: App): Mono<Void> = appColl
+            .insertOne(Document(mapOf(
                     "_id" to ObjectId().toString(),
                     "name" to app.name,
                     "profile" to app.profile,
@@ -86,8 +86,9 @@ open class MongoAppRepository(
                     "updated_at" to Date(),
                     "content" to app.content,
                     "users" to app.users
-            )
-    )).toMono()
+            )))
+            .toMono()
+            .then()
 
     /**
      * 删除应用配置信息，并在 `app_history` 中保存已删除的应用配置信息。
@@ -95,14 +96,13 @@ open class MongoAppRepository(
      * @param app 应用配置信息
      * @param userContext 用户上下文
      */
-    @Suppress("HasPlatformType")
-    override fun delete(app: App, userContext: UserContext) = findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-        appColl.deleteOne(and(eq("name", app.name), eq("profile", app.profile)))
-                .toMono()
-                .flatMap {
-                    insertHistory(dbApp, true, userContext)
-                }
-    }
+    override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne<Any>(app.name, app.profile)
+            .flatMap { dbApp ->
+                appColl.deleteOne(and(
+                        eq("name", app.name), eq("profile", app.profile)))
+                        .toMono()
+                        .then(insertHistory(dbApp, true, userContext))
+            }
 
     /**
      * 返回指定的应用配置信息。
@@ -121,7 +121,7 @@ open class MongoAppRepository(
      * @param app 更新的应用配置信息
      * @param userContext 用户上下文
      */
-    override fun update(app: App, userContext: UserContext): Mono<Int> {
+    override fun update(app: App, userContext: UserContext): Mono<Void> {
         val updatedAt = Date()
         val q = and(eq("name", app.name), eq("profile", app.profile), eq("v", app.v))
         val u = combine(
@@ -136,9 +136,8 @@ open class MongoAppRepository(
                 if (rs.modifiedCount < 1) {
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 }
+
                 insertHistory(dbApp, false, userContext)
-            }.map {
-                dbApp.v
             }
         }
     }
@@ -302,19 +301,22 @@ open class MongoAppRepository(
         Page(it.t1, it.t2.toInt(), pageable)
     }
 
-    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = appHisColl.insertOne(Document(
-            mapOf(
-                    "_id" to ObjectId().toString(),
-                    "name" to app.name,
-                    "profile" to app.profile,
-                    "description" to app.description,
-                    "v" to app.v,
-                    "created_at" to Date(),
-                    "content" to app.content,
-                    "users" to app.users,
-                    if (delete) "deleted_by" to userContext.email else "updated_by" to userContext.email
-            )
-    )).toMono()
+    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext): Mono<Void> = appHisColl
+            .insertOne(Document(
+                    mapOf(
+                            "_id" to ObjectId().toString(),
+                            "name" to app.name,
+                            "profile" to app.profile,
+                            "description" to app.description,
+                            "v" to app.v,
+                            "created_at" to Date(),
+                            "content" to app.content,
+                            "users" to app.users,
+                            if (delete) "deleted_by" to userContext.email else "updated_by" to userContext.email
+                    )
+            ))
+            .toMono()
+            .then()
 
     @Suppress("UNCHECKED_CAST")
     private fun mapToApp(doc: Document) = App(

@@ -37,7 +37,7 @@ open class MySQLServerRepository(
 ) : ServerRepository, AbstractTransactionRepository(transactionManager) {
 
     override fun register(host: String, port: Int): Mono<Void> = Mono.defer {
-        transactionTemplate.execute {
+        this.transactionTemplate.execute {
             jdbcTemplate.update(
                     "INSERT INTO DUIC_SERVER(ID,HOST,PORT,INIT_AT,ACTIVE_AT) VALUES(:id,:host,:port,NOW(),NOW()) ON DUPLICATE KEY UPDATE INIT_AT=NOW(),ACTIVE_AT=NOW()",
                     mapOf(
@@ -52,7 +52,7 @@ open class MySQLServerRepository(
     }.subscribeOn(Schedulers.elastic())
 
     override fun unregister(host: String, port: Int): Mono<Void> = Mono.defer {
-        transactionTemplate.execute {
+        this.transactionTemplate.execute {
             jdbcTemplate.update("DELETE FROM DUIC_SERVER WHERE ID=:id", mapOf("id" to "${host}_$port"))
         }
 
@@ -60,7 +60,7 @@ open class MySQLServerRepository(
     }.subscribeOn(Schedulers.elastic())
 
     override fun ping(host: String, port: Int): Mono<Void> = Mono.defer {
-        transactionTemplate.execute {
+        this.transactionTemplate.execute {
             jdbcTemplate.update(
                     "UPDATE DUIC_SERVER SET ACTIVE_AT=:active_at WHERE ID=:id",
                     mapOf(
@@ -74,7 +74,7 @@ open class MySQLServerRepository(
     }.subscribeOn(Schedulers.elastic())
 
     override fun findServers(): Flux<Server> = Flux.create<Server> { sink ->
-        roTransactionTemplate.execute {
+        transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT HOST,PORT,INIT_AT,ACTIVE_AT FROM DUIC_SERVER WHERE ACTIVE_AT >= :active_at",
                     mapOf(
@@ -93,7 +93,7 @@ open class MySQLServerRepository(
     }.subscribeOn(Schedulers.elastic())
 
     override fun clean(): Mono<Void> = Mono.defer {
-        transactionTemplate.execute {
+        this.transactionTemplate.execute {
             jdbcTemplate.update(
                     "DELETE FROM DUIC_SERVER WHERE ACTIVE_AT<=:active_at",
                     mapOf(
@@ -106,7 +106,7 @@ open class MySQLServerRepository(
     }.subscribeOn(Schedulers.elastic())
 
     override fun findDbVersion(): Mono<String> = Mono.create<String> {
-        val v = transactionTemplate.execute {
+        val v = this.transactionTemplate.execute {
             val m = jdbcTemplate.queryForMap("SELECT VERSION() AS 'version'", emptyMap<String, Any>())
             m["version"] as String
         }
