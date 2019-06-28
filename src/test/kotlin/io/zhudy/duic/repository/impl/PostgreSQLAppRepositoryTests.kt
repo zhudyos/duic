@@ -88,8 +88,8 @@ class PostgreSQLAppRepositoryTests {
                 users = listOf("a@unit-test.com", "b@unit-test.com")
         )
         StepVerifier.create(appRepository.insert(app))
-                .expectNext(1)
-                .verifyComplete()
+                .expectComplete()
+                .verify()
     }
 
     @Test
@@ -104,8 +104,8 @@ class PostgreSQLAppRepositoryTests {
         appRepository.insert(app).block()
 
         StepVerifier.create(appRepository.delete(app, normalUserContext))
-                .expectNext(1)
-                .verifyComplete()
+                .expectComplete()
+                .verify()
     }
 
     @Test
@@ -140,8 +140,8 @@ class PostgreSQLAppRepositoryTests {
         appRepository.insert(app).block()
 
         StepVerifier.create(appRepository.update(app, normalUserContext))
-                .expectNext(app.v)
-                .verifyComplete()
+                .expectComplete()
+                .verify()
     }
 
     @Test
