@@ -59,7 +59,7 @@ class PostgreSQLAppRepository(
         Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne<App>(app.name, app.profile)
+    override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile)
             .flatMap { dbApp ->
                 this.transactionTemplate.execute {
                     jdbcTemplate.update(
@@ -76,7 +76,7 @@ class PostgreSQLAppRepository(
             }
             .subscribeOn(Schedulers.elastic())
 
-    override fun <T> findOne(name: String, profile: String): Mono<App> = Mono.create<App> { sink ->
+    override fun findOne(name: String, profile: String): Mono<App> = Mono.create<App> { sink ->
         transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile",
@@ -92,7 +92,7 @@ class PostgreSQLAppRepository(
         }
     }.subscribeOn(Schedulers.elastic())
 
-    override fun update(app: App, userContext: UserContext): Mono<Void> = findOne<App>(app.name, app.profile).flatMap { dbApp ->
+    override fun update(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile).flatMap { dbApp ->
         this.transactionTemplate.execute {
             val n = jdbcTemplate.update(
                     "UPDATE DUIC_APP SET TOKEN=:token,IP_LIMIT=:ip_limit,DESCRIPTION=:description,USERS=:users,UPDATED_AT=now() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
@@ -120,7 +120,7 @@ class PostgreSQLAppRepository(
         Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    override fun updateContent(app: App, userContext: UserContext): Mono<App> = findOne<App>(app.name, app.profile).map { dbApp ->
+    override fun updateContent(app: App, userContext: UserContext): Mono<App> = findOne(app.name, app.profile).map { dbApp ->
         this.transactionTemplate.execute {
             val n = jdbcTemplate.update(
                     "UPDATE DUIC_APP SET CONTENT=:content,V=V+1,UPDATED_AT=NOW() WHERE NAME=:name AND PROFILE=:profile AND V=:v",

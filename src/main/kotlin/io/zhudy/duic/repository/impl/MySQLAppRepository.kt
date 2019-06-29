@@ -59,7 +59,7 @@ open class MySQLAppRepository(
         Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne<App>(app.name, app.profile)
+    override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile)
             .flatMap { dbApp ->
                 this.transactionTemplate.execute {
                     jdbcTemplate.update(
@@ -75,7 +75,7 @@ open class MySQLAppRepository(
                 Mono.empty<Void>()
             }.subscribeOn(Schedulers.elastic())
 
-    override fun <T> findOne(name: String, profile: String): Mono<App> = Mono.create<App> { sink ->
+    override fun findOne(name: String, profile: String): Mono<App> = Mono.create<App> { sink ->
         transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile",
@@ -92,7 +92,7 @@ open class MySQLAppRepository(
     }.subscribeOn(Schedulers.elastic())
 
     @Suppress("HasPlatformType")
-    override fun update(app: App, userContext: UserContext): Mono<Void> = findOne<App>(app.name, app.profile)
+    override fun update(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile)
             .flatMap { dbApp ->
                 this.transactionTemplate.execute {
                     val n = jdbcTemplate.update(
@@ -122,7 +122,7 @@ open class MySQLAppRepository(
             }
             .subscribeOn(Schedulers.elastic())
 
-    override fun updateContent(app: App, userContext: UserContext): Mono<App> = findOne<App>(app.name, app.profile)
+    override fun updateContent(app: App, userContext: UserContext): Mono<App> = findOne(app.name, app.profile)
             .map { dbApp ->
                 this.transactionTemplate.execute {
                     val n = jdbcTemplate.update(

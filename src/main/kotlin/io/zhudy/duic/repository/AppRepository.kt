@@ -49,7 +49,7 @@ interface AppRepository {
      * @param name 应用名称
      * @param profile 应用配置
      */
-    fun <T> findOne(name: String, profile: String): Mono<App>
+    fun findOne(name: String, profile: String): Mono<App>
 
     /**
      * 更新指定的应用配置信息，并在 `app_history` 中保存被更新的应用配置信息。

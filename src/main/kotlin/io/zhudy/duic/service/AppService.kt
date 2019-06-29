@@ -472,7 +472,7 @@ class AppService(
     /**
      * 查询指定的应用详细信息。
      */
-    fun findOne(name: String, profile: String) = appRepository.findOne<Any>(name, profile)
+    fun findOne(name: String, profile: String) = appRepository.findOne(name, profile)
             .switchIfEmpty(Mono.defer {
                 throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
             })
@@ -539,7 +539,7 @@ class AppService(
             return Mono.just(Unit)
         }
 
-        return appRepository.findOne<Any>(name, profile).flatMap {
+        return appRepository.findOne(name, profile).flatMap {
             if (!it.users.contains(userContext.email)) {
                 // 用户没有修改该 APP 的权限
                 throw BizCodeException(BizCode.Classic.C_403)
