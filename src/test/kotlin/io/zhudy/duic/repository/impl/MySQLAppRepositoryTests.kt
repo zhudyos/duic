@@ -119,7 +119,7 @@ class MySQLAppRepositoryTests {
         )
         appRepository.insert(app).block()
 
-        val dbApp = appRepository.findOne<App>(app.name, app.profile).block()
+        val dbApp = appRepository.findOne(app.name, app.profile).block()
         assertEquals(app.name, dbApp.name)
         assertEquals(app.profile, dbApp.profile)
         assertEquals(app.description, dbApp.description)

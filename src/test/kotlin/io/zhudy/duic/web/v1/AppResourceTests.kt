@@ -100,7 +100,7 @@ array:
     @Test
     fun getConfigState() {
         doReturn(Mono.just(firstTestApp))
-                .`when`(appRepository).findOne<Mono<App>>(name, profile)
+                .`when`(appRepository).findOne(name, profile)
 
         webTestClient.get()
                 .uri("/api/v1/apps/states/{name}/{profile}", name, profile)
@@ -133,7 +133,7 @@ array:
     @Test
     fun getSpringCloudConfig() {
         doReturn(Mono.just(firstTestApp))
-                .`when`(appRepository).findOne<Mono<App>>(name, profile)
+                .`when`(appRepository).findOne(name, profile)
 
         webTestClient.get()
                 .uri("/api/v1/ssc/{name}/{profile}", name, profile)
@@ -152,7 +152,7 @@ array:
     @Test
     fun getConfigByNameProfile() {
         doReturn(Mono.just(firstTestApp))
-                .`when`(appRepository).findOne<Mono<App>>(name, profile)
+                .`when`(appRepository).findOne(name, profile)
 
         webTestClient.get()
                 .uri("/api/v1/apps/{name}/{profile}", name, profile)
@@ -169,7 +169,7 @@ array:
     @Test
     fun getConfigByNameProfileKey() {
         doReturn(Mono.just(firstTestApp))
-                .`when`(appRepository).findOne<Mono<App>>(name, profile)
+                .`when`(appRepository).findOne(name, profile)
 
         webTestClient.get()
                 .uri("/api/v1/apps/{name}/{profile}/{key}", name, profile, "environments.production")
@@ -186,9 +186,9 @@ array:
     @Test
     fun getConfigByNameProfileMulti() {
         doReturn(Mono.just(firstTestApp))
-                .`when`(appRepository).findOne<Mono<App>>(name, profile)
+                .`when`(appRepository).findOne(name, profile)
         doReturn(Mono.just(firstProdApp))
-                .`when`(appRepository).findOne<Mono<App>>(name, profile2)
+                .`when`(appRepository).findOne(name, profile2)
 
         webTestClient.get()
                 .uri("/api/v1/apps/{name}/{profile},{profile2}", name, profile, profile2)
