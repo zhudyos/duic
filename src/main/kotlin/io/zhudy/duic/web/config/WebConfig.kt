@@ -16,16 +16,7 @@
 package io.zhudy.duic.web.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.resilience4j.ratelimiter.RateLimiter
-import io.zhudy.duic.web.WebConstants
-import io.zhudy.duic.web.admin.AdminResource
-import io.zhudy.duic.web.security.AuthorizedHandlerFilter
-import io.zhudy.duic.web.security.RootRoleHandler
-import io.zhudy.duic.web.server.ServerResource
-import io.zhudy.duic.web.v1.AppResource
-import io.zhudy.duic.web.v1.OAIResource
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.ObjectProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.CacheControl
@@ -38,10 +29,6 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource
 import org.springframework.web.reactive.config.EnableWebFlux
 import org.springframework.web.reactive.config.ResourceHandlerRegistry
 import org.springframework.web.reactive.config.WebFluxConfigurer
-import org.springframework.web.reactive.function.server.RouterFunction
-import org.springframework.web.reactive.function.server.ServerResponse
-import org.springframework.web.reactive.function.server.router
-import org.springframework.web.server.WebFilter
 import reactor.core.publisher.Hooks
 import java.util.concurrent.TimeUnit
 
@@ -50,13 +37,7 @@ import java.util.concurrent.TimeUnit
  */
 @Configuration
 @EnableWebFlux
-class WebConfig(val objectMapper: ObjectMapper,
-                val appResource: AppResource,
-                val adminResource: AdminResource,
-                val serverResource: ServerResource,
-                val oaiResource: OAIResource,
-                val rateLimiterProvider: ObjectProvider<RateLimiter>
-) : WebFluxConfigurer {
+class WebConfig(private val objectMapper: ObjectMapper) : WebFluxConfigurer {
 
     private val log = LoggerFactory.getLogger(WebConfig::class.java)
 
@@ -96,94 +77,4 @@ class WebConfig(val objectMapper: ObjectMapper,
         source.registerCorsConfiguration("/api/**", c)
         return CorsWebFilter(source)
     }
-
-    @Bean
-    fun webFilter() = WebFilter { exchange, chain ->
-        exchange.attributes[WebConstants.SERVER_WEB_EXCHANGE_ATTR] = exchange
-        chain.filter(exchange)
-    }
-
-    @Bean
-    fun mainRouter(): RouterFunction<ServerResponse> {
-        val rf = router {
-            path("/api").nest {
-                GET("/info", serverResource::info)
-                GET("/health", serverResource::health)
-            }
-
-            path("/api/v1").nest {
-                GET("/ssc/{name}/{profile}", appResource::getSpringCloudConfig)
-
-                path("/apps").nest {
-                    GET("/states/{name}/{profile}", appResource::getConfigState)
-                    GET("/watches/{name}/{profile}", appResource::watchConfigState)
-                    GET("/{name}/{profile}", appResource::getConfigByNameProfile)
-                    GET("/{name}/{profile}/{key}", appResource::getConfigByNameProfileKey)
-                }
-            }
-
-            // Deprecated. 请采用 /api/services 路径目录替换该资源接口
-            path("/servers").nest {
-                POST("/apps/refresh", serverResource::refreshApp)
-                GET("/last-data-time", serverResource::getLastDataTime)
-            }
-
-            path("/api/servers").nest {
-                POST("/apps/refresh", serverResource::refreshApp)
-                GET("/last-data-time", serverResource::getLastDataTime)
-            }
-
-            GET("/api/oai.yml", oaiResource::index)
-        }
-
-        // 当启用限流时，添加限流过滤器
-        val rateLimiter = rateLimiterProvider.ifAvailable
-        if (rateLimiter != null) {
-            return rf.filter(RateLimiterHandlerFilter(rateLimiter))
-        }
-        return rf
-    }
-
-    @Bean
-    fun adminRouter(): RouterFunction<ServerResponse> = router {
-        path("/api/admins").nest {
-            POST("/login", adminResource::login)
-            GET("/user/root", adminResource::rootUser)
-
-            path("/users").nest {
-                POST("/", adminResource::insertUser)
-                GET("/", adminResource::findPageUser)
-                GET("/emails", adminResource::findAllEmail)
-                DELETE("/{email}", RootRoleHandler(adminResource::deleteUser))
-                PUT("/password", adminResource::updateUserPassword)
-                PATCH("/password", RootRoleHandler(adminResource::resetUserPassword))
-            }
-
-            path("/apps").nest {
-                POST("/", adminResource::insertApp)
-                PUT("/", adminResource::updateApp)
-                PUT("/contents", adminResource::updateAppContent)
-                GET("/user", adminResource::findAppByUser)
-                DELETE("/{name}/{profile}", adminResource::deleteApp)
-                GET("/{name}/{profile}", adminResource::findOneApp)
-                GET("/{name}/{profile}/histories", adminResource::findAppContentHistory)
-                POST("/duplicates/{name}/{profile}", adminResource::insertAppForApp)
-                GET("/last-data-time", adminResource::findLastDataTime)
-            }
-
-            path("/tests").nest {
-                GET("/apps/names", adminResource::findAllNames)
-                GET("/apps/{name}/profiles", adminResource::findProfilesByName)
-            }
-
-            path("/search").nest {
-                GET("/apps", adminResource::searchAppByUser)
-            }
-
-            path("/servers").nest {
-                GET("/", adminResource::loadServerStates)
-            }
-        }
-    }.filter(AuthorizedHandlerFilter())
-
 }
