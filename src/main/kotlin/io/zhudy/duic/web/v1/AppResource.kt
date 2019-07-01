@@ -27,7 +27,6 @@ import org.springframework.util.StringUtils
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
-import org.springframework.web.server.ServerWebExchange
 import reactor.core.publisher.Mono
 import java.net.Inet4Address
 
@@ -37,7 +36,9 @@ import java.net.Inet4Address
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Controller
-class AppResource(val appService: AppService) {
+class AppResource(
+        private val appService: AppService
+) {
 
     /**
      * 返回配置状态。
@@ -129,7 +130,7 @@ class AppResource(val appService: AppService) {
             return ip
         }
 
-        val swe = request.attribute(WebConstants.SERVER_WEB_EXCHANGE_ATTR).get() as ServerWebExchange
+        val swe = request.exchange()
         val address = swe.request.remoteAddress?.address
         if (address is Inet4Address) {
             return address.hostAddress
