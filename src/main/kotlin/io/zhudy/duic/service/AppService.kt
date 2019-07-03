@@ -37,10 +37,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.bson.types.ObjectId
 import org.simplejavamail.email.EmailBuilder
-import org.simplejavamail.mailer.Mailer
 import org.simplejavamail.mailer.MailerBuilder
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.annotation.DependsOn
 import org.springframework.context.event.ApplicationEventMulticaster
@@ -69,15 +67,13 @@ import java.util.concurrent.TimeUnit
 @Service
 @DependsOn("io.zhudy.duic.Config")
 class AppService(
-        val appRepository: AppRepository,
-        val serverRepository: ServerRepository,
-        val webClientBuilder: WebClient.Builder,
-        val applicationEventMulticaster: ApplicationEventMulticaster,
-        val mailerProvider: ObjectProvider<Mailer>
+        private val appRepository: AppRepository,
+        private val serverRepository: ServerRepository,
+        private val webClientBuilder: WebClient.Builder,
+        private val applicationEventMulticaster: ApplicationEventMulticaster
 ) {
 
     private val reliableLog = LoggerFactory.getLogger("reliable")
-    private val acLog = LoggerFactory.getLogger("app.change")
     private val log = LoggerFactory.getLogger(AppService::class.java)
 
     private val watchStateTimeout = 30 * 1000L
