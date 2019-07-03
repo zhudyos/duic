@@ -39,10 +39,7 @@ import org.bson.types.ObjectId
 import org.simplejavamail.email.EmailBuilder
 import org.simplejavamail.mailer.MailerBuilder
 import org.slf4j.LoggerFactory
-import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.annotation.DependsOn
-import org.springframework.context.event.ApplicationEventMulticaster
-import org.springframework.context.event.EventListener
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -55,7 +52,6 @@ import reactor.core.scheduler.Schedulers
 import java.time.OffsetDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
@@ -69,8 +65,7 @@ import java.util.concurrent.TimeUnit
 class AppService(
         private val appRepository: AppRepository,
         private val serverRepository: ServerRepository,
-        private val webClientBuilder: WebClient.Builder,
-        private val applicationEventMulticaster: ApplicationEventMulticaster
+        private val webClientBuilder: WebClient.Builder
 ) {
 
     private val reliableLog = LoggerFactory.getLogger("reliable")
@@ -148,26 +143,6 @@ class AppService(
             result = 31 * result + done.hashCode()
             return result
         }
-    }
-
-    /**
-     * `spring` 启动成功后立即校验数据库信息，如果数据库 3 秒未响应则返回错误。
-     *
-     * @see ApplicationReadyEvent
-     */
-    @EventListener(ApplicationReadyEvent::class)
-    fun springReadyEvent(event: ApplicationReadyEvent) {
-        val cdl = CountDownLatch(1)
-        serverRepository.findDbVersion().subscribe { cdl.countDown() }
-
-        val s = try {
-            cdl.await(3, TimeUnit.SECONDS)
-        } catch (e: InterruptedException) {
-            false
-        }
-
-        val e = if (s) ApplicationUsableEvent(event.applicationContext) else ApplicationUnusableEvent(event.applicationContext)
-        applicationEventMulticaster.multicastEvent(e)
     }
 
     @Scheduled(initialDelay = 0,
