@@ -32,6 +32,7 @@ import io.zhudy.duic.repository.AppRepository
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -74,8 +75,8 @@ open class MongoAppRepository(
      *
      * @param app 应用配置信息
      */
-    override fun insert(app: App) = appColl.insertOne(Document(
-            mapOf(
+    override fun insert(app: App): Mono<Void> = appColl
+            .insertOne(Document(mapOf(
                     "_id" to ObjectId().toString(),
                     "name" to app.name,
                     "profile" to app.profile,
@@ -86,8 +87,9 @@ open class MongoAppRepository(
                     "updated_at" to Date(),
                     "content" to app.content,
                     "users" to app.users
-            )
-    )).toMono()
+            )))
+            .toMono()
+            .then()
 
     /**
      * 删除应用配置信息，并在 `app_history` 中保存已删除的应用配置信息。
@@ -95,14 +97,13 @@ open class MongoAppRepository(
      * @param app 应用配置信息
      * @param userContext 用户上下文
      */
-    @Suppress("HasPlatformType")
-    override fun delete(app: App, userContext: UserContext) = findOne<Any>(app.name, app.profile).flatMap { dbApp ->
-        appColl.deleteOne(and(eq("name", app.name), eq("profile", app.profile)))
-                .toMono()
-                .flatMap {
-                    insertHistory(dbApp, true, userContext)
-                }
-    }
+    override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile)
+            .flatMap { dbApp ->
+                appColl.deleteOne(and(
+                        eq("name", app.name), eq("profile", app.profile)))
+                        .toMono()
+                        .then(insertHistory(dbApp, true, userContext))
+            }
 
     /**
      * 返回指定的应用配置信息。
@@ -110,7 +111,7 @@ open class MongoAppRepository(
      * @param name 应用名称
      * @param profile 应用配置
      */
-    override fun <T> findOne(name: String, profile: String): Mono<App> {
+    override fun findOne(name: String, profile: String): Mono<App> {
         val q = and(eq("name", name), eq("profile", profile))
         return appColl.find(q).first().toMono().map(::mapToApp)
     }
@@ -121,7 +122,7 @@ open class MongoAppRepository(
      * @param app 更新的应用配置信息
      * @param userContext 用户上下文
      */
-    override fun update(app: App, userContext: UserContext): Mono<Int> {
+    override fun update(app: App, userContext: UserContext): Mono<Void> {
         val updatedAt = Date()
         val q = and(eq("name", app.name), eq("profile", app.profile), eq("v", app.v))
         val u = combine(
@@ -131,14 +132,13 @@ open class MongoAppRepository(
                 set("users", app.users),
                 set("updated_at", updatedAt)
         )
-        return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
+        return findOne(app.name, app.profile).flatMap { dbApp ->
             appColl.updateOne(q, u).toMono().flatMap { rs ->
                 if (rs.modifiedCount < 1) {
                     throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
                 }
+
                 insertHistory(dbApp, false, userContext)
-            }.map {
-                dbApp.v
             }
         }
     }
@@ -159,7 +159,7 @@ open class MongoAppRepository(
                 inc("v", 1)
         )
 
-        return findOne<Any>(app.name, app.profile).flatMap { dbApp ->
+        return findOne(app.name, app.profile).flatMap { dbApp ->
             appColl.updateOne(q, u).toMono().flatMap { rs ->
                 if (rs.modifiedCount < 1) {
                     if (app.v != dbApp.v) {
@@ -239,10 +239,10 @@ open class MongoAppRepository(
      * @param name 应用名称
      * @param profile 应用配置
      */
-    @Suppress("HasPlatformType")
-    override fun findLast50History(name: String, profile: String) = appHisColl
+    override fun findLast50History(name: String, profile: String): Flux<AppContentHistory> = appHisColl
             .find(and(eq("name", name), eq("profile", profile)))
             .sort(descending("created_at"))
+            .limit(50)
             .toFlux()
             .map {
                 AppContentHistory(
@@ -302,19 +302,23 @@ open class MongoAppRepository(
         Page(it.t1, it.t2.toInt(), pageable)
     }
 
-    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext) = appHisColl.insertOne(Document(
-            mapOf(
-                    "_id" to ObjectId().toString(),
-                    "name" to app.name,
-                    "profile" to app.profile,
-                    "description" to app.description,
-                    "v" to app.v,
-                    "created_at" to Date(),
-                    "content" to app.content,
-                    "users" to app.users,
-                    if (delete) "deleted_by" to userContext.email else "updated_by" to userContext.email
-            )
-    )).toMono()
+    private fun insertHistory(app: App, delete: Boolean, userContext: UserContext): Mono<Void> = appHisColl
+            .insertOne(Document(
+                    mapOf(
+                            "_id" to ObjectId().toString(),
+                            "name" to app.name,
+                            "profile" to app.profile,
+                            "token" to app.token,
+                            "description" to app.description,
+                            "v" to app.v,
+                            "created_at" to Date(),
+                            "content" to app.content,
+                            "users" to app.users,
+                            if (delete) "deleted_by" to userContext.email else "updated_by" to userContext.email
+                    )
+            ))
+            .toMono()
+            .then()
 
     @Suppress("UNCHECKED_CAST")
     private fun mapToApp(doc: Document) = App(

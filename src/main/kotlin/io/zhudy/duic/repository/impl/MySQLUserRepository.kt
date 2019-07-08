@@ -36,42 +36,40 @@ class MySQLUserRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : UserRepository, AbstractTransactionRepository(transactionManager) {
 
-    @Suppress("HasPlatformType")
-    override fun insert(user: User) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun insert(user: User): Mono<Void> = Mono.defer {
+        this.transactionTemplate.execute {
             jdbcTemplate.update(
                     "INSERT INTO DUIC_USER(EMAIL,PASSWORD,CREATED_AT) VALUES(:email,:password,NOW())",
                     mapOf("email" to user.email, "password" to user.password)
             )
         }
-        it.success(n)
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun delete(email: String) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun delete(email: String): Mono<Void> = Mono.defer {
+        this.transactionTemplate.execute {
             jdbcTemplate.update(
                     "DELETE FROM DUIC_USER WHERE EMAIL=:email",
                     mapOf("email" to email)
             )
         }
-        it.success(n)
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun updatePassword(email: String, password: String) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun updatePassword(email: String, password: String): Mono<Void> = Mono.defer {
+        this.transactionTemplate.execute {
             jdbcTemplate.update(
                     "UPDATE DUIC_USER SET PASSWORD=:password,UPDATED_AT=now() WHERE EMAIL=:email",
                     mapOf("email" to email, "password" to password)
             )
         }
-        it.success(n)
+
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
     @Suppress("HasPlatformType")
     override fun findByEmail(email: String) = Mono.create<User> { sink ->
-        roTransactionTemplate.execute {
+        transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT EMAIL,PASSWORD FROM DUIC_USER WHERE EMAIL=:email",
                     mapOf("email" to email),
@@ -89,7 +87,7 @@ class MySQLUserRepository(
     @Suppress("HasPlatformType")
     override fun findPage(pageable: Pageable) = Mono.zip(
             Flux.create<User> { sink ->
-                roTransactionTemplate.execute {
+                transactionTemplate.execute {
                     jdbcTemplate.query(
                             "SELECT EMAIL,CREATED_AT,UPDATED_AT FROM DUIC_USER LIMIT :offset,:limit",
                             mapOf("offset" to pageable.offset, "limit" to pageable.size)
@@ -104,7 +102,7 @@ class MySQLUserRepository(
                 }
             }.subscribeOn(Schedulers.elastic()).collectList(),
             Mono.create<Int> {
-                val c = roTransactionTemplate.execute {
+                val c = transactionTemplate.execute {
                     jdbcTemplate.queryForObject(
                             "SELECT COUNT(1) FROM DUIC_USER",
                             EmptySqlParameterSource.INSTANCE,
@@ -119,7 +117,7 @@ class MySQLUserRepository(
 
     @Suppress("HasPlatformType")
     override fun findAllEmail() = Flux.create<String> { sink ->
-        roTransactionTemplate.execute {
+        transactionTemplate.execute {
             jdbcTemplate.query("SELECT EMAIL FROM DUIC_USER") {
                 sink.next(it.getString(1))
             }

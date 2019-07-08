@@ -33,7 +33,7 @@ interface AppRepository {
      *
      * @param app 应用配置信息
      */
-    fun insert(app: App): Mono<*>
+    fun insert(app: App): Mono<Void>
 
     /**
      * 删除应用配置信息，并在 `app_history` 中保存已删除的应用配置信息。
@@ -41,7 +41,7 @@ interface AppRepository {
      * @param app 应用配置信息
      * @param userContext 用户上下文
      */
-    fun delete(app: App, userContext: UserContext): Mono<*>
+    fun delete(app: App, userContext: UserContext): Mono<Void>
 
     /**
      * 返回指定的应用配置信息。
@@ -49,7 +49,7 @@ interface AppRepository {
      * @param name 应用名称
      * @param profile 应用配置
      */
-    fun <T> findOne(name: String, profile: String): Mono<App>
+    fun findOne(name: String, profile: String): Mono<App>
 
     /**
      * 更新指定的应用配置信息，并在 `app_history` 中保存被更新的应用配置信息。
@@ -57,7 +57,7 @@ interface AppRepository {
      * @param app 更新的应用配置信息
      * @param userContext 用户上下文
      */
-    fun update(app: App, userContext: UserContext): Mono<Int>
+    fun update(app: App, userContext: UserContext): Mono<Void>
 
     /**
      * 更新应用配置信息，并在 `app_history` 中保存被更新的应用配置信息。

@@ -13,22 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.zhudy.duic.repository.config
+package io.zhudy.duic.config
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
-import org.springframework.context.annotation.Bean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
-import org.springframework.transaction.PlatformTransactionManager
-import org.springframework.transaction.support.TransactionTemplate
+import org.springframework.scheduling.annotation.EnableScheduling
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Configuration
-@ConditionalOnExpression("!T(io.zhudy.duic.DBMS).forName('\${duic.dbms}').isNoSQL")
-class RelationalDBMSConfiguration {
-
-    @Bean
-    fun transactionTemplate(transactionManager: PlatformTransactionManager) = TransactionTemplate(transactionManager)
-
-}
+@EnableScheduling
+@ConditionalOnProperty(name = ["scheduling.enabled"], matchIfMissing = true)
+class SchedulingConfiguration

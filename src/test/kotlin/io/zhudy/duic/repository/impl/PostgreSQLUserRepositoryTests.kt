@@ -19,15 +19,20 @@ import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.repository.config.PostgreSQLConfiguration
-import org.junit.After
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.ContextHierarchy
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import reactor.test.StepVerifier
 import java.util.*
@@ -35,23 +40,27 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ContextHierarchy(*[
-ContextConfiguration(locations = ["classpath:postgresql-spring.xml"]),
-ContextConfiguration(classes = [PostgreSQLConfiguration::class])
+@SpringBootTest(classes = [PostgreSQLConfiguration::class])
+@OverrideAutoConfiguration(enabled = false)
+@ActiveProfiles("test", "postgresql")
+@ImportAutoConfiguration(classes = [
+    DataSourceAutoConfiguration::class,
+    DataSourceTransactionManagerAutoConfiguration::class,
+    JdbcTemplateAutoConfiguration::class,
+    LiquibaseAutoConfiguration::class
 ])
-@TestPropertySource(properties = ["duic.dbms=PostgreSQL"])
-class PostgreSQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
+class PostgreSQLUserRepositoryTests {
 
     @Autowired
-    lateinit var transactionTemplate: TransactionTemplate
+    lateinit var transactionManager: PlatformTransactionManager
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
     @Autowired
     lateinit var userRepository: UserRepository
 
-    @After
+    @AfterEach
     fun clean() {
-        transactionTemplate.execute {
+        TransactionTemplate(transactionManager).execute {
             jdbcTemplate.execute("DELETE FROM DUIC_USER")
         }
     }
@@ -65,7 +74,6 @@ class PostgreSQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
         )
 
         StepVerifier.create(userRepository.insert(user))
-                .expectNext(1)
                 .verifyComplete()
     }
 
@@ -79,7 +87,6 @@ class PostgreSQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
         userRepository.insert(user).block()
 
         StepVerifier.create(userRepository.delete(user.email))
-                .expectNext(1)
                 .verifyComplete()
     }
 
@@ -93,7 +100,6 @@ class PostgreSQLUserRepositoryTests : AbstractJUnit4SpringContextTests() {
         userRepository.insert(user).block()
 
         StepVerifier.create(userRepository.updatePassword(user.email, "hello"))
-                .expectNext(1)
                 .verifyComplete()
     }
 

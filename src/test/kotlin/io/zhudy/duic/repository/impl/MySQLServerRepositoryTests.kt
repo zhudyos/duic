@@ -17,80 +17,103 @@ package io.zhudy.duic.repository.impl
 
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.repository.config.MySQLConfiguration
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.ContextHierarchy
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import reactor.test.StepVerifier
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ContextHierarchy(*[
-    ContextConfiguration(locations = ["classpath:mysql-spring.xml"]),
-    ContextConfiguration(classes = [MySQLConfiguration::class])
+@SpringBootTest(classes = [MySQLConfiguration::class])
+@OverrideAutoConfiguration(enabled = false)
+@ActiveProfiles("test", "mysql")
+@ImportAutoConfiguration(classes = [
+    DataSourceAutoConfiguration::class,
+    DataSourceTransactionManagerAutoConfiguration::class,
+    JdbcTemplateAutoConfiguration::class,
+    LiquibaseAutoConfiguration::class
 ])
-@TestPropertySource(properties = ["duic.dbms=MySQL"])
-class MySQLServerRepositoryTests : AbstractJUnit4SpringContextTests() {
+class MySQLServerRepositoryTests {
 
     @Autowired
-    lateinit var transactionTemplate: TransactionTemplate
+    lateinit var transactionManager: PlatformTransactionManager
     @Autowired
     lateinit var jdbcTemplate: NamedParameterJdbcTemplate
     @Autowired
     lateinit var serverRepository: ServerRepository
 
-    @After
+    @AfterEach
     fun clean() {
-        transactionTemplate.execute {
+        TransactionTemplate(transactionManager).execute {
             jdbcTemplate.update("DELETE FROM DUIC_SERVER", EmptySqlParameterSource.INSTANCE)
         }
     }
 
     @Test
     fun register() {
-        val n = serverRepository.register("localhost", 1234).block()
-        assertEquals(1, n)
+        val rs = serverRepository.register("localhost", 1234)
+        StepVerifier.create(rs)
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun registerOnExists() {
-        serverRepository.register("localhost", 1234).block()
-        serverRepository.register("localhost", 1234).block()
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.register("localhost", 1234)
+        StepVerifier.create(rs1.concatWith(rs2))
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun unregister() {
-        serverRepository.register("localhost", 1234).block()
-        val n = serverRepository.unregister("localhost", 1234).block()
-        assertEquals(1, n)
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.unregister("localhost", 1234)
+        StepVerifier.create(rs1.then(rs2))
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun ping() {
-        serverRepository.register("localhost", 1234).block()
-        val n = serverRepository.ping("localhost", 1234).block()
-        assertEquals(1, n)
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.ping("localhost", 1234)
+        StepVerifier.create(rs1.then(rs2))
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun findServers() {
-        serverRepository.register("localhost", 1234).block()
-        val servers = serverRepository.findServers().collectList().block()
-        // assertTrue(servers.isNotEmpty())
+        val rs1 = serverRepository.register("localhost", 1234)
+        val rs2 = serverRepository.findServers()
+        StepVerifier.create(rs1.thenMany(rs2))
+                .expectNextCount(1)
+                .expectComplete()
+                .verify()
     }
 
     @Test
     fun findDbVersion() {
-        val version = serverRepository.findDbVersion().block()
-        assertTrue(version.isNotEmpty())
+        val rs = serverRepository.findDbVersion()
+        StepVerifier.create(rs)
+                .expectNextMatches { it.isNotEmpty() }
+                .expectComplete()
+                .verify()
     }
 
 }

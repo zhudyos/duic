@@ -36,6 +36,10 @@ enum class DBMS(@JvmField val isNoSQL: Boolean = false) {
      * PostgreSQL 数据库。
      */
     PostgreSQL,
+    /**
+     * 无数据库，应用于单元测试环境。
+     */
+    None(true),
     ;
 
     companion object {
@@ -44,7 +48,7 @@ enum class DBMS(@JvmField val isNoSQL: Boolean = false) {
          *
          */
         @JvmStatic
-        fun forName(name: String) = DBMS.values().firstOrNull {
+        fun forName(name: String) = values().firstOrNull {
             it.name.toLowerCase() == name.toLowerCase()
         } ?: throw IllegalArgumentException("not found dbms: $name")
     }

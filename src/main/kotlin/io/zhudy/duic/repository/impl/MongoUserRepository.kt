@@ -30,6 +30,7 @@ import io.zhudy.duic.domain.User
 import io.zhudy.duic.repository.UserRepository
 import org.bson.Document
 import org.bson.types.ObjectId
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -49,48 +50,45 @@ open class MongoUserRepository(
     init {
         userColl.createIndexes(listOf(
                 IndexModel(Document("email", 1), IndexOptions().background(true).unique(true))
-        )).toMono().subscribe()
+        ))
+                .toMono()
+                .subscribe()
     }
 
     /**
      *
      */
-    @Suppress("HasPlatformType")
-    override fun insert(user: User) = userColl.insertOne(Document(
-            mapOf(
+    override fun insert(user: User): Mono<Void> = userColl
+            .insertOne(Document(mapOf(
                     "_id" to ObjectId().toString(),
                     "email" to user.email,
                     "password" to user.password,
                     "created_at" to Date(),
                     "updated_at" to Date()
-            )
-    )).toMono()
-
-    /**
-     *
-     */
-    @Suppress("HasPlatformType")
-    override fun delete(email: String) = userColl.deleteOne(eq("email", email))
+            )))
             .toMono()
-            .map { it.deletedCount.toInt() }
+            .then()
 
     /**
      *
      */
-    @Suppress("HasPlatformType")
-    override fun updatePassword(email: String, password: String) = userColl.updateOne(
+    override fun delete(email: String): Mono<Void> = userColl.deleteOne(eq("email", email)).toMono().then()
+
+    /**
+     *
+     */
+    override fun updatePassword(email: String, password: String): Mono<Void> = userColl.updateOne(
             eq("email", email),
             combine(
                     set("password", password),
                     set("updated_at", Date())
             ))
             .toMono()
-            .map { it.modifiedCount.toInt() }
+            .then()
 
     /**
      *
      */
-    @Suppress("HasPlatformType")
     override fun findByEmail(email: String): Mono<User> = userColl.find(eq("email", email))
             .first()
             .toMono()
@@ -101,8 +99,7 @@ open class MongoUserRepository(
                 )
             }
 
-    @Suppress("HasPlatformType")
-    override fun findPage(pageable: Pageable) = Mono.zip(
+    override fun findPage(pageable: Pageable): Mono<Page<User>> = Mono.zip(
             userColl.find()
                     .projection(exclude("password"))
                     .skip(pageable.offset)
@@ -117,6 +114,7 @@ open class MongoUserRepository(
                         )
                     }
                     .collectList(),
+
             userColl.countDocuments()
                     .toMono()
                     .subscribeOn(Schedulers.parallel())
@@ -124,11 +122,7 @@ open class MongoUserRepository(
         Page(it.t1, it.t2.toInt(), pageable)
     }
 
-    /**
-     *
-     */
-    @Suppress("HasPlatformType")
-    override fun findAllEmail() = userColl.find()
+    override fun findAllEmail(): Flux<String> = userColl.find()
             .projection(include("email"))
             .toFlux()
             .map { it.getString("email") }

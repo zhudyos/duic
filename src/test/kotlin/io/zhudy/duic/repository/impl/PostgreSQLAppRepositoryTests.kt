@@ -20,17 +20,21 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.repository.config.PostgreSQLConfiguration
-import org.junit.After
-import org.junit.Assert
-import org.junit.Test
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.jdbc.core.ResultSetExtractor
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
+import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
+import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
-import org.springframework.test.context.ContextConfiguration
-import org.springframework.test.context.ContextHierarchy
-import org.springframework.test.context.TestPropertySource
-import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import reactor.test.StepVerifier
 import java.time.Instant
@@ -41,26 +45,24 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ContextHierarchy(*[
-ContextConfiguration(locations = ["classpath:postgresql-spring.xml"]),
-ContextConfiguration(classes = [PostgreSQLConfiguration::class])
+@SpringBootTest(classes = [PostgreSQLConfiguration::class])
+@OverrideAutoConfiguration(enabled = false)
+@ActiveProfiles("test", "postgresql")
+@ImportAutoConfiguration(classes = [
+    DataSourceAutoConfiguration::class,
+    DataSourceTransactionManagerAutoConfiguration::class,
+    JdbcTemplateAutoConfiguration::class,
+    LiquibaseAutoConfiguration::class
 ])
-@TestPropertySource(properties = ["duic.dbms=PostgreSQL"])
-class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
+class PostgreSQLAppRepositoryTests {
 
     @Autowired
-    lateinit var transactionTemplate: TransactionTemplate
+    lateinit var transactionManager: PlatformTransactionManager
     @Autowired
     lateinit var jdbcTemplate: NamedParameterJdbcTemplate
     @Autowired
     lateinit var appRepository: AppRepository
 
-    val rootUserContext = object : UserContext {
-        override val email: String
-            get() = "root@unit-test.com"
-        override val isRoot: Boolean
-            get() = false
-    }
     val normalUserContext = object : UserContext {
         override val email: String
             get() = "a@unit-test.com"
@@ -68,9 +70,9 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
             get() = false
     }
 
-    @After
+    @AfterEach
     fun clean() {
-        transactionTemplate.execute {
+        TransactionTemplate(transactionManager).execute {
             jdbcTemplate.update("DELETE FROM DUIC_APP", EmptySqlParameterSource.INSTANCE)
             jdbcTemplate.update("DELETE FROM DUIC_APP_HISTORY", EmptySqlParameterSource.INSTANCE)
         }
@@ -86,8 +88,8 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
                 users = listOf("a@unit-test.com", "b@unit-test.com")
         )
         StepVerifier.create(appRepository.insert(app))
-                .expectNext(1)
-                .verifyComplete()
+                .expectComplete()
+                .verify()
     }
 
     @Test
@@ -102,21 +104,8 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         appRepository.insert(app).block()
 
         StepVerifier.create(appRepository.delete(app, normalUserContext))
-                .expectNext(1)
-                .verifyComplete()
-
-        jdbcTemplate.query(
-                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
-                mapOf(
-                        "name" to app.name,
-                        "profile" to app.profile
-                ),
-                ResultSetExtractor {
-                    Assert.assertTrue(it.next())
-                    Assert.assertEquals(app.users.joinToString(","), it.getString("users"))
-                    Assert.assertEquals(normalUserContext.email, it.getString("deleted_by"))
-                }
-        )
+                .expectComplete()
+                .verify()
     }
 
     @Test
@@ -130,13 +119,13 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         )
         appRepository.insert(app).block()
 
-        val dbApp = appRepository.findOne<App>(app.name, app.profile).block()
-        Assert.assertEquals(app.name, dbApp.name)
-        Assert.assertEquals(app.profile, dbApp.profile)
-        Assert.assertEquals(app.description, dbApp.description)
-        Assert.assertEquals(app.token, dbApp.token)
-        Assert.assertEquals(app.ipLimit, dbApp.ipLimit)
-        Assert.assertEquals(app.users.joinToString(","), dbApp.users.joinToString(","))
+        val dbApp = appRepository.findOne(app.name, app.profile).block()
+        assertEquals(app.name, dbApp.name)
+        assertEquals(app.profile, dbApp.profile)
+        assertEquals(app.description, dbApp.description)
+        assertEquals(app.token, dbApp.token)
+        assertEquals(app.ipLimit, dbApp.ipLimit)
+        assertEquals(app.users.joinToString(","), dbApp.users.joinToString(","))
     }
 
     @Test
@@ -151,21 +140,8 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         appRepository.insert(app).block()
 
         StepVerifier.create(appRepository.update(app, normalUserContext))
-                .expectNext(app.v)
-                .verifyComplete()
-
-        jdbcTemplate.query(
-                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
-                mapOf(
-                        "name" to app.name,
-                        "profile" to app.profile
-                ),
-                ResultSetExtractor {
-                    Assert.assertTrue(it.next())
-                    Assert.assertEquals(app.users.joinToString(","), it.getString("users"))
-                    Assert.assertEquals(normalUserContext.email, it.getString("updated_by"))
-                }
-        )
+                .expectComplete()
+                .verify()
     }
 
     @Test
@@ -181,21 +157,7 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
 
         app.content = "a: a"
         val dbApp = appRepository.updateContent(app, normalUserContext).block()
-        Assert.assertEquals(app.v, dbApp.v)
-
-        jdbcTemplate.query(
-                "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile",
-                mapOf(
-                        "name" to app.name,
-                        "profile" to app.profile
-                ),
-                ResultSetExtractor {
-                    Assert.assertTrue(it.next())
-                    Assert.assertEquals(app.users.joinToString(","), it.getString("users"))
-                    Assert.assertEquals(normalUserContext.email, it.getString("updated_by"))
-                    Assert.assertEquals(app.v, it.getInt("v"))
-                }
-        )
+        assertEquals(app.v, dbApp.v)
     }
 
     @Test
@@ -212,7 +174,7 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         }
 
         val all = appRepository.findAll().collectList().block()
-        Assert.assertTrue(all.isNotEmpty())
+        assertTrue(all.isNotEmpty())
     }
 
     @Test
@@ -230,7 +192,7 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
 
         val p = Pageable()
         val list = appRepository.findPage(p).block()
-        Assert.assertTrue(list.items.isNotEmpty())
+        assertTrue(list.items.isNotEmpty())
     }
 
     @Test
@@ -248,7 +210,7 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
 
         val p = Pageable()
         val list = appRepository.findPageByUser(p, normalUserContext).block()
-        Assert.assertTrue(list.items.isNotEmpty())
+        assertTrue(list.items.isNotEmpty())
     }
 
     @Test
@@ -321,12 +283,12 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         val updatedAt = Date.from(LocalDate.parse("2018-01-01").atStartOfDay(ZoneId.systemDefault()).toInstant())
         val list = appRepository.findByUpdatedAt(updatedAt).collectList().block()
 
-        Assert.assertTrue(list.size >= 30)
+        assertTrue(list.size >= 30)
 
         var prevUpdatedAt: Instant? = null
         list.forEach {
             if (prevUpdatedAt != null) {
-                Assert.assertFalse(it.updatedAt!!.toInstant().isBefore(prevUpdatedAt))
+                assertFalse(it.updatedAt!!.toInstant().isBefore(prevUpdatedAt))
             }
             prevUpdatedAt = it.updatedAt?.toInstant()
         }
@@ -349,7 +311,7 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         }
 
         val list = appRepository.findLast50History(app.name, app.profile).collectList().block()
-        Assert.assertEquals(50, list.size)
+        assertEquals(50, list.size)
     }
 
     @Test
@@ -366,7 +328,7 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         }
 
         val list = appRepository.findAllNames().collectList().block()
-        Assert.assertTrue(list.size >= 30)
+        assertTrue(list.size >= 30)
     }
 
     @Test
@@ -384,7 +346,7 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
         }
 
         val list = appRepository.findProfilesByName(name).collectList().block()
-        Assert.assertEquals(30, list.size)
+        assertEquals(30, list.size)
     }
 
     @Test
@@ -409,12 +371,12 @@ class PostgreSQLAppRepositoryTests : AbstractJUnit4SpringContextTests() {
 
         val createdAt = Date.from(LocalDate.parse("2018-01-01").atStartOfDay(ZoneId.systemDefault()).toInstant())
         val list = appRepository.findDeletedByCreatedAt(createdAt).collectList().block()
-        Assert.assertTrue(list.isNotEmpty())
+        assertTrue(list.isNotEmpty())
 
         var prevCreatedAt: Instant? = null
         list.forEach {
             if (prevCreatedAt != null) {
-                Assert.assertFalse(it.createdAt!!.toInstant().isBefore(prevCreatedAt))
+                assertFalse(it.createdAt!!.toInstant().isBefore(prevCreatedAt))
             }
             prevCreatedAt = it.createdAt?.toInstant()
         }

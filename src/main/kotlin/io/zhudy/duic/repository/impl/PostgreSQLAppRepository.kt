@@ -39,9 +39,8 @@ class PostgreSQLAppRepository(
         private val jdbcTemplate: NamedParameterJdbcTemplate
 ) : AppRepository, AbstractTransactionRepository(transactionManager) {
 
-    @Suppress("HasPlatformType")
-    override fun insert(app: App) = Mono.create<Int> {
-        val n = transactionTemplate.execute {
+    override fun insert(app: App): Mono<Void> = Mono.defer {
+        this.transactionTemplate.execute {
             jdbcTemplate.update(
                     "INSERT INTO DUIC_APP(NAME,PROFILE,DESCRIPTION,TOKEN,IP_LIMIT,CONTENT,V,USERS,CREATED_AT,UPDATED_AT) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:users,NOW(),NOW())",
                     mapOf(
@@ -56,28 +55,29 @@ class PostgreSQLAppRepository(
                     )
             )
         }
-        it.success(n)
+
+        Mono.empty<Void>()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun delete(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
-        Mono.create<Int> { sink ->
-            val n = transactionTemplate.execute {
-                val n = jdbcTemplate.update("DELETE FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile", mapOf(
-                        "name" to app.name,
-                        "profile" to app.profile
-                ))
+    override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile)
+            .flatMap { dbApp ->
+                this.transactionTemplate.execute {
+                    jdbcTemplate.update(
+                            "DELETE FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile",
+                            mapOf(
+                                    "name" to app.name,
+                                    "profile" to app.profile
+                            )
+                    )
+                    insertHistory(dbApp, true, userContext)
+                }
 
-                insertHistory(dbApp, true, userContext)
-                n
+                Mono.empty<Void>()
             }
-            sink.success(n)
-        }.subscribeOn(Schedulers.elastic())
-    }
+            .subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun <T> findOne(name: String, profile: String) = Mono.create<App> { sink ->
-        roTransactionTemplate.execute {
+    override fun findOne(name: String, profile: String): Mono<App> = Mono.create<App> { sink ->
+        transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP WHERE NAME=:name AND PROFILE=:profile",
                     mapOf("name" to name, "profile" to profile),
@@ -92,67 +92,61 @@ class PostgreSQLAppRepository(
         }
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun update(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
-        Mono.create<Int> { sink ->
-            val n = transactionTemplate.execute {
-                val n = jdbcTemplate.update(
-                        "UPDATE DUIC_APP SET TOKEN=:token,IP_LIMIT=:ip_limit,DESCRIPTION=:description,USERS=:users,UPDATED_AT=now() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
-                        mapOf(
-                                "token" to app.token,
-                                "ip_limit" to app.ipLimit,
-                                "description" to app.description,
-                                "users" to app.users.joinToString(","),
-                                "name" to app.name,
-                                "profile" to app.profile,
-                                "v" to app.v
-                        )
-                )
-                if (n != 1) {
-                    if (app.v != dbApp.v) {
-                        throw BizCodeException(BizCodes.C_1004)
-                    }
-
-                    throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+    override fun update(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile).flatMap { dbApp ->
+        this.transactionTemplate.execute {
+            val n = jdbcTemplate.update(
+                    "UPDATE DUIC_APP SET TOKEN=:token,IP_LIMIT=:ip_limit,DESCRIPTION=:description,USERS=:users,UPDATED_AT=now() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
+                    mapOf(
+                            "token" to app.token,
+                            "ip_limit" to app.ipLimit,
+                            "description" to app.description,
+                            "users" to app.users.joinToString(","),
+                            "name" to app.name,
+                            "profile" to app.profile,
+                            "v" to app.v
+                    )
+            )
+            if (n != 1) {
+                if (app.v != dbApp.v) {
+                    throw BizCodeException(BizCodes.C_1004)
                 }
 
-                insertHistory(dbApp, false, userContext)
-                n
+                throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
             }
-            sink.success(n)
-        }.subscribeOn(Schedulers.elastic())
-    }
 
-    @Suppress("HasPlatformType")
-    override fun updateContent(app: App, userContext: UserContext) = findOne<App>(app.name, app.profile).flatMap { dbApp ->
-        Mono.create<App> { sink ->
-            transactionTemplate.execute {
-                val n = jdbcTemplate.update(
-                        "UPDATE DUIC_APP SET CONTENT=:content,V=V+1,UPDATED_AT=NOW() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
-                        mapOf(
-                                "content" to app.content,
-                                "name" to app.name,
-                                "profile" to app.profile,
-                                "v" to app.v
-                        )
-                )
-                if (n != 1) {
-                    if (app.v != dbApp.v) {
-                        throw BizCodeException(BizCodes.C_1004)
-                    }
+            insertHistory(dbApp, false, userContext)
+        }
 
-                    throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+        Mono.empty<Void>()
+    }.subscribeOn(Schedulers.elastic())
+
+    override fun updateContent(app: App, userContext: UserContext): Mono<App> = findOne(app.name, app.profile).map { dbApp ->
+        this.transactionTemplate.execute {
+            val n = jdbcTemplate.update(
+                    "UPDATE DUIC_APP SET CONTENT=:content,V=V+1,UPDATED_AT=NOW() WHERE NAME=:name AND PROFILE=:profile AND V=:v",
+                    mapOf(
+                            "content" to app.content,
+                            "name" to app.name,
+                            "profile" to app.profile,
+                            "v" to app.v
+                    )
+            )
+            if (n != 1) {
+                if (app.v != dbApp.v) {
+                    throw BizCodeException(BizCodes.C_1004)
                 }
 
-                insertHistory(dbApp, false, userContext)
+                throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
             }
-            sink.success(dbApp)
-        }.subscribeOn(Schedulers.elastic())
-    }
 
-    @Suppress("HasPlatformType")
-    override fun findAll() = Flux.create<App> { sink ->
-        roTransactionTemplate.execute {
+            insertHistory(dbApp, false, userContext)
+        }
+
+        dbApp
+    }.subscribeOn(Schedulers.elastic())
+
+    override fun findAll(): Flux<App> = Flux.create<App> { sink ->
+        transactionTemplate.execute {
             jdbcTemplate.query("SELECT * FROM DUIC_APP ORDER BY UPDATED_AT") { rs ->
                 sink.next(mapToApp(rs))
             }
@@ -160,10 +154,9 @@ class PostgreSQLAppRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findPage(pageable: Pageable) = Mono.zip(
+    override fun findPage(pageable: Pageable): Mono<Page<App>> = Mono.zip(
             Flux.create<App> { sink ->
-                roTransactionTemplate.execute {
+                transactionTemplate.execute {
                     jdbcTemplate.query(
                             "SELECT * FROM DUIC_APP LIMIT :limit OFFSET :offset",
                             mapOf("offset" to pageable.offset, "limit" to pageable.size)
@@ -173,8 +166,9 @@ class PostgreSQLAppRepository(
                 }
                 sink.complete()
             }.subscribeOn(Schedulers.elastic()).collectList(),
+
             Mono.create<Int> {
-                val c = roTransactionTemplate.execute {
+                val c = transactionTemplate.execute {
                     jdbcTemplate.queryForObject(
                             "SELECT COUNT(1) FROM DUIC_APP",
                             EmptySqlParameterSource.INSTANCE,
@@ -187,10 +181,9 @@ class PostgreSQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
-    @Suppress("HasPlatformType")
-    override fun findPageByUser(pageable: Pageable, userContext: UserContext) = Mono.zip(
+    override fun findPageByUser(pageable: Pageable, userContext: UserContext): Mono<Page<App>> = Mono.zip(
             Flux.create<App> { sink ->
-                roTransactionTemplate.execute {
+                transactionTemplate.execute {
                     jdbcTemplate.query(
                             "SELECT * FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%') LIMIT :limit OFFSET :offset",
                             mapOf(
@@ -204,8 +197,9 @@ class PostgreSQLAppRepository(
                 }
                 sink.complete()
             }.subscribeOn(Schedulers.elastic()).collectList(),
+
             Mono.create<Int> {
-                val c = roTransactionTemplate.execute {
+                val c = transactionTemplate.execute {
                     jdbcTemplate.queryForObject(
                             "SELECT COUNT(1) FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%')",
                             mapOf("email" to userContext.email),
@@ -218,10 +212,9 @@ class PostgreSQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
-    @Suppress("HasPlatformType")
-    override fun searchPage(q: String, pageable: Pageable) = Mono.zip(
+    override fun searchPage(q: String, pageable: Pageable): Mono<Page<App>> = Mono.zip(
             Flux.create<App> { sink ->
-                roTransactionTemplate.execute {
+                transactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
                         "SELECT * FROM DUIC_APP LIMIT :limit OFFSET :offset"
                     } else {
@@ -241,8 +234,9 @@ class PostgreSQLAppRepository(
                 }
                 sink.complete()
             }.subscribeOn(Schedulers.elastic()).collectList(),
+
             Mono.create<Int> {
-                val c = roTransactionTemplate.execute {
+                val c = transactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
                         "SELECT COUNT(*) FROM DUIC_APP"
                     } else {
@@ -256,10 +250,9 @@ class PostgreSQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
-    @Suppress("HasPlatformType")
-    override fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext) = Mono.zip(
+    override fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext): Mono<Page<App>> = Mono.zip(
             Flux.create<App> { sink ->
-                roTransactionTemplate.execute {
+                transactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
                         "SELECT * FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%') LIMIT :limit OFFSET :offset"
                     } else {
@@ -279,8 +272,9 @@ class PostgreSQLAppRepository(
                 }
                 sink.complete()
             }.subscribeOn(Schedulers.elastic()).collectList(),
+
             Mono.create<Int> {
-                val c = roTransactionTemplate.execute {
+                val c = transactionTemplate.execute {
                     val sql = if (q.isEmpty()) {
                         "SELECT COUNT(*) FROM DUIC_APP WHERE USERS LIKE CONCAT('%', :email, '%')"
                     } else {
@@ -294,9 +288,8 @@ class PostgreSQLAppRepository(
         Page(it.t1, it.t2, pageable)
     }
 
-    @Suppress("HasPlatformType")
-    override fun findByUpdatedAt(updateAt: Date) = Flux.create<App> { sink ->
-        transactionTemplate.execute {
+    override fun findByUpdatedAt(updateAt: Date): Flux<App> = Flux.create<App> { sink ->
+        this.transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP WHERE UPDATED_AT > :updated_at ORDER BY UPDATED_AT",
                     mapOf("updated_at" to updateAt)
@@ -307,9 +300,8 @@ class PostgreSQLAppRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findLast50History(name: String, profile: String) = Flux.create<AppContentHistory> { sink ->
-        roTransactionTemplate.execute {
+    override fun findLast50History(name: String, profile: String): Flux<AppContentHistory> = Flux.create<AppContentHistory> { sink ->
+        transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP_HISTORY WHERE NAME=:name AND PROFILE=:profile ORDER BY CREATED_AT DESC LIMIT 50",
                     mapOf("name" to name, "profile" to profile)
@@ -325,9 +317,8 @@ class PostgreSQLAppRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findAllNames() = Flux.create<String> { sink ->
-        roTransactionTemplate.execute {
+    override fun findAllNames(): Flux<String> = Flux.create<String> { sink ->
+        transactionTemplate.execute {
             jdbcTemplate.query("SELECT NAME FROM DUIC_APP") { rs ->
                 sink.next(rs.getString("name"))
             }
@@ -335,9 +326,8 @@ class PostgreSQLAppRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findProfilesByName(name: String) = Flux.create<String> { sink ->
-        roTransactionTemplate.execute {
+    override fun findProfilesByName(name: String): Flux<String> = Flux.create<String> { sink ->
+        transactionTemplate.execute {
             jdbcTemplate.query("SELECT PROFILE FROM DUIC_APP WHERE NAME=:name", mapOf("name" to name)) { rs ->
                 sink.next(rs.getString("profile"))
             }
@@ -345,9 +335,8 @@ class PostgreSQLAppRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findDeletedByCreatedAt(createdAt: Date) = Flux.create<AppHistory> { sink ->
-        roTransactionTemplate.execute {
+    override fun findDeletedByCreatedAt(createdAt: Date): Flux<AppHistory> = Flux.create<AppHistory> { sink ->
+        transactionTemplate.execute {
             jdbcTemplate.query(
                     "SELECT * FROM DUIC_APP_HISTORY WHERE CREATED_AT > :created_at AND DELETED_BY IS NOT NULL AND DELETED_BY != '' ORDER BY CREATED_AT",
                     mapOf("created_at" to createdAt)
@@ -371,9 +360,8 @@ class PostgreSQLAppRepository(
         sink.complete()
     }.subscribeOn(Schedulers.elastic())
 
-    @Suppress("HasPlatformType")
-    override fun findLastDataTime() = Mono.create<Long> { sink ->
-        roTransactionTemplate.execute {
+    override fun findLastDataTime(): Mono<Long> = Mono.create { sink ->
+        transactionTemplate.execute {
             jdbcTemplate.query("SELECT UPDATED_AT FROM DUIC_APP ORDER BY UPDATED_AT DESC", ResultSetExtractor { rs ->
                 if (rs.next()) {
                     sink.success(rs.getTimestamp("updated_at").time)

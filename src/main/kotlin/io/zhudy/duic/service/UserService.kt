@@ -18,10 +18,12 @@ package io.zhudy.duic.service
 import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
+import io.zhudy.duic.annotation.NoIntegrationTest
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.repository.UserRepository
+import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -38,7 +40,16 @@ import javax.annotation.PostConstruct
 class UserService(val userRepository: UserRepository,
                   val passwordEncoder: PasswordEncoder) {
 
-    @PostConstruct
+    @NoIntegrationTest
+    @Configuration
+    inner class Lifecycle {
+
+        @PostConstruct
+        fun init() {
+            this@UserService.initRootUser()
+        }
+    }
+
     fun initRootUser() {
         userRepository.findByEmail(Config.rootEmail).hasElement().subscribe {
             if (!it) {
@@ -58,7 +69,7 @@ class UserService(val userRepository: UserRepository,
      */
     fun login(email: String, password: String): Mono<User> {
         return userRepository.findByEmail(email).single().map {
-            if (!passwordEncoder.matches(password, it!!.password)) {
+            if (!passwordEncoder.matches(password, it.password)) {
                 throw BizCodeException(BizCodes.C_2001)
             }
             it
@@ -82,9 +93,9 @@ class UserService(val userRepository: UserRepository,
      * @param oldPassword 原密码
      * @param newPassword 新密码
      */
-    fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Int> {
+    fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Void> {
         return userRepository.findByEmail(email).single().flatMap {
-            if (passwordEncoder.matches(oldPassword, it?.password)) {
+            if (passwordEncoder.matches(oldPassword, it.password)) {
                 return@flatMap userRepository.updatePassword(email, passwordEncoder.encode(newPassword))
             }
             throw BizCodeException(BizCodes.C_2001)
@@ -94,21 +105,21 @@ class UserService(val userRepository: UserRepository,
     /**
      * 删除用户。
      */
-    fun delete(email: String): Mono<*> {
+    fun delete(email: String): Mono<Void> = Mono.defer {
         if (email == Config.rootEmail) {
             throw BizCodeException(BizCodes.C_2002)
         }
-        return userRepository.delete(email)
+        userRepository.delete(email)
     }
 
     /**
      * 重置密码。
      */
-    fun resetPassword(dto: ResetPasswordDto): Mono<*> {
+    fun resetPassword(dto: ResetPasswordDto): Mono<Void> = Mono.defer {
         if (dto.email == Config.rootEmail) {
             throw BizCodeException(BizCodes.C_2003)
         }
-        return userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
+        userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
     }
 
     /**
