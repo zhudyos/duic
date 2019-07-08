@@ -1,40 +1,62 @@
 const path = require("path")
+const webpack = require("webpack")
 const CopyWebpackPlugin = require("copy-webpack-plugin")
 const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin")
-const VuetifyLoaderPlugin = require("vuetify-loader/lib/plugin")
 
 function resolve(dir) {
-    return path.join(__dirname, dir)
+  return path.join(__dirname, dir)
 }
 
 module.exports = {
-    configureWebpack: {
-        resolve: {
-            alias: {
-                "@": resolve("src/main/web")
-            }
+  configureWebpack: {
+    resolve: {
+      alias: {
+        "@": resolve("src/main/web")
+      }
+    },
+    plugins: [
+      new webpack.DllReferencePlugin(
+        {
+          context: process.cwd(),
+          manifest: require("./src/main/web/static/js/vue_poly-manifest.json")
+        }
+      ),
+      new CopyWebpackPlugin([
+        {
+          from: "./src/main/web/assets",
+          to: "public"
         },
-        plugins: [
-            new CopyWebpackPlugin([{
-                from: "./src/main/web/assets",
-                to: "public"
-            }]),
-            new MonacoWebpackPlugin(),
-            new VuetifyLoaderPlugin()
-        ]
-    },
-    assetsDir: "public",
-    pages: {
-        index: {
-            entry: "src/main/web/main.js",
-            template: "src/main/web/index.html"
+        {
+          from: "./src/main/web/static",
+          to: "static"
         }
-    },
-    devServer: {
-        proxy: {
-            "/api": {
-                target: "http://127.0.0.1:7777"
-            }
+      ]),
+      new MonacoWebpackPlugin(
+        {
+          languages: ["yaml"]
         }
+      )
+    ]
+  },
+  pluginOptions: {
+    quasar: {
+      treeShake: true
     }
+  },
+  transpileDependencies: [
+    /[\\\/]node_modules[\\\/]quasar[\\\/]/
+  ],
+  pages: {
+    index: {
+      entry: "src/main/web/main.js",
+      template: "src/main/web/index.html"
+    }
+  },
+  devServer: {
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:7777"
+      }
+    }
+  }
 }
