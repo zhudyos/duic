@@ -11,9 +11,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
-import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
@@ -35,7 +33,6 @@ import java.util.*
     BasicConfiguration::class,
     WebClientAutoConfiguration::class
 ])
-@EnableConfigurationProperties(ServerProperties::class)
 internal class ServerServiceTests {
 
     // ====================================== MOCK ============================================//
