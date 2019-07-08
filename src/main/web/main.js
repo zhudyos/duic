@@ -1,22 +1,16 @@
-import Vue from "vue"
+import Vue from 'vue'
 
-import "@fortawesome/fontawesome-free/css/all.css"
+// quasar
+import "./vendor/quasar"
+import "./styles/quasar.styl"
 
-import Vuetify from "vuetify/lib"
-import "vuetify/src/stylus/app.styl"
-Vue.use(Vuetify, {
-  iconfont: "fa"
-})
-
-import router from "./router"
-import store from "./store"
-import App from "./App.vue"
+import { router } from "./router"
+import Main from "./pages/Main.vue"
 
 Vue.config.productionTip = false
 
 new Vue({
   el: "#app",
-  render: h => h(App),
+  render: h => h(Main),
   router,
-  store
 })

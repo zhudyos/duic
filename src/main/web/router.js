@@ -1,26 +1,35 @@
-import Vue from 'vue'
-import Router from 'vue-router'
+import Vue from "vue"
+import VueRouter from "vue-router"
 
-Vue.use(Router)
+Vue.use(VueRouter)
 
-export default new Router({
-  routes: [
+const routes = [
     {
-      path: "/login",
-      name: "login",
-      component: () => import("./views/Login.vue")
+        path: "/login",
+        meta: { title: "登录 - DUIC" },
+        component: () => import("@/pages/Login")
     },
     {
-      path: '/',
-      name: 'home',
-      component: () => import("./views/Home.vue"),
-      children: [
-        {
-          path: "/app/content-edit",
-          name: "app-content-edit",
-          component: () => import("./views/apps/AppContentEdit.vue")
-        }
-      ]
-    },
-  ]
+        path: "/",
+        meta: { title: "主页 - DUIC" },
+        component: () => import("@/pages/Main"),
+        children: [
+            {
+                path: "/home",
+                component: () => import("@/pages/App.vue")
+            }
+        ]
+    }
+]
+
+const router = new VueRouter({
+    routes: routes
 })
+
+router.beforeEach((to, from, next) => {
+    let title = to.meta.title || "配置中心 - DUIC"
+    document.title = title
+    next()
+})
+
+export { router }
