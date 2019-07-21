@@ -1,0 +1,7 @@
+# Spring Test ContextCustomizerFactories
+org.springframework.test.context.ContextCustomizerFactory=\
+  io.zhudy.roar.pay.SettingsContextCustomizerFactory
+
+# Test Execution Listeners
+org.springframework.test.context.TestExecutionListener=\
+  io.zhudy.roar.pay.StartupTestExecutionListener
