@@ -1,3 +1,7 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import com.hierynomus.gradle.license.tasks.LicenseCheck
+import com.hierynomus.gradle.license.tasks.LicenseFormat
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -108,6 +112,83 @@ tasks {
                     "Implementation-Version" to project.version
             ))
         }
+    }
+
+    license {
+        headerURI = com.hierynomus.gradle.license.LicenseBasePlugin::class.java.classLoader.getResource("headers/Apache-2.0")!!.toURI()
+        mapping(mapOf(
+                "vue" to "XML_STYLE"
+        ))
+        excludes(listOf(
+                "db/migration/**"
+        ))
+        ext {
+            set("year", "2017-2019")
+            set("author", "the original author or authors")
+        }
+    }
+
+    withType<LicenseCheck> {
+        enabled = false
+    }
+
+    task<LicenseFormat>("licenseFormatWeb") {
+        group = "license"
+        source = fileTree(projectDir) {
+            include(
+                    "buildSrc/*.js",
+                    "src/main/web/**/*.vue",
+                    "src/main/web/**/*.html",
+                    "src/main/web/**/*.js"
+            )
+        }
+    }
+
+    // docker 构建
+    task<Copy>("copyDockerJar") {
+        group = "docker"
+        from(jar.get().archiveFile)
+        into("$buildDir/docker")
+        rename {
+            it.replace("-$version", "")
+        }
+    }
+
+    task<Dockerfile>("createDockerfile") {
+        dependsOn.add("copyDockerJar")
+
+        group = "docker"
+        destFile.set(file("$buildDir/docker/Dockerfile"))
+
+        val jarName = "${project.name}.jar"
+        from("openjdk:8u171-jre-slim-stretch")
+        label(mapOf(
+                "maintainer" to "Kevin Zou (kevinz@weghst.com)"
+        ))
+        copyFile(jarName, "/app/$jarName")
+        workingDir("/app")
+        volume("/app/logs")
+        environmentVariable(mapOf(
+                "TZ" to "Asia/Shanghai",
+                "JVM_OPTS" to "-Xms1g -Xmx1g -XX:MetaspaceSize=128m",
+                "JAVA_OPTS" to "-server -XX:+UseG1GC ${'$'}JVM_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=logs/ -XX:+PrintGCDateStamps -verbose:gc -XX:+PrintGCDetails -Xloggc:logs/gc.log",
+                "DUIC_OPTS" to "-Dspring.profiles.active=mongodb"
+        ))
+        exposePort(7777)
+        defaultCommand("sh", "-c", "java ${'$'}JAVA_OPTS ${'$'}DUIC_OPTS -jar $jarName")
+    }
+
+    task<DockerBuildImage>("buildImage") {
+        dependsOn.add("createDockerfile")
+
+        group = "docker"
+        inputDir.set(file("$buildDir/docker"))
+        tags.addAll("zhudyos/${project.name}:$version", "zhudyos/${project.name}:latest")
+    }
+
+    task<Copy>("copyRelease") {
+        from(jar.get().archiveFile)
+        into(file("$buildDir/releases"))
     }
 }
 
