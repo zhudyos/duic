@@ -33,7 +33,7 @@ install: true
 script:
   - ./gradlew clean
   - ./gradlew check
-  - ./gradlew codeCoverageReport
+  - ./gradlew jacocoTestReport
   - ./gradlew bootJar
   - ./gradlew buildImage
 
