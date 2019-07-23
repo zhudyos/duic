@@ -9,7 +9,7 @@ import org.springframework.test.context.TestExecutionListener
 class StartupTestExecutionListener : TestExecutionListener {
 
     override fun beforeTestClass(testContext: TestContext) {
-        System.setProperty("spring.profiles.active", "integration-test")
+        System.setProperty("spring.profiles.include", "integration-test")
     }
 
 }

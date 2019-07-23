@@ -45,9 +45,10 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [MySQLConfiguration::class])
-@OverrideAutoConfiguration(enabled = false)
-@ActiveProfiles("test", "mysql")
+@SpringBootTest(classes = [
+    MySQLConfiguration::class
+])
+@ActiveProfiles("mysql")
 @ImportAutoConfiguration(classes = [
     DataSourceAutoConfiguration::class,
     DataSourceTransactionManagerAutoConfiguration::class,

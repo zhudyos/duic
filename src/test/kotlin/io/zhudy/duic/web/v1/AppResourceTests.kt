@@ -1,15 +1,14 @@
 package io.zhudy.duic.web.v1
 
-import com.nhaarman.mockitokotlin2.any
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.web.AbstractResourceTestBase
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.MediaType
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toMono
@@ -21,7 +20,7 @@ import java.util.*
 @SpringBootTest(classes = [AppResource::class])
 internal class AppResourceTests : AbstractResourceTestBase() {
 
-    @MockBean
+    @MockkBean
     lateinit var appService: AppService
 
     val name = "first"
@@ -47,7 +46,7 @@ internal class AppResourceTests : AbstractResourceTestBase() {
     @Test
     fun getConfigState() {
         val state = "123"
-        given(appService.getConfigState(any())).willReturn(state.toMono())
+        every { appService.getConfigState(any()) } returns state.toMono()
 
         webTestClient.get()
                 .uri("/api/v1/apps/states/{name}/{profile}", name, profile)
@@ -61,7 +60,7 @@ internal class AppResourceTests : AbstractResourceTestBase() {
 
     @Test
     fun `getConfigState not found config`() {
-        given(appService.getConfigState(any())).willReturn(Mono.error(BizCodeException(BizCodes.C_1000)))
+        every { appService.getConfigState(any()) } returns Mono.error(BizCodeException(BizCodes.C_1000))
 
         webTestClient.get()
                 .uri("/api/v1/apps/states/{name}/{profile}", name, profile)

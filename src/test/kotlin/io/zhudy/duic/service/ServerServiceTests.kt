@@ -1,5 +1,7 @@
 package io.zhudy.duic.service
 
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import io.zhudy.duic.Config
 import io.zhudy.duic.config.BasicConfiguration
 import io.zhudy.duic.domain.Server
@@ -8,14 +10,9 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.QueueDispatcher
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -26,17 +23,15 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [ServerService::class])
-@ActiveProfiles("test")
-@OverrideAutoConfiguration(enabled = false)
-@ImportAutoConfiguration(classes = [
+@SpringBootTest(classes = [
+    ServerService::class,
     BasicConfiguration::class,
     WebClientAutoConfiguration::class
 ])
 internal class ServerServiceTests {
 
     // ====================================== MOCK ============================================//
-    @MockBean
+    @MockkBean
     lateinit var serverRepository: ServerRepository
     // ====================================== MOCK ============================================//
 
@@ -45,22 +40,22 @@ internal class ServerServiceTests {
 
     @Test
     fun init() {
-        given(serverRepository.register(Config.server.host, Config.server.port)).willReturn(Mono.empty())
+        every { serverRepository.register(Config.server.host, Config.server.port) } returns Mono.empty()
 
         serverService.Lifecycle().init()
     }
 
     @Test
     fun destroy() {
-        given(serverRepository.unregister(Config.server.host, Config.server.port)).willReturn(Mono.empty())
+        every { serverRepository.unregister(Config.server.host, Config.server.port) } returns Mono.empty()
 
         serverService.Lifecycle().destroy()
     }
 
     @Test
     fun clockPing() {
-        given(serverRepository.ping(Config.server.host, Config.server.port)).willReturn(Mono.empty())
-        given(serverRepository.clean()).willReturn(Mono.empty())
+        every { serverRepository.ping(Config.server.host, Config.server.port) } returns Mono.empty()
+        every { serverRepository.clean() } returns Mono.empty()
 
         serverService.clockPing()
     }
@@ -89,7 +84,7 @@ internal class ServerServiceTests {
                 activeAt = Date()
         )
         val servers = arrayOf(server, server)
-        given(serverRepository.findServers()).willReturn(servers.toFlux())
+        every { serverRepository.findServers() } returns servers.toFlux()
 
         val rs = serverService.loadServerStates()
         StepVerifier.create(rs)
@@ -102,7 +97,7 @@ internal class ServerServiceTests {
 
     @Test
     fun info() {
-        given(serverRepository.findDbVersion()).willReturn("5.16".toMono())
+        every { serverRepository.findDbVersion() } returns "5.16".toMono()
 
         val rs = serverService.info()
         StepVerifier.create(rs)
@@ -113,7 +108,7 @@ internal class ServerServiceTests {
 
     @Test
     fun health() {
-        given(serverRepository.findDbVersion()).willReturn("5.16".toMono())
+        every { serverRepository.findDbVersion() } returns "5.16".toMono()
 
         val rs = serverService.health()
         StepVerifier.create(rs)
@@ -124,7 +119,7 @@ internal class ServerServiceTests {
 
     @Test
     fun `health check error`() {
-        given(serverRepository.findDbVersion()).willReturn(Mono.error(IllegalStateException("check failed")))
+        every { serverRepository.findDbVersion() } returns Mono.error(IllegalStateException("check failed"))
 
         val rs = serverService.health()
         StepVerifier.create(rs)

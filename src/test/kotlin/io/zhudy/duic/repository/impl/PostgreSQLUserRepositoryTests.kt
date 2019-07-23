@@ -28,7 +28,6 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.JdbcTemplateAutoConfiguration
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
@@ -40,9 +39,10 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [PostgreSQLConfiguration::class])
-@OverrideAutoConfiguration(enabled = false)
-@ActiveProfiles("test", "postgresql")
+@SpringBootTest(classes = [
+    PostgreSQLConfiguration::class
+])
+@ActiveProfiles("postgresql")
 @ImportAutoConfiguration(classes = [
     DataSourceAutoConfiguration::class,
     DataSourceTransactionManagerAutoConfiguration::class,

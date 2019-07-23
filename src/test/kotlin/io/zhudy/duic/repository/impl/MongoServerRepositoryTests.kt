@@ -9,8 +9,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import reactor.core.publisher.toMono
@@ -21,12 +19,11 @@ import java.util.*
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [MongoConfiguration::class])
-@OverrideAutoConfiguration(enabled = false)
-@ActiveProfiles("test", "mongodb")
-@ImportAutoConfiguration(classes = [
+@SpringBootTest(classes = [
+    MongoConfiguration::class,
     BasicConfiguration::class
 ])
+@ActiveProfiles("mongodb")
 internal class MongoServerRepositoryTests {
 
     @Autowired

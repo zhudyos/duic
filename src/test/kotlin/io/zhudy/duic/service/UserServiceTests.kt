@@ -1,5 +1,8 @@
 package io.zhudy.duic.service
 
+import com.ninjasquad.springmockk.MockkBean
+import com.ninjasquad.springmockk.SpykBean
+import io.mockk.every
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
 import io.zhudy.duic.config.BasicConfiguration
@@ -10,19 +13,11 @@ import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.expectError
 import io.zhudy.duic.repository.UserRepository
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.web.ServerProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.boot.test.mock.mockito.SpyBean
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.test.context.ActiveProfiles
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
@@ -31,19 +26,17 @@ import reactor.test.StepVerifier
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [UserService::class])
-@ActiveProfiles("test")
-@OverrideAutoConfiguration(enabled = false)
-@ImportAutoConfiguration(classes = [
+@SpringBootTest(classes = [
+    UserService::class,
     BasicConfiguration::class
 ])
 @EnableConfigurationProperties(ServerProperties::class)
 internal class UserServiceTests {
 
     // ====================================== MOCK ============================================//
-    @MockBean
+    @MockkBean
     lateinit var userRepository: UserRepository
-    @SpyBean
+    @SpykBean
     lateinit var passwordEncoder: PasswordEncoder
     // ====================================== MOCK ============================================//
     @Autowired
@@ -51,8 +44,8 @@ internal class UserServiceTests {
 
     @Test
     fun init() {
-        given(userRepository.findByEmail(Config.rootEmail)).willReturn(Mono.empty())
-        given(userRepository.insert(any() ?: User())).willReturn(Mono.empty())
+        every { userRepository.findByEmail(Config.rootEmail) } returns Mono.empty()
+        every { userRepository.insert(any()) } returns Mono.empty()
 
         userService.Lifecycle().init()
     }
@@ -65,7 +58,7 @@ internal class UserServiceTests {
                 email = email,
                 password = passwordEncoder.encode(password)
         )
-        given(userRepository.findByEmail(email)).willReturn(user.toMono())
+        every { userRepository.findByEmail(email) } returns user.toMono()
 
         val rs = userService.login(email, password)
         StepVerifier.create(rs)
@@ -77,7 +70,7 @@ internal class UserServiceTests {
     fun `login user not found`() {
         val email = "kevinz@weghst.com"
         val password = "hello"
-        given(userRepository.findByEmail(email)).willReturn(Mono.empty())
+        every { userRepository.findByEmail(email) } returns Mono.empty()
 
         val rs = userService.login(email, password)
         StepVerifier.create(rs)
@@ -93,7 +86,7 @@ internal class UserServiceTests {
                 email = email,
                 password = password
         )
-        given(userRepository.findByEmail(email)).willReturn(user.toMono())
+        every { userRepository.findByEmail(email) } returns user.toMono()
 
         val rs = userService.login(email, password)
         StepVerifier.create(rs)
@@ -109,7 +102,7 @@ internal class UserServiceTests {
                 email = email,
                 password = password
         )
-        given(userRepository.insert(user)).willReturn(Mono.empty())
+        every { userRepository.insert(user) } returns Mono.empty()
 
         val rs = userService.insert(user)
         StepVerifier.create(rs)
@@ -127,8 +120,8 @@ internal class UserServiceTests {
                 email = email,
                 password = passwordEncoder.encode(oldPassword)
         )
-        given(userRepository.findByEmail(email)).willReturn(mockUser.toMono())
-        given(userRepository.updatePassword(anyString(), anyString())).willReturn(Mono.empty())
+        every { userRepository.findByEmail(email) } returns mockUser.toMono()
+        every { userRepository.updatePassword(any(), any()) } returns Mono.empty()
 
         val rs = userService.updatePassword(email, oldPassword, newPassword)
         StepVerifier.create(rs)
@@ -146,7 +139,7 @@ internal class UserServiceTests {
                 email = email,
                 password = passwordEncoder.encode("$oldPassword-error")
         )
-        given(userRepository.findByEmail(email)).willReturn(mockUser.toMono())
+        every { userRepository.findByEmail(email) } returns mockUser.toMono()
 
         val rs = userService.updatePassword(email, oldPassword, newPassword)
         StepVerifier.create(rs)
@@ -157,7 +150,7 @@ internal class UserServiceTests {
     @Test
     fun delete() {
         val email = "junit@weghst.com"
-        given(userRepository.delete(email)).willReturn(Mono.empty())
+        every { userRepository.delete(email) } returns Mono.empty()
 
         val rs = userService.delete(email)
         StepVerifier.create(rs)
@@ -178,7 +171,7 @@ internal class UserServiceTests {
                 email = "junit@weghst.com",
                 password = "hello"
         )
-        given(userRepository.updatePassword(anyString(), anyString())).willReturn(Mono.empty())
+        every { userRepository.updatePassword(any(), any()) } returns Mono.empty()
 
         val rs = userService.resetPassword(dto)
         StepVerifier.create(rs)
@@ -192,7 +185,7 @@ internal class UserServiceTests {
                 email = Config.rootEmail,
                 password = "hello"
         )
-        given(userRepository.updatePassword(anyString(), anyString())).willReturn(Mono.empty())
+        every { userRepository.updatePassword(any(), any()) } returns Mono.empty()
 
         val rs = userService.resetPassword(dto)
         StepVerifier.create(rs)
@@ -206,7 +199,7 @@ internal class UserServiceTests {
         val page = Page<User>(
                 pageable = pageable
         )
-        given(userRepository.findPage(pageable)).willReturn(page.toMono())
+        every { userRepository.findPage(pageable) } returns page.toMono()
 
         val rs = userService.findPage(pageable)
         StepVerifier.create(rs)
@@ -218,7 +211,7 @@ internal class UserServiceTests {
     @Test
     fun findAllEmail() {
         val emails = arrayOf("kevinz@weghst.com")
-        given(userRepository.findAllEmail()).willReturn(emails.toFlux())
+        every { userRepository.findAllEmail() } returns emails.toFlux()
 
         val rs = userService.findAllEmail()
         StepVerifier.create(rs)

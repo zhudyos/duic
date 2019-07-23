@@ -1,7 +1,7 @@
 package io.zhudy.duic.service
 
-import com.nhaarman.mockitokotlin2.any
-import com.nhaarman.mockitokotlin2.given
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import io.zhudy.duic.BizCode
 import io.zhudy.duic.UserContext
 import io.zhudy.duic.config.BasicConfiguration
@@ -13,12 +13,8 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.mock.mockito.MockBean
-import org.springframework.test.context.ActiveProfiles
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toMono
 import reactor.test.StepVerifier
@@ -26,19 +22,17 @@ import reactor.test.StepVerifier
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@SpringBootTest(classes = [AppService::class])
-@ActiveProfiles("test")
-@OverrideAutoConfiguration(enabled = false)
-@ImportAutoConfiguration(classes = [
+@SpringBootTest(classes = [
+    AppService::class,
     BasicConfiguration::class,
     WebClientAutoConfiguration::class
 ])
 internal class AppServiceTests {
 
     // ====================================== MOCK ============================================//
-    @MockBean
+    @MockkBean
     lateinit var appRepository: AppRepository
-    @MockBean
+    @MockkBean
     lateinit var serverRepository: ServerRepository
     // ====================================== MOCK ============================================//
 
@@ -75,7 +69,7 @@ internal class AppServiceTests {
                 name = "junit",
                 profile = "test"
         )
-        given(appRepository.insert(any())).willReturn(Mono.empty())
+        every { appRepository.insert(any()) } returns Mono.empty()
 
         val rs = appService.insert(app)
         StepVerifier.create(rs)
@@ -93,7 +87,7 @@ internal class AppServiceTests {
                 name = "junit",
                 profile = "test"
         )
-        given(appRepository.delete(app, userContext)).willReturn(Mono.empty())
+        every { appRepository.delete(app, userContext) } returns Mono.empty()
 
         val rs = appService.delete(app, userContext)
         StepVerifier.create(rs)
@@ -115,8 +109,8 @@ internal class AppServiceTests {
             override val isRoot: Boolean
                 get() = false
         }
-        given(appRepository.findOne(app.name, app.profile)).willReturn(app.toMono())
-        given(appRepository.delete(app, userContext)).willReturn(Mono.empty())
+        every { appRepository.findOne(app.name, app.profile) } returns app.toMono()
+        every { appRepository.delete(app, userContext) } returns Mono.empty()
 
         val rs = appService.delete(app, userContext)
         StepVerifier.create(rs)
@@ -137,8 +131,8 @@ internal class AppServiceTests {
             override val isRoot: Boolean
                 get() = false
         }
-        given(appRepository.findOne(app.name, app.profile)).willReturn(app.toMono())
-        given(appRepository.delete(app, userContext)).willReturn(Mono.empty())
+        every { appRepository.findOne(app.name, app.profile) } returns app.toMono()
+        every { appRepository.delete(app, userContext) } returns Mono.empty()
 
         val rs = appService.delete(app, userContext)
         StepVerifier.create(rs)

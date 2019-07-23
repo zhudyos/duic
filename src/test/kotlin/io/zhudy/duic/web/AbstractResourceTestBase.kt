@@ -10,17 +10,13 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.ReactiveWebServerFactoryAutoConfiguration
 import org.springframework.boot.autoconfigure.web.reactive.WebFluxAutoConfiguration
-import org.springframework.boot.test.autoconfigure.OverrideAutoConfiguration
 import org.springframework.http.server.reactive.HttpHandler
-import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.web.server.WebHandler
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@ActiveProfiles("test")
-@OverrideAutoConfiguration(enabled = false)
 @ImportAutoConfiguration(classes = [
     WebFluxAutoConfiguration::class,
     ReactiveWebServerFactoryAutoConfiguration::class,
