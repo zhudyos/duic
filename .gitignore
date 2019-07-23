@@ -29,19 +29,12 @@ dist/
 .gradle/
 .idea/
 
-config/application-test\.yml
-config/application\.yml
-config/postgresql\.properties
-config/application-postgresql\.yml
-config/oracle\.properties
-config/application-oracle\.yml
-config/mysql\.properties
-application\.pid
-config/duic.yml
+config/*.yml
+config/*.properties
 
 .DS_Store
 node_modules
-/dist
+dist/
 
 # local env files
 .env.local
