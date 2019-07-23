@@ -32,8 +32,11 @@ install: true
 
 script:
   - ./gradlew clean buildImage --stacktrace
+  - ./gradlew check
+  - ./gradlew codeCoverageReport
 
 after_success:
+  - bash <(curl -s https://codecov.io/bash)
   - if [ ! -z "$TRAVIS_TAG" ]; then
       docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
       docker push zhudyos/duic;

@@ -28,6 +28,7 @@ configurations {
         exclude(group = "ch.qos.logback")
         exclude(module = "hibernate-validator")
         exclude(module = "nio-multipart-parser")
+        exclude(module = "mockito-core")
     }
 }
 
@@ -111,6 +112,21 @@ tasks {
                     "Implementation-Title" to "duic",
                     "Implementation-Version" to project.version
             ))
+        }
+    }
+
+    task<JacocoReport>("codeCoverageReport") {
+        group = "verification"
+        dependsOn.add(subprojects.map { it.tasks.named("test").get() })
+
+        executionData(fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec"))
+        subprojects.forEach { sourceSets(it.sourceSets.asMap["main"]) }
+
+        reports {
+            xml.isEnabled = true
+            xml.destination = file("$buildDir/reports/jacoco/report.xml")
+            html.isEnabled = false
+            csv.isEnabled = false
         }
     }
 
