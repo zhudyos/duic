@@ -32,10 +32,10 @@ install: true
 
 script:
   - ./gradlew clean
-  - ./gradlew bootJar
-  - ./gradlew buildImage
   - ./gradlew check
   - ./gradlew codeCoverageReport
+  - ./gradlew bootJar
+  - ./gradlew buildImage
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
