@@ -31,8 +31,9 @@ before_install:
 install: true
 
 script:
+  - ./gradlew clean
   - ./gradlew bootJar
-  - ./gradlew clean buildImage
+  - ./gradlew buildImage
   - ./gradlew check
   - ./gradlew codeCoverageReport
 
