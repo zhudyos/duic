@@ -54,6 +54,7 @@ yarn-error.log*
 *.sw?
 
 # vscode
+bin/*
 .classpath
 .github
 .project
