@@ -1,7 +1,0 @@
-# Spring Test ContextCustomizerFactories
-org.springframework.test.context.ContextCustomizerFactory=\
-  io.zhudy.duic.SettingsContextCustomizerFactory
-
-# Test Execution Listeners
-org.springframework.test.context.TestExecutionListener=\
-  io.zhudy.duic.StartupTestExecutionListener
