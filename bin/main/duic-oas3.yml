@@ -1,0 +1,389 @@
+#
+# Copyright 2017-2019 the original author or authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+openapi: 3.0.1
+servers:
+  - description: DuiC Server
+    url: https://duic.zhudy.io/
+
+info:
+  description: DuiC 配置中心 API
+  version: 1.0.0
+  title: DuiC 配置中心 API
+  contact:
+    email: kevinz@weghst.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+tags:
+  - name: system
+    description: 系统接口
+  - name: apps
+    description: APP 配置应用 API
+  - name: spring-cloud
+    description: spring-cloud 配置 API
+paths:
+  /api/info:
+    get:
+      tags:
+        - system
+      summary: 返回 duic 服务基本信息
+      description: 返回 duic 服务基本信息。其中包括部署的 duic 版本信息、数据库版本信息、操作系统信息以及 Java 版本信息。
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - name
+                  - version
+                  - db_name
+                  - db_version
+                  - os_name
+                  - os_version
+                  - os_arch
+                  - java_version
+                properties:
+                  name:
+                    type: string
+                    description: duic 名称
+                  version:
+                    type: string
+                    description: duic 版本
+                  db_name:
+                    type: string
+                    description: 使用的数据库名称
+                  db_version:
+                    type: string
+                    description: 使用的数据库版本
+                  os_name:
+                    type: string
+                    description: 部署 duic 操作系统的名称
+                  os_version:
+                    type: string
+                    description: 部署 duic 操作系统的版本
+                  os_arch:
+                    type: string
+                    description: 部署 duic 操作系统的位数
+                  java_version:
+                    type: string
+                    description: 部署 duic 的 Java 版本
+              example: { "name": "duic", "db_name": "MongoDB", "db_version": "4.0.4", "os_name": "Windows 10", "os_version": "10.0", "os_arch": "amd64", "java_version": "1.8.0_121" }
+  /api/health:
+    get:
+      tags:
+        - system
+      summary: 健康检查接口
+      description: |
+        健康检查接口。
+        可通过该接口检查 duic 的可用性。当返回状态码为 `200` 则表示服务可用，
+        返回非 `200` 的错误码都表示服务存在一定的问题并且会返回可用的描述信息，需要及时的跟进并解决问题。
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                    description: 可用状态
+        '503':
+          description: 服务不可用
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - description
+                properties:
+                  status:
+                    type: string
+                    example: DOWN
+                    description: 不可用状态
+                  description:
+                    type: string
+                    example: MongoDB health check failed
+                    description: 服务不可用的具体描述信息
+              example:
+                description: 数据库不可用
+  /api/v1/apps/states/{name}/{profile}:
+    get:
+      tags:
+        - apps
+      summary: 获取应用配置状态
+      description: |
+        获取应用状态。
+        该接口会立即返回应用当前配置的状态。
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - state
+                properties:
+                  state:
+                    type: string
+                    example: "45"
+        '400':
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        '401':
+          description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+  /api/v1/apps/watches/{name}/{profile}:
+    get:
+      tags:
+        - apps
+      summary: 监控配置状态
+      description: |
+        监控应用配置状态。
+
+        如果服务端当前的配置状态与传入的参数 state 不相同，则服务端会立即响应当前最新的状态给客户端。
+
+        如果服务端当前的配置状态与传入的参数 state 相同，该接口会延迟响应，当服务端配置状态发生变化时会立即响应给客户端。
+        服务端延迟最多 30 秒一定会响应客户端 state 状态，响应的 state 可能与传入的参数 state 相同，客户端需要判断当 state 不同时做出相应的动作，
+        比如刷新客户端配置信息。
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+        - name: state
+          in: query
+          schema:
+            type: string
+          description: 客户端当前的 state 状态值
+          required: true
+      responses:
+        '200':
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - state
+                properties:
+                  state:
+                    type: string
+                    example: "45"
+        '400':
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        '401':
+          description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+  /api/v1/apps/{name}/{profile}:
+    get:
+      tags:
+        - apps
+      summary: 获取配置
+      description: 获取应用 profile 的全部配置
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+      responses:
+        '200':
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        '401':
+          description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+  /api/v1/apps/{name}/{profile}/{key}:
+    get:
+      tags:
+        - apps
+      summary: 获取指定 key 的配置
+      description: 获取应用 profile 指定键的配置
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+        - in: path
+          name: key
+          description: 配置键值
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        '401':
+          description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+  /api/v1/ssc/{name}/{profile}:
+    get:
+      tags:
+        - spring-cloud
+      summary: 获取 spring-cloud 格式的配置
+      description: 返回 spring-cloud-config 配置
+      parameters:
+        - $ref: '#/components/parameters/AppNamePath'
+        - $ref: '#/components/parameters/AppProfilePath'
+        - $ref: '#/components/parameters/ConfigTokenHeader'
+      responses:
+        '200':
+          description: 正确返回
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpringCloudRes'
+        '400':
+          description: |
+            业务错误码及错误描述
+            + `1000` 未找到应用配置
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+        '401':
+          description: 认证失败缺少或者错误的 `x-config-token`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorRes'
+components:
+  parameters:
+    AppNamePath:
+      in: path
+      name: name
+      description: 应用名称
+      required: true
+      schema:
+        type: string
+    AppProfilePath:
+      in: path
+      name: profile
+      description: 多个 profile 使用英文逗号(,)分隔
+      required: true
+      schema:
+        type: string
+    ConfigTokenHeader:
+      in: header
+      name: x-config-token
+      description: 应用配置访问令牌
+      schema:
+        type: array
+        items:
+          type: string
+  schemas:
+    ErrorRes:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+          example: 400
+        message:
+          type: string
+          example: error description
+    SpringCloudRes:
+      type: object
+      required:
+        - name
+        - profiles
+        - state
+        - propertySources
+      properties:
+        name:
+          type: string
+          example: test
+        profiles:
+          type: array
+          items:
+            type: string
+            example: ["test", "dev"]
+        state:
+          type: string
+        propertySources:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertySourceRes'
+    PropertySourceRes:
+      type: object
+      required:
+        - name
+        - source
+      properties:
+        name:
+          type: string
+          example: test_dev
+        source:
+          type: object
+          additionalProperties: true
