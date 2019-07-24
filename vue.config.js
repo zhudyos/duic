@@ -1,41 +1,31 @@
-const path = require("path")
-const webpack = require("webpack")
-const CopyWebpackPlugin = require("copy-webpack-plugin")
-const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin")
+const path = require('path')
+const webpack = require('webpack')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 
-function resolve(dir) {
-  return path.join(__dirname, dir)
-}
+const src = (pathName = '') => path.join(__dirname, 'web/src', pathName)
+const dll = (pathName = '') => src(`assets/dll/${pathName}`)
 
 module.exports = {
   configureWebpack: {
     resolve: {
       alias: {
-        "@": resolve("src/main/web")
+        '@': src(),
+        'quasar-variables-styl': 'quasar/src/css/variables.styl',
+        'quasar-styl': 'quasar/dist/quasar.styl',
+        'quasar-addon-styl': 'quasar/src/css/flex-addon.styl'
       }
     },
     plugins: [
-      new webpack.DllReferencePlugin(
-        {
-          context: process.cwd(),
-          manifest: require("./src/main/web/static/js/vue_poly-manifest.json")
-        }
-      ),
       new CopyWebpackPlugin([
-        {
-          from: "./src/main/web/assets",
-          to: "public"
-        },
-        {
-          from: "./src/main/web/static",
-          to: "static"
-        }
+        { from: src('../static'), to: 'static' }
       ]),
-      new MonacoWebpackPlugin(
-        {
-          languages: ["yaml"]
-        }
-      )
+      new MonacoWebpackPlugin({
+        languages: ['yaml']
+      }),
+      new webpack.DllReferencePlugin({
+        manifest: require(dll('manifest.json'))
+      }),
     ]
   },
   pluginOptions: {
@@ -48,14 +38,16 @@ module.exports = {
   ],
   pages: {
     index: {
-      entry: "src/main/web/main.js",
-      template: "src/main/web/index.html"
+      entry: src('main.ts'),
+      template: src('index.html'),
+      // 自定义数据 可以在 template 中使用
+      dllJs: `/static/js/${require(dll('file.json')).vendor.js}`
     }
   },
   devServer: {
     proxy: {
-      "/api": {
-        target: "http://127.0.0.1:7777"
+      '/api': {
+        target: 'http://127.0.0.1:7777'
       }
     }
   }

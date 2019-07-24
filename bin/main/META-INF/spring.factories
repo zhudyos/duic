@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=io.zhudy.duic.env.PrepareEnvironmentPostProcessor
+org.springframework.context.ApplicationListener=org.springframework.boot.context.ApplicationPidFileWriter

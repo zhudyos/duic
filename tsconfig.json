@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "esnext",
+    "strict": true,
+    "jsx": "preserve",
+    "importHelpers": true,
+    "moduleResolution": "node",
+    "allowJs": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictNullChecks": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true,
+    "baseUrl": "./web",
+    "rootDir": "./web",
+    "typeRoots": ["types"],
+    "paths": {
+      "@/*": [
+        "src/*"
+      ]
+    },
+    "lib": ["es2017", "dom"],
+  },
+  "include": [
+    "web/src/**/*",
+    "web/types/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
+  

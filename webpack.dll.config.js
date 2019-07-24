@@ -1,24 +1,33 @@
-const path = require("path")
-const webpack = require("webpack")
+const path = require('path')
+const webpack = require('webpack')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const AssetsPlugin = require('assets-webpack-plugin')
 
-const dllPath = "src/main/web/static/js"
+const root = (pathName = '') => path.resolve(__dirname, 'web', pathName)
+const dllPath = 'web/src/assets/dll'
 
 module.exports = {
-    entry: {
-        vue_poly: ["vue", "vue-router"]
-    },
-    output: {
-        path: path.join(__dirname, dllPath),
-        filename: "[name].dll.js",
-        // 保持与 webpack.DllPlugin 中名称一致
-        library: "[name]_[hash]"
-    },
-    plugins: [
-        new webpack.DllPlugin({
-            path: path.join(__dirname, dllPath, '[name]-manifest.json'),
-            // 保持与 output.library 中名称一致
-            name: '[name]_[hash]',
-            context: process.cwd()
-        })
-    ]
+  entry: {
+    // 所有在开发中不会更改的包
+    vendor: ['vue', 'vue-router', 'whatwg-fetch']
+  },
+  output: {
+    path: root('static/js'),
+    filename: 'dll_[name]_[hash:6].js',
+    library: '[name]_[hash:6]'
+  },
+  plugins: [
+    new CleanWebpackPlugin({
+      cleanOnceBeforeBuildPatterns: ['dll_*'],
+    }),
+    new webpack.DllPlugin({
+      path: root(`${dllPath}/manifest.json`),
+      name: '[name]_[hash:6]' // 必须与 output.library 一致
+    }),
+    new AssetsPlugin({
+      filename: `${dllPath}/file.json`, // 相对于该配置文件的相对路径
+      fullPath: false,
+      prettyPrint: true
+    }),
+  ]
 }

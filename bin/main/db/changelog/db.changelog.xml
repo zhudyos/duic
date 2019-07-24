@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright 2017-2019 the original author or authors
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="1-1" author="kevinz@weghst.com">
+        <createTable tableName="DUIC_USER">
+            <column name="ID" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="EMAIL" type="VARCHAR(64)" remarks="登录邮箱">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="PASSWORD" type="VARCHAR(256)" remarks="登录密码">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_AT" type="TIMESTAMP" remarks="创建时间">
+            </column>
+            <column name="UPDATED_AT" type="TIMESTAMP" remarks="修改时间">
+            </column>
+        </createTable>
+        <sql dbms="oracle">
+            CREATE SEQUENCE SEQ_DUIC_USER MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2-1" author="kevinz@weghst.com">
+        <createTable tableName="DUIC_APP">
+            <column name="ID" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="NAME" type="VARCHAR(64)" remarks="应用名称">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROFILE" type="VARCHAR(64)" remarks="应用环境">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" type="VARCHAR(1024)" remarks="应用描述">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TOKEN" type="VARCHAR(64)" remarks="访问令牌">
+            </column>
+            <column name="IP_LIMIT" type="VARCHAR(1024)" remarks="可访问 IP">
+            </column>
+            <column name="V" type="INT" remarks="应用版本">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_AT" type="TIMESTAMP" remarks="创建时间">
+            </column>
+            <column name="UPDATED_AT" type="TIMESTAMP" remarks="修改时间">
+            </column>
+            <column name="CONTENT" type="CLOB" remarks="应用配置内容">
+            </column>
+            <column name="USERS" type="VARCHAR(1024)" remarks="应用所属用户">
+            </column>
+        </createTable>
+        <createIndex tableName="DUIC_APP" indexName="DUIC_APP_NAME_PROFILE" unique="true">
+            <column name="NAME"/>
+            <column name="PROFILE"/>
+        </createIndex>
+        <createIndex tableName="DUIC_APP" indexName="DUIC_APP_CREATED_AT">
+            <column name="CREATED_AT"/>
+        </createIndex>
+        <createIndex tableName="DUIC_APP" indexName="DUIC_APP_UPDATED_AT">
+            <column name="UPDATED_AT"/>
+        </createIndex>
+        <sql dbms="mysql, mariadb">
+            ALTER TABLE DUIC_APP ADD FULLTEXT INDEX `DUIC_APP_NAME_PROFILE_CONTENT` (`NAME`, `PROFILE`, `CONTENT`);
+        </sql>
+        <sql dbms="oracle">
+            CREATE SEQUENCE SEQ_DUIC_APP MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE;
+        </sql>
+        <sql dbms="oracle" endDelimiter="">
+            BEGIN
+                CTX_DDL.CREATE_PREFERENCE('DUIC_APP_NPC_DATASTORE', 'MULTI_COLUMN_DATASTORE');
+                CTX_DDL.SET_ATTRIBUTE('DUIC_APP_NPC_DATASTORE', 'COLUMNS', 'NAME, PROFILE, CONTENT');
+            END;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2-2" author="kevinz@weghst.com">
+        <sql dbms="oracle">
+            CREATE INDEX DUIC_APP_NPC_FT_AT_INDEX ON DUIC_APP (CONTENT) INDEXTYPE IS CTXSYS.CONTEXT PARAMETERS
+            ('DATASTORE DUIC_APP_NPC_DATASTORE SYNC(ON COMMIT)');
+        </sql>
+    </changeSet>
+
+    <changeSet id="3-1" author="kevinz@weghst.com">
+        <createTable tableName="DUIC_APP_HISTORY">
+            <column name="ID" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="NAME" type="VARCHAR(64)" remarks="应用名称">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PROFILE" type="VARCHAR(64)" remarks="应用环境">
+                <constraints nullable="false"/>
+            </column>
+            <column name="DESCRIPTION" type="VARCHAR(1024)" remarks="应用描述">
+                <constraints nullable="false"/>
+            </column>
+            <column name="TOKEN" type="VARCHAR(64)" remarks="访问令牌">
+            </column>
+            <column name="IP_LIMIT" type="VARCHAR(1024)" remarks="可访问 IP">
+            </column>
+            <column name="V" type="INT" remarks="应用版本">
+                <constraints nullable="false"/>
+            </column>
+            <column name="CREATED_AT" type="TIMESTAMP" remarks="创建时间">
+            </column>
+            <column name="CONTENT" type="CLOB" remarks="应用配置内容">
+            </column>
+            <column name="USERS" type="VARCHAR(1024)" remarks="应用所属用户">
+            </column>
+            <column name="UPDATED_BY" type="VARCHAR(64)" remarks="修改者">
+            </column>
+            <column name="DELETED_BY" type="VARCHAR(64)" remarks="删除者">
+            </column>
+        </createTable>
+        <createIndex tableName="DUIC_APP_HISTORY" indexName="DUIC_APP_HISTORY_NAME">
+            <column name="NAME"/>
+        </createIndex>
+        <createIndex tableName="DUIC_APP_HISTORY" indexName="DUIC_APP_HISTORY_PROFILE">
+            <column name="PROFILE"/>
+        </createIndex>
+        <createIndex tableName="DUIC_APP_HISTORY" indexName="DUIC_APP_HISTORY_CREATED_AT">
+            <column name="CREATED_AT"/>
+        </createIndex>
+        <sql dbms="oracle">
+            CREATE SEQUENCE SEQ_DUIC_APP_HISTORY MINVALUE 1 NOMAXVALUE INCREMENT BY 1 START WITH 1 NOCACHE;
+        </sql>
+    </changeSet>
+
+    <changeSet id="4-1" author="kevinz@weghst.com">
+        <createTable tableName="DUIC_SERVER">
+            <column name="ID" type="VARCHAR(128)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="HOST" type="VARCHAR(64)" remarks="主机地址">
+                <constraints nullable="false"/>
+            </column>
+            <column name="PORT" type="INT" remarks="主机端口">
+                <constraints nullable="false"/>
+            </column>
+            <column name="INIT_AT" type="TIMESTAMP" remarks="初始化时间">
+            </column>
+            <column name="ACTIVE_AT" type="TIMESTAMP" remarks="最后活跃时间">
+            </column>
+        </createTable>
+        <createIndex tableName="DUIC_SERVER" indexName="DUIC_SERVER_INIT_AT">
+            <column name="INIT_AT"/>
+        </createIndex>
+        <createIndex tableName="DUIC_SERVER" indexName="DUIC_SERVER_ACTIVE_AT">
+            <column name="ACTIVE_AT"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
