@@ -1,6 +1,7 @@
 package io.zhudy.duic.service
 
 import com.ninjasquad.springmockk.MockkBean
+import com.ninjasquad.springmockk.SpykBean
 import io.mockk.every
 import io.zhudy.duic.BizCode
 import io.zhudy.duic.UserContext
@@ -9,10 +10,9 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.expectError
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.repository.ServerRepository
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.zhudy.duic.vo.RequestConfigVo
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
 import reactor.core.publisher.Mono
@@ -43,7 +43,7 @@ internal class AppServiceTests {
             get() = true
     }
 
-    @Autowired
+    @SpykBean
     lateinit var appService: AppService
 
     @Test
@@ -61,6 +61,8 @@ internal class AppServiceTests {
 
     @Test
     fun getMemoryLastDataTime() {
+        val lastDataTime = appService.getMemoryLastDataTime()
+        assertThat(lastDataTime).isEqualTo(0L)
     }
 
     @Test
@@ -76,9 +78,9 @@ internal class AppServiceTests {
                 .expectComplete()
                 .verify()
 
-        assertTrue(app.id.isNotEmpty())
-        assertNotNull(app.createdAt)
-        assertNotNull(app.updatedAt)
+        assertThat(app.id).isNotEmpty()
+        assertThat(app.createdAt).isNotNull()
+        assertThat(app.updatedAt).isNotNull()
     }
 
     @Test
@@ -142,14 +144,68 @@ internal class AppServiceTests {
 
     @Test
     fun update() {
+        val email = "integration-test-x@weghst.com"
+        val app = App(
+                name = "junit",
+                profile = "test",
+                users = listOf(email)
+        )
+        val userContext = object : UserContext {
+            override val email: String
+                get() = email
+            override val isRoot: Boolean
+                get() = false
+        }
+        every { appRepository.findOne(app.name, app.profile) } returns app.toMono()
+        every { appRepository.update(app, userContext) } returns Mono.empty()
+
+        val rs = appService.update(app, userContext)
+        StepVerifier.create(rs)
+                .expectComplete()
+                .verify()
+    }
+
+    @Test
+    fun `update no permission`() {
+        val email = "integration-test-x@weghst.com"
+        val app = App(
+                name = "junit",
+                profile = "test"
+        )
+        val userContext = object : UserContext {
+            override val email: String
+                get() = email
+            override val isRoot: Boolean
+                get() = false
+        }
+        every { appRepository.findOne(app.name, app.profile) } returns app.toMono()
+        every { appRepository.update(app, userContext) } returns Mono.empty()
+
+        val rs = appService.update(app, userContext)
+        StepVerifier.create(rs)
+                .expectError(BizCode.Classic.C_403)
+                .verify()
     }
 
     @Test
     fun updateContent() {
+        // TODO 新增单元测试
     }
 
     @Test
     fun getConfigState() {
+        val vo = RequestConfigVo(
+                name = "test",
+                profiles = listOf("a", "b")
+        )
+        val cachedApps = listOf(
+                AppService.CachedApp(name = "test", profile = "a", token = "", properties = emptyMap(), v = 100),
+                AppService.CachedApp(name = "test", profile = "a", token = "", properties = emptyMap(), v = 999)
+        )
+        every { appService.loadAndCheckApps(vo) } returns Mono.just(cachedApps)
+
+        val state = appService.getConfigState(vo).block()
+        assertThat(state).startsWith("100").endsWith("999")
     }
 
     @Test

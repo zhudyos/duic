@@ -18,10 +18,7 @@ package io.zhudy.duic.service
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.difflib.text.DiffRowGenerator
 import io.zhudy.duic.*
-import io.zhudy.duic.domain.App
-import io.zhudy.duic.domain.Page
-import io.zhudy.duic.domain.Pageable
-import io.zhudy.duic.domain.SingleValue
+import io.zhudy.duic.domain.*
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
@@ -68,8 +65,11 @@ class AppService(
         private val webClientBuilder: WebClient.Builder
 ) {
 
-    private val reliableLog = LoggerFactory.getLogger("reliable")
-    private val log = LoggerFactory.getLogger(AppService::class.java)
+    companion object {
+
+        private val reliableLog = LoggerFactory.getLogger("reliable")
+        private val log = LoggerFactory.getLogger(AppService::class.java)
+    }
 
     private val watchStateTimeout = 30 * 1000L
     private val watchRequestLimit = Config.concurrent.watchRequestLimit
@@ -92,7 +92,7 @@ class AppService(
     /**
      * 缓存的 APP 实例。
      */
-    private data class CachedApp(
+    internal data class CachedApp(
             val name: String,
             val profile: String,
             val token: String,
@@ -107,7 +107,7 @@ class AppService(
     private data class WatchStateSink(
             val sink: MonoSink<String>,
             val name: String,
-            val profiles: Array<String>,
+            val profiles: List<String>,
             val state: String,
             val startTime: Long,
 
@@ -117,42 +117,14 @@ class AppService(
             @Volatile
             var done: Boolean = false,
             var timeoutJob: Job? = null
-    ) {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (javaClass != other?.javaClass) return false
+    )
 
-            other as WatchStateSink
-
-            if (sink != other.sink) return false
-            if (name != other.name) return false
-            if (!profiles.contentEquals(other.profiles)) return false
-            if (state != other.state) return false
-            if (startTime != other.startTime) return false
-            if (done != other.done) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            var result = sink.hashCode()
-            result = 31 * result + name.hashCode()
-            result = 31 * result + profiles.contentHashCode()
-            result = 31 * result + state.hashCode()
-            result = 31 * result + startTime.hashCode()
-            result = 31 * result + done.hashCode()
-            return result
-        }
-    }
-
-    @Scheduled(initialDelay = 0,
-            fixedDelayString = "%{duic.app.watch.updated.fixed_delay:%{duic.app.watch.updated.fixed-delay:%{duic.app.watch.updated.fixedDelay:60000}}}")
+    @Scheduled(initialDelay = 1000, fixedDelayString = "%{duic.app.watch.updated.fixed-delay:60000}")
     fun watchApps() {
         refresh().subscribe()
     }
 
-    @Scheduled(initialDelay = 0,
-            fixedDelayString = "%{duic.app.watch.deleted.fixed_delay:%{duic.app.watch.deleted.fixed-delay:%{duic.app.watch.deleted.fixedDelay:600000}}}")
+    @Scheduled(initialDelay = 1000, fixedDelayString = "%{duic.app.watch.deleted.fixed_delay::600000}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
         appRepository.findDeletedByCreatedAt(lastAppHistoryCreatedAt).doOnError {
@@ -170,8 +142,7 @@ class AppService(
      *
      * @return 配置最后的更新时间戳（毫秒）
      */
-    @Suppress("HasPlatformType")
-    fun refresh() = Mono.create<Long> { sink ->
+    fun refresh(): Mono<Long> = Mono.create<Long> { sink ->
         // 更新 APP 配置信息
         if (lastDataTime == null) {
             findAll()
@@ -227,16 +198,14 @@ class AppService(
     /**
      * 删除应用。
      */
-    @Suppress("HasPlatformType")
-    fun delete(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
+    fun delete(app: App, userContext: UserContext): Mono<Void> = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.delete(app, userContext)
     }
 
     /**
      * 更新应用。
      */
-    @Suppress("HasPlatformType")
-    fun update(app: App, userContext: UserContext) = checkPermission(app.name, app.profile, userContext).flatMap {
+    fun update(app: App, userContext: UserContext): Mono<Void> = checkPermission(app.name, app.profile, userContext).flatMap {
         appRepository.update(app, userContext)
     }
 
@@ -314,8 +283,7 @@ class AppService(
     /**
      * 获取配置状态。
      */
-    @Suppress("HasPlatformType")
-    fun getConfigState(vo: RequestConfigVo) = loadAndCheckApps(vo).map { apps ->
+    fun getConfigState(vo: RequestConfigVo): Mono<String> = loadAndCheckApps(vo).map { apps ->
         val state = StringBuilder()
         apps.forEach {
             state.append(it.v)
@@ -326,8 +294,7 @@ class AppService(
     /**
      * 监控配置状态。
      */
-    @Suppress("HasPlatformType")
-    fun watchConfigState(vo: RequestConfigVo, oldState: String) = getConfigState(vo).flatMap { state ->
+    fun watchConfigState(vo: RequestConfigVo, oldState: String): Mono<String> = getConfigState(vo).flatMap { state ->
         if (state != oldState) {
             return@flatMap Mono.just(state)
         }
@@ -365,7 +332,7 @@ class AppService(
             val wss = WatchStateSink(
                     sink = sink,
                     name = vo.name,
-                    profiles = vo.profiles.toTypedArray(),
+                    profiles = vo.profiles.toList(),
                     state = state,
                     startTime = System.currentTimeMillis()
             )
@@ -410,7 +377,7 @@ class AppService(
     /**
      * 获取配置。
      */
-    fun loadConfigByNameProfile(vo: RequestConfigVo) = loadAndCheckApps(vo).map(::mergeProps)
+    fun loadConfigByNameProfile(vo: RequestConfigVo): Mono<Map<Any, Any?>> = loadAndCheckApps(vo).map(::mergeProps)
 
     /**
      * 获取某个 `key` 的具体配置。
@@ -443,7 +410,7 @@ class AppService(
     /**
      * 查询指定的应用详细信息。
      */
-    fun findOne(name: String, profile: String) = appRepository.findOne(name, profile)
+    fun findOne(name: String, profile: String): Mono<App> = appRepository.findOne(name, profile)
             .switchIfEmpty(Mono.defer {
                 throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
             })
@@ -486,7 +453,7 @@ class AppService(
     /**
      * 查询应用更新的最新 50 条更新记录。
      */
-    fun findLast50History(name: String, profile: String, userContext: UserContext) = checkPermission(name, profile, userContext).flatMapMany {
+    fun findLast50History(name: String, profile: String, userContext: UserContext): Flux<AppContentHistory> = checkPermission(name, profile, userContext).flatMapMany {
         appRepository.findLast50History(name, profile)
     }
 
@@ -520,7 +487,7 @@ class AppService(
         }
     }
 
-    private fun loadAndCheckApps(vo: RequestConfigVo) = Flux.merge(vo.profiles.map {
+    internal fun loadAndCheckApps(vo: RequestConfigVo): Mono<List<CachedApp>> = Flux.merge(vo.profiles.map {
         loadOne(vo.name, it).doOnNext { app ->
             if (app.ipLimit.isNotEmpty()) {
                 // 校验访问 IP
@@ -548,7 +515,7 @@ class AppService(
         }
     }).collectList()
 
-    private fun loadOne(name: String, profile: String): Mono<CachedApp> {
+    internal fun loadOne(name: String, profile: String): Mono<CachedApp> {
         val k = localKey(name, profile)
         return Mono.justOrEmpty<CachedApp>(appCaches.getIfPresent(k))
                 .switchIfEmpty(
@@ -562,7 +529,7 @@ class AppService(
                 )
     }
 
-    private fun configState0(name: String, profiles: Array<String>): Mono<String> {
+    private fun configState0(name: String, profiles: List<String>): Mono<String> {
         val sources = profiles.map { loadOne(name, it) }
         return Flux.concat(sources).collectList().map { apps ->
             val state = StringBuilder()
@@ -592,7 +559,7 @@ class AppService(
             return
         }
 
-        b.forEach { k, v ->
+        b.forEach { (k, v) ->
             if (v is Map<*, *>) {
                 val field: String = if (prefix.isEmpty()) k.toString() else "$prefix.$k"
 
@@ -616,7 +583,6 @@ class AppService(
         return result
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun buildFlattenedMap(result: MutableMap<String, Any>, source: Map<Any, Any>, path: String) {
         for (entry in source.entries) {
             var key: String = entry.key as? String ?: entry.key.toString()
@@ -629,9 +595,7 @@ class AppService(
                 }
             }
 
-            val value = entry.value
-            when (value) {
-                is String -> result.put(key, value)
+            when (val value = entry.value) {
                 is Map<*, *> -> {
                     // Need a compound key
                     val map = value as Map<Any, Any>
@@ -673,7 +637,7 @@ class AppService(
                 token = app.token,
                 v = app.v,
                 ipLimit = ipLimit,
-                properties = if (!app.content.isEmpty()) yaml.load(app.content) else emptyMap()
+                properties = if (app.content.isNotEmpty()) yaml.load(app.content) else emptyMap()
         )
     }
 
@@ -713,4 +677,5 @@ class AppService(
                     .subscribe()
         }
     }
+
 }
