@@ -28,7 +28,7 @@ class ServerChecker(
      */
     @EventListener(ApplicationReadyEvent::class)
     fun springReadyEvent(event: ApplicationReadyEvent) {
-        val cdl = CountDownLatch(1)
+        val cdl = downLatch()
         serverRepository.findDbVersion().subscribe { cdl.countDown() }
 
         val s = try {
@@ -40,4 +40,6 @@ class ServerChecker(
         val e = if (s) ApplicationUsableEvent(event.applicationContext) else ApplicationUnusableEvent(event.applicationContext)
         multicaster.multicastEvent(e)
     }
+
+    internal fun downLatch() = CountDownLatch(1)
 }
