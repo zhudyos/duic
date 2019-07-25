@@ -77,7 +77,7 @@ class GlobalWebExceptionHandler(
                 status = e.bizCode.status
                 mapOf(
                         "code" to e.bizCode.code,
-                        "message" to if (e.exactMessage.isNotEmpty()) e.exactMessage else e.bizCode.msg
+                        "message" to e.message
                 )
             }
             is UnsupportedMediaTypeException -> {

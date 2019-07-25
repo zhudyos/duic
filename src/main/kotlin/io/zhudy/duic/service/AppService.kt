@@ -216,7 +216,8 @@ class AppService(
         try {
             yaml.load<Map<String, Any>>(app.content)
         } catch (e: Exception) {
-            throw BizCodeException(BizCodes.C_1006, e)
+            log.debug("YAML 格式错误", e)
+            throw BizCodeException(BizCodes.C_1006)
         }
 
         return checkPermission(app.name, app.profile, userContext).flatMap {
