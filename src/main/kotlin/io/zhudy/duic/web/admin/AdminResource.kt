@@ -39,6 +39,9 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.noContent
 import org.springframework.web.reactive.function.server.ServerResponse.ok
 import org.springframework.web.reactive.function.server.body
+import org.valiktor.functions.hasSize
+import org.valiktor.functions.matches
+import org.valiktor.validate
 import reactor.core.publisher.Mono
 import java.time.Duration
 import java.time.Instant
@@ -153,18 +156,20 @@ class AdminResource(
     /**
      * 保存应用.
      */
-    fun insertApp(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap {
-        if (it.name.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
-        }
-        if (it.profile.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
-        }
-
-        appService.insert(it).flatMap {
-            ok().build()
-        }
-    }
+    fun insertApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java)
+            .doOnNext {
+                validate(it) {
+                    val standardChar = "/^[A-Za-z0-9\\.\\-]+\$/".toRegex()
+                    validate(App::name).hasSize(min = 1, max = 64).matches(standardChar)
+                    validate(App::profile).hasSize(min = 1, max = 64).matches(standardChar)
+                    validate(App::description).hasSize(max = 1024)
+                    validate(App::token).hasSize(max = 64)
+                    validate(App::ipLimit).hasSize(max = 1024)
+                    validate(App::users).hasSize(max = 50)
+                }
+            }
+            .flatMap(appService::insert)
+            .then(ok().build())
 
     /**
      * 从已经存在的应用信息中插入一个应用。
@@ -179,11 +184,9 @@ class AdminResource(
             }
             newApp.content = it.content
 
-            appService.insert(newApp).flatMap {
-                ok().build()
-            }
+            appService.insert(newApp)
         }
-    }
+    }.then(ok().build())
 
     /**
      *

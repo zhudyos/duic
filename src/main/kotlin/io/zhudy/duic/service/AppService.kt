@@ -188,7 +188,7 @@ class AppService(
     /**
      * 保存应用。
      */
-    fun insert(app: App): Mono<*> {
+    fun insert(app: App): Mono<Void> {
         app.id = ObjectId().toHexString()
         app.createdAt = Date()
         app.updatedAt = Date()

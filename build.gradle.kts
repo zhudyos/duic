@@ -57,6 +57,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.mongodb:mongodb-driver-reactivestreams:1.11.0")
 
+    implementation("org.valiktor:valiktor-core:0.8.0")
     implementation("com.github.ben-manes.caffeine:caffeine:2.7.0")
     implementation("com.auth0:java-jwt:3.3.0")
     implementation("org.simplejavamail:simple-java-mail:5.1.6")
