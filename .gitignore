@@ -56,6 +56,5 @@ yarn-error.log*
 # vscode
 bin/*
 .classpath
-.github
 .project
 .settings

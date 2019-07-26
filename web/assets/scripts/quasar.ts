@@ -6,6 +6,7 @@ import Quasar, {
   QAjaxBar,
   QAvatar,
   QBtn,
+  QBtnToggle,
   QCard,
   QCardActions,
   QCardSection,
@@ -15,23 +16,25 @@ import Quasar, {
   QHeader,
   QIcon,
   QInput,
-  QItem,
   // form
+  QItem,
   QItemLabel,
-  QItemSection,
   // card
+  QItemSection,
   QLayout,
   QList,
-  QPage,
   // plugins
+  QPage,
   QPageContainer,
+  QSpace,
   QToolbar,
   QToolbarTitle,
 } from 'quasar'
-import iconSet from 'quasar/icon-set/fontawesome-v5.js'
+import iconSet from 'quasar/icon-set/material-icons.js'
 import Vue from 'vue'
 
-Vue.use(Quasar as any, {
+Vue.use(Quasar, {
+  iconSet,
   components: {
     QAjaxBar,
     QLayout,
@@ -54,11 +57,12 @@ Vue.use(Quasar as any, {
     QCard,
     QCardSection,
     QCardActions,
+    QBtnToggle,
+    QSpace,
   },
   plugins: {
     Loading,
     Dialog,
     Notify,
   },
-  iconSet,
 })

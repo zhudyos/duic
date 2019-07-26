@@ -3,8 +3,8 @@ const webpack = require('webpack')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const AssetsPlugin = require('assets-webpack-plugin')
 
-const root = (pathName = '') => path.resolve(__dirname, 'web', pathName)
-const dllPath = 'web/src/assets/dll'
+const root = (pathName = '') => path.resolve(__dirname, pathName)
+const dllPath = 'web/assets/dll'
 
 module.exports = {
   entry: {
@@ -25,7 +25,7 @@ module.exports = {
       name: '[name]_[hash:6]' // 必须与 output.library 一致
     }),
     new AssetsPlugin({
-      filename: `${dllPath}/file.json`, // 相对于该配置文件的相对路径
+      filename: `${dllPath}/assets.json`, // 相对于该配置文件的相对路径
       fullPath: false,
       prettyPrint: true
     }),
