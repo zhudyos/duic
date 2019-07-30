@@ -2,3 +2,4 @@ node_modules
 dist
 web/assets
 web/vendor
+web/static

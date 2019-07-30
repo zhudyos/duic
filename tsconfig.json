@@ -16,22 +16,23 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
-    "baseUrl": "./web",
-    "rootDir": "./web",
-    "typeRoots": ["types"],
+    "baseUrl": ".",
+    "rootDir": ".",
+    "typeRoots": ["web/typings"],
     "paths": {
       "@/*": [
-        "src/*"
+        "web/*"
       ]
     },
     "lib": ["es2017", "dom"],
   },
   "include": [
-    "web/src/**/*",
-    "web/types/*"
+    "web/**/*.ts",
+    "web/**/*.vue",
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "web/static",
   ]
 }
   

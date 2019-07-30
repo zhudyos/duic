@@ -3,7 +3,7 @@ const webpack = require('webpack')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 
-const src = (pathName = '') => path.join(__dirname, 'web/src', pathName)
+const src = (pathName = '') => path.join(__dirname, 'web', pathName)
 const dll = (pathName = '') => src(`assets/dll/${pathName}`)
 
 module.exports = {
@@ -13,42 +13,38 @@ module.exports = {
         '@': src(),
         'quasar-variables-styl': 'quasar/src/css/variables.styl',
         'quasar-styl': 'quasar/dist/quasar.styl',
-        'quasar-addon-styl': 'quasar/src/css/flex-addon.styl'
-      }
+        'quasar-addon-styl': 'quasar/src/css/flex-addon.styl',
+      },
     },
     plugins: [
-      new CopyWebpackPlugin([
-        { from: src('../static'), to: 'static' }
-      ]),
+      new CopyWebpackPlugin([{ from: src('../static'), to: 'static' }]),
       new MonacoWebpackPlugin({
-        languages: ['yaml']
+        languages: ['yaml'],
       }),
       new webpack.DllReferencePlugin({
-        manifest: require(dll('manifest.json'))
+        manifest: require(dll('manifest.json')),
       }),
-    ]
+    ],
   },
   pluginOptions: {
     quasar: {
-      treeShake: true
-    }
+      treeShake: true,
+    },
   },
-  transpileDependencies: [
-    /[\\\/]node_modules[\\\/]quasar[\\\/]/
-  ],
+  transpileDependencies: [/[\\\/]node_modules[\\\/]quasar[\\\/]/],
   pages: {
     index: {
       entry: src('main.ts'),
       template: src('index.html'),
       // 自定义数据 可以在 template 中使用
-      dllJs: `/static/js/${require(dll('file.json')).vendor.js}`
-    }
+      dllJs: `/static/js/${require(dll('assets.json')).vendor.js}`,
+    },
   },
   devServer: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:7777'
-      }
-    }
-  }
+        target: 'http://127.0.0.1:7777',
+      },
+    },
+  },
 }
