@@ -9,7 +9,7 @@
   "author": "Kevin Zou",
   "license": "Apache-2.0",
   "scripts": {
-    "dev": "vue-cli-service serve",
+    "dev": "vue-cli-service serve --port 7778",
     "build": "vue-cli-service build",
     "dll": "webpack -p --progress --config ./webpack.dll.config.js",
     "lint:ts": "tslint web/**/*.{ts}",
