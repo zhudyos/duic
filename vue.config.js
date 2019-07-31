@@ -17,7 +17,7 @@ module.exports = {
       },
     },
     plugins: [
-      new CopyWebpackPlugin([{ from: src('../static'), to: 'static' }]),
+      new CopyWebpackPlugin([{ from: src('static'), to: 'static' }]),
       new MonacoWebpackPlugin({
         languages: ['yaml'],
       }),

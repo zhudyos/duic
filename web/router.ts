@@ -1,24 +1,33 @@
 import Vue from 'vue'
-import Router from 'vue-router'
+import VueRouter from 'vue-router'
+Vue.use(VueRouter)
 
-import Home from '@/pages/Home.vue'
+const routes = [
+  {
+    path: '/login',
+    meta: { title: '登录 - DUIC' },
+    component: () => import('@/pages/Login.vue'),
+  },
+  {
+    path: '/',
+    meta: { title: '主页 - DUIC' },
+    component: () => import('@/pages/Main.vue'),
+    children: [
+      {
+        path: '/home',
+        component: () => import('@/pages/App.vue'),
+      },
+    ],
+  },
+]
 
-Vue.use(Router)
+const router = new VueRouter({ routes })
 
-export default new Router({
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: Home,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (about.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import(/* webpackChunkName: "about" */ '@/pages/About.vue'),
-    },
-  ],
+// tslint:disable-next-line: variable-name
+router.beforeEach((to, _from, next) => {
+  const title = to.meta.title || '配置中心 - DUIC'
+  document.title = title
+  next()
 })
+
+export default router
