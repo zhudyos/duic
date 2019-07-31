@@ -63,7 +63,7 @@ class AdminResource(
     /**
      * 登录.
      */
-    fun login(request: ServerRequest) = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
+    fun login(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
         userService.login(it.email, it.password).flatMap { user ->
             val expiresAt = Instant.now().plus(Duration.ofSeconds(Config.jwt.expiresIn))
             val token = JWT.create().withJWTId(user.email)

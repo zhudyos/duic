@@ -1,5 +1,6 @@
 package io.zhudy.duic.web.config
 
+import com.auth0.jwt.algorithms.Algorithm
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.zhudy.duic.web.admin.AdminResource
 import io.zhudy.duic.web.security.AuthorizedHandlerFilter
@@ -16,50 +17,44 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.router
 
 /**
+ * 资源路由器。
+ *
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Configuration
-class Routers(private val rateLimiterProvider: ObjectProvider<RateLimiter>) {
+class Routers(
+        private val jwtAlgorithm: Algorithm,
+        private val rateLimiterProvider: ObjectProvider<RateLimiter>
+) {
 
-    @ConditionalOnBean(OAIResource::class)
     @Bean
+    @ConditionalOnBean(OAIResource::class)
     fun oaiRouter(oaiResource: OAIResource): RouterFunction<ServerResponse> = router {
         GET("/api/oai.yml", oaiResource::index)
     }
 
-    @ConditionalOnBean(ServerResource::class)
     @Bean
+    @ConditionalOnBean(ServerResource::class)
     fun serverRouter(serverResource: ServerResource): RouterFunction<ServerResponse> = router {
-        path("/api").nest {
+        "/api".nest {
             GET("/info", serverResource::info)
             GET("/health", serverResource::health)
-        }
-
-        // Deprecated. 请采用 /api/services 路径目录替换该资源接口
-        path("/servers").nest {
-            POST("/apps/refresh", serverResource::refreshApp)
-            GET("/last-data-time", serverResource::getLastDataTime)
-        }
-
-        path("/api/servers").nest {
-            POST("/apps/refresh", serverResource::refreshApp)
-            GET("/last-data-time", serverResource::getLastDataTime)
+            POST("/servers/apps/refresh", serverResource::refreshApp)
+            GET("/servers/last-data-time", serverResource::getLastDataTime)
         }
     }
 
-    @ConditionalOnBean(AppResource::class)
     @Bean
+    @ConditionalOnBean(AppResource::class)
     fun appRouter(appResource: AppResource): RouterFunction<ServerResponse> {
         val rf = router {
-            path("/api/v1").nest {
+            "/api/v1".nest {
                 GET("/ssc/{name}/{profile}", appResource::getSpringCloudConfig)
 
-                path("/apps").nest {
-                    GET("/states/{name}/{profile}", appResource::getConfigState)
-                    GET("/watches/{name}/{profile}", appResource::watchConfigState)
-                    GET("/{name}/{profile}", appResource::getConfigByNameProfile)
-                    GET("/{name}/{profile}/{key}", appResource::getConfigByNameProfileKey)
-                }
+                GET("/apps/states/{name}/{profile}", appResource::getConfigState)
+                GET("/apps/watches/{name}/{profile}", appResource::watchConfigState)
+                GET("/apps/{name}/{profile}", appResource::getConfigByNameProfile)
+                GET("/apps/{name}/{profile}/{key}", appResource::getConfigByNameProfileKey)
             }
         }
 
@@ -71,46 +66,35 @@ class Routers(private val rateLimiterProvider: ObjectProvider<RateLimiter>) {
         return rf
     }
 
-    @ConditionalOnBean(AdminResource::class)
     @Bean
+    @ConditionalOnBean(AdminResource::class)
     fun adminRouter(adminResource: AdminResource): RouterFunction<ServerResponse> = router {
-        path("/api/admins").nest {
+        "/api/admins".nest {
             POST("/login", adminResource::login)
             GET("/user/root", adminResource::rootUser)
 
-            path("/users").nest {
-                POST("/", adminResource::insertUser)
-                GET("/", adminResource::findPageUser)
-                GET("/emails", adminResource::findAllEmail)
-                DELETE("/{email}", RootRoleHandler(adminResource::deleteUser))
-                PUT("/password", adminResource::updateUserPassword)
-                PATCH("/password", RootRoleHandler(adminResource::resetUserPassword))
-            }
+            POST("/users", adminResource::insertUser)
+            GET("/users/", adminResource::findPageUser)
+            GET("/users/emails", adminResource::findAllEmail)
+            DELETE("/users/{email}", RootRoleHandler(adminResource::deleteUser))
+            PUT("/users/password", adminResource::updateUserPassword)
+            PATCH("/users/password", RootRoleHandler(adminResource::resetUserPassword))
 
-            path("/apps").nest {
-                POST("/", adminResource::insertApp)
-                PUT("/", adminResource::updateApp)
-                PUT("/contents", adminResource::updateAppContent)
-                GET("/user", adminResource::findAppByUser)
-                DELETE("/{name}/{profile}", adminResource::deleteApp)
-                GET("/{name}/{profile}", adminResource::findOneApp)
-                GET("/{name}/{profile}/histories", adminResource::findAppContentHistory)
-                POST("/duplicates/{name}/{profile}", adminResource::insertAppForApp)
-                GET("/last-data-time", adminResource::findLastDataTime)
-            }
+            POST("/apps", adminResource::insertApp)
+            PUT("/apps", adminResource::updateApp)
+            PUT("/apps/contents", adminResource::updateAppContent)
+            GET("/apps/user", adminResource::findAppByUser)
+            DELETE("/apps/{name}/{profile}", adminResource::deleteApp)
+            GET("/apps/{name}/{profile}", adminResource::findOneApp)
+            GET("/apps/{name}/{profile}/histories", adminResource::findAppContentHistory)
+            POST("/apps/duplicates/{name}/{profile}", adminResource::insertAppForApp)
+            GET("/apps/last-data-time", adminResource::findLastDataTime)
 
-            path("/tests").nest {
-                GET("/apps/names", adminResource::findAllNames)
-                GET("/apps/{name}/profiles", adminResource::findProfilesByName)
-            }
+            GET("/tests/apps/names", adminResource::findAllNames)
+            GET("/tests/apps/{name}/profiles", adminResource::findProfilesByName)
 
-            path("/search").nest {
-                GET("/apps", adminResource::searchAppByUser)
-            }
-
-            path("/servers").nest {
-                GET("/", adminResource::loadServerStates)
-            }
+            GET("/search/apps", adminResource::searchAppByUser)
+            GET("/servers", adminResource::loadServerStates)
         }
-    }.filter(AuthorizedHandlerFilter())
+    }.filter(AuthorizedHandlerFilter(jwtAlgorithm))
 }

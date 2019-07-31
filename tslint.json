@@ -49,6 +49,6 @@
     "no-var-requires": false
   },
   "linterOptions": {
-    "exclude": ["node_modules", "web/static", "web/assets"]
+    "exclude": ["node_modules", "web/static", "web/assets", "*.vue"]
   }
 }
