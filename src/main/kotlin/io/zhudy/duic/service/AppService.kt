@@ -124,7 +124,7 @@ class AppService(
         refresh().subscribe()
     }
 
-    @Scheduled(initialDelay = 1000, fixedDelayString = "%{duic.app.watch.deleted.fixed_delay::600000}")
+    @Scheduled(initialDelay = 1000, fixedDelayString = "%{duic.app.watch.deleted.fixed-delay:600000}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
         appRepository.findDeletedByCreatedAt(lastAppHistoryCreatedAt).doOnError {

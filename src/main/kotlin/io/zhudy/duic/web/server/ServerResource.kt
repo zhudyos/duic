@@ -20,7 +20,6 @@ import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.HealthCheckException
 import io.zhudy.duic.service.ServerService
-import io.zhudy.duic.web.body
 import org.springframework.stereotype.Controller
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
@@ -43,14 +42,14 @@ class ServerResource(
     /**
      * 刷新内存配置。
      */
-    fun refreshApp(request: ServerRequest): Mono<ServerResponse> = appService.refresh().flatMap {
-        ok().body(ServerRefreshDto(it))
-    }
+    fun refreshApp(request: ServerRequest): Mono<ServerResponse> = appService.refresh()
+            .map { ServerRefreshDto(it) }
+            .flatMap(ok()::syncBody)
 
     /**
      * 获取内存配置最后更新时间。
      */
-    fun getLastDataTime(request: ServerRequest) = ok().body(ServerRefreshDto(appService.getMemoryLastDataTime()))
+    fun getLastDataTime(request: ServerRequest): Mono<ServerResponse> = ok().syncBody(ServerRefreshDto(appService.getMemoryLastDataTime()))
 
     /**
      * 返回服务信息。
@@ -61,9 +60,9 @@ class ServerResource(
      * 健康检查。
      */
     fun health(request: ServerRequest): Mono<ServerResponse> = serverService.health().flatMap {
-        ok().body(mapOf("status" to "UP"))
+        ok().syncBody(mapOf("status" to "UP"))
     }.onErrorResume(HealthCheckException::class.java) {
-        status(it.code).body(mapOf(
+        status(it.code).syncBody(mapOf(
                 "status" to "DOWN",
                 "description" to it.description
         )).toMono()

@@ -15,8 +15,8 @@
  */
 package io.zhudy.duic.web.v1
 
-import org.springframework.stereotype.Controller
 import org.springframework.util.ResourceUtils
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
@@ -24,21 +24,25 @@ import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Mono
 
 /**
+ * OpenAPI 接口文档数据。
+ *
  * @author Kevin Zou (yong.zou@2339.com)
  */
-@Controller
+@RestController
 class OAIResource {
 
-    private val yaml = Yaml()
-    private val apiData = yaml.load<Map<String, Any>>(ResourceUtils.getURL("classpath:duic-oas3.yml").openStream())
-
-    /**
-     *
-     */
-    fun index(request: ServerRequest): Mono<ServerResponse> {
-        val dumpData = apiData.toMutableMap()
-        dumpData.remove("servers")
-        return ok().syncBody(yaml.dump(dumpData))
+    private val apiData: String by lazy {
+        val stream = ResourceUtils.getURL("classpath:duic-oas3.yml").openStream()
+        stream.use {
+            val yaml = Yaml()
+            val d = yaml.load<Map<String, Any>>(it).toMutableMap()
+            d.remove("servers")
+            yaml.dump(d)
+        }
     }
 
+    /**
+     * 获取 OpenAPI。
+     */
+    fun index(request: ServerRequest): Mono<ServerResponse> = ok().syncBody(apiData)
 }

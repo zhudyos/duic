@@ -28,7 +28,6 @@ import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.ServerService
 import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
-import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
 import io.zhudy.duic.web.security.userContext
 import org.springframework.http.ResponseCookie
@@ -91,12 +90,12 @@ class AdminResource(
     /**
      * 返回 `root` 用户登录名.
      */
-    fun rootUser(request: ServerRequest) = ok().body(mapOf("root" to Config.rootEmail))
+    fun rootUser(request: ServerRequest): Mono<ServerResponse> = ok().syncBody(mapOf("root" to Config.rootEmail))
 
     /**
      * 保存用户.
      */
-    fun insertUser(request: ServerRequest) = request.body(BodyExtractors.toMono(User::class.java)).flatMap {
+    fun insertUser(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(User::class.java).flatMap {
         if (it.email.isEmpty()) {
             throw BizCodeException(BizCode.Classic.C_999, "email 不能为空")
         }
@@ -104,50 +103,42 @@ class AdminResource(
             throw BizCodeException(BizCode.Classic.C_999, "密码不能为空")
         }
 
-        userService.insert(it).flatMap {
-            ok().build()
-        }
+        userService.insert(it).then(ok().build())
     }
 
     /**
      * 删除用户.
      */
-    fun deleteUser(request: ServerRequest) = userService.delete(request.pathString("email")).flatMap {
-        noContent().build()
-    }
+    fun deleteUser(request: ServerRequest): Mono<ServerResponse> = userService.delete(request.pathString("email"))
+            .then(noContent().build())
 
     /**
      *
      */
-    fun updateUserPassword(request: ServerRequest) = request.bodyToMono(UpdatePassword::class.java).flatMap {
-        val userContext = request.userContext()
-        userService.updatePassword(userContext.email, it.oldPassword, it.newPassword).flatMap {
-            noContent().build()
-        }
-    }
+    fun updateUserPassword(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(UpdatePassword::class.java)
+            .flatMap {
+                val userContext = request.userContext()
+                userService.updatePassword(userContext.email, it.oldPassword, it.newPassword)
+                        .then(noContent().build())
+            }
 
     /**
      * 重置用户密码.
      */
-    fun resetUserPassword(request: ServerRequest) = request.bodyToMono(ResetPasswordDto::class.java).flatMap {
-        userService.resetPassword(it).flatMap {
-            noContent().build()
-        }
-    }
+    fun resetUserPassword(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(ResetPasswordDto::class.java)
+            .flatMap(userService::resetPassword)
+            .then(noContent().build())
 
     /**
      */
-    fun findPageUser(request: ServerRequest) = userService.findPage(WebUtils.getPage(request)).flatMap {
-        ok().body(it)
-    }
-
+    fun findPageUser(request: ServerRequest): Mono<ServerResponse> = userService.findPage(WebUtils.getPage(request))
+            .flatMap(ok()::syncBody)
 
     /**
      *
      */
-    fun findAllEmail(request: ServerRequest) = userService.findAllEmail().collectList().flatMap {
-        ok().body(it)
-    }
+    fun findAllEmail(request: ServerRequest): Mono<ServerResponse> = userService.findAllEmail().collectList()
+            .flatMap(ok()::syncBody)
     // ======================================= USER ====================================================== //
 
 
@@ -174,43 +165,46 @@ class AdminResource(
     /**
      * 从已经存在的应用信息中插入一个应用。
      */
-    fun insertAppForApp(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap { newApp ->
-        appService.findOne(request.pathString("name"), request.pathString("profile")).flatMap {
-            if (newApp.name.isEmpty()) {
-                throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
-            }
-            if (newApp.profile.isEmpty()) {
-                throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
-            }
-            newApp.content = it.content
+    fun insertAppForApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java)
+            .flatMap { newApp ->
+                appService.findOne(request.pathString("name"), request.pathString("profile")).flatMap {
+                    if (newApp.name.isEmpty()) {
+                        throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
+                    }
+                    if (newApp.profile.isEmpty()) {
+                        throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
+                    }
+                    newApp.content = it.content
 
-            appService.insert(newApp)
-        }
-    }.then(ok().build())
-
-    /**
-     *
-     */
-    fun updateApp(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap {
-        if (it.name.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
-        }
-        if (it.profile.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
-        }
-
-        appService.update(it, request.userContext()).flatMap {
-            ok().body(mapOf("v" to it))
-        }
-    }
+                    appService.insert(newApp)
+                }
+            }.then(ok().build())
 
     /**
      *
      */
-    fun updateAppContent(request: ServerRequest) = request.bodyToMono(App::class.java).flatMap {
-        appService.updateContent(it, request.userContext()).flatMap {
-            ok().body(mapOf("v" to it))
-        }
+    fun updateApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java)
+            .doOnNext {
+                if (it.name.isEmpty()) {
+                    throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
+                }
+                if (it.profile.isEmpty()) {
+                    throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
+                }
+            }
+            .flatMap {
+                appService.update(it, request.userContext())
+                        .map { v -> mapOf("v" to v) }
+                        .flatMap(ok()::syncBody)
+            }
+
+    /**
+     *
+     */
+    fun updateAppContent(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java).flatMap {
+        appService.updateContent(it, request.userContext())
+                .map { v -> mapOf("v" to v) }
+                .flatMap(ok()::syncBody)
     }
 
     /**
@@ -219,32 +213,25 @@ class AdminResource(
     fun deleteApp(request: ServerRequest): Mono<ServerResponse> {
         val name = request.pathString("name")
         val profile = request.pathString("profile")
-        return appService.delete(App(name = name, profile = profile), request.userContext()).flatMap {
-            noContent().build()
-        }
+        return appService.delete(App(name = name, profile = profile), request.userContext())
+                .then(noContent().build())
     }
 
     /**
      * 查询单个应用配置.
      */
-    fun findOneApp(request: ServerRequest): Mono<ServerResponse> {
-        val name = request.pathString("name")
-        val profile = request.pathString("profile")
-
-        return appService.findOne(name, profile).flatMap {
-            ok().body(it)
-        }
-    }
+    fun findOneApp(request: ServerRequest): Mono<ServerResponse> = appService.findOne(
+            request.pathString("name"),
+            request.pathString("profile")
+    ).flatMap(ok()::syncBody)
 
     /**
      * 查询用户的 apps.
      */
-    fun findAppByUser(request: ServerRequest): Mono<ServerResponse> {
-        val page = WebUtils.getPage(request)
-        return appService.findPageByUser(page, request.userContext()).flatMap {
-            ok().body(it)
-        }
-    }
+    fun findAppByUser(request: ServerRequest): Mono<ServerResponse> = appService.findPageByUser(
+            WebUtils.getPage(request),
+            request.userContext()
+    ).flatMap(ok()::syncBody)
 
     /**
      * 搜索配置。
@@ -252,9 +239,7 @@ class AdminResource(
     fun searchAppByUser(request: ServerRequest): Mono<ServerResponse> {
         val page = WebUtils.getPage(request)
         val q = request.queryParam("q").orElse("").trim()
-        return appService.searchPageByUser(q, page, request.userContext()).flatMap {
-            ok().body(it)
-        }
+        return appService.searchPageByUser(q, page, request.userContext()).flatMap(ok()::syncBody)
     }
 
     /**
@@ -268,28 +253,25 @@ class AdminResource(
                 AppContentHistory::class.java)
     }
 
-    fun findAllNames(request: ServerRequest) = appService.findAllNames().collectList().flatMap {
-        ok().body(it)
-    }
+    fun findAllNames(request: ServerRequest): Mono<ServerResponse> = appService.findAllNames().collectList()
+            .flatMap(ok()::syncBody)
 
-    fun findProfilesByName(request: ServerRequest) = appService.findProfilesByName(request.pathString("name"))
+    fun findProfilesByName(request: ServerRequest): Mono<ServerResponse> = appService.findProfilesByName(request.pathString("name"))
             .collectList()
-            .flatMap {
-                ok().body(it)
-            }
+            .flatMap(ok()::syncBody)
 
     /**
      *
      */
-    fun findLastDataTime(request: ServerRequest) = appService.findLastDataTime().flatMap {
-        ok().body(mapOf("last_data_time" to it))
-    }
+    fun findLastDataTime(request: ServerRequest): Mono<ServerResponse> = appService.findLastDataTime()
+            .map { mapOf("last_data_time" to it) }
+            .flatMap(ok()::syncBody)
 
     // ======================================= APP ======================================================= //
 
     // ======================================= SERVER ==================================================== //
 
-    fun loadServerStates(request: ServerRequest) = ok().body(serverService.loadServerStates())
+    fun loadServerStates(request: ServerRequest): Mono<ServerResponse> = ok().body(serverService.loadServerStates())
 
     // ======================================= SERVER ==================================================== //
 }

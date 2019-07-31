@@ -20,10 +20,9 @@ import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.vo.RequestConfigVo
 import io.zhudy.duic.web.WebConstants
-import io.zhudy.duic.web.body
 import io.zhudy.duic.web.pathString
-import org.springframework.stereotype.Controller
 import org.springframework.util.StringUtils
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
@@ -35,7 +34,7 @@ import java.net.Inet4Address
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Controller
+@RestController
 class AppResource(
         private val appService: AppService
 ) {
@@ -45,9 +44,9 @@ class AppResource(
      */
     fun getConfigState(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
-        return appService.getConfigState(vo).flatMap {
-            ok().body(mapOf("state" to it))
-        }
+        return appService.getConfigState(vo)
+                .map { mapOf("state" to it) }
+                .flatMap(ok()::syncBody)
     }
 
     /**
@@ -56,10 +55,9 @@ class AppResource(
     fun watchConfigState(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
         val oldState = request.queryParam("state").orElse("")
-
-        return appService.watchConfigState(vo, oldState).flatMap {
-            ok().body(mapOf("state" to it))
-        }
+        return appService.watchConfigState(vo, oldState)
+                .map { mapOf("state" to it) }
+                .flatMap(ok()::syncBody)
     }
 
     /**
@@ -67,9 +65,8 @@ class AppResource(
      */
     fun getSpringCloudConfig(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
-        return appService.loadSpringCloudConfig(vo).flatMap {
-            ok().body(it)
-        }
+        return appService.loadSpringCloudConfig(vo)
+                .flatMap(ok()::syncBody)
     }
 
     /**
@@ -80,9 +77,8 @@ class AppResource(
      */
     fun getConfigByNameProfile(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
-        return appService.loadConfigByNameProfile(vo).flatMap {
-            ok().body(it)
-        }
+        return appService.loadConfigByNameProfile(vo)
+                .flatMap(ok()::syncBody)
     }
 
     /**
@@ -94,9 +90,8 @@ class AppResource(
     fun getConfigByNameProfileKey(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
         vo.key = request.pathString("key")
-        return appService.loadConfigByNameProfileKey(vo).flatMap {
-            ok().body(it)
-        }
+        return appService.loadConfigByNameProfileKey(vo)
+                .flatMap(ok()::syncBody)
     }
 
     private fun getRequestConfigVo(request: ServerRequest): RequestConfigVo {

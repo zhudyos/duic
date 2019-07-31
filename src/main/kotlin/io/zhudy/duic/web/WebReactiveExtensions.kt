@@ -15,10 +15,7 @@
  */
 package io.zhudy.duic.web
 
-import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.server.ServerRequest
-import org.springframework.web.reactive.function.server.ServerResponse
-import reactor.core.publisher.Mono
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -125,13 +122,6 @@ fun ServerRequest.queryString(name: String) = requestStringParam(this, query, na
  * @param name 参数名称
  */
 fun ServerRequest.queryTrimString(name: String) = requestTrimStringParam(this, query, name)
-
-// =================================================================================================================
-
-/**
- *
- */
-fun ServerResponse.BodyBuilder.body(o: Any): Mono<ServerResponse> = body(BodyInserters.fromObject(o))
 
 
 // =================================================================================================================
