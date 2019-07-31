@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.2.0",
+    "js-yaml": "^3.13.1",
     "monaco-editor": "^0.17.1",
     "quasar": "^1.0.5",
     "vue": "^2.6.10",
