@@ -1,24 +1,24 @@
 <template>
-  <q-layout view="hHh lpR fFf">
-    <q-header elevated class="bg-primary text-white">
+  <q-layout view="hHh lpR fFf" class>
+    <q-header elevated class="bg-black">
       <q-toolbar>
         <q-toolbar-title>
           <q-avatar>
-            <img src="../assets/duic60x60.png" />
+            <img src="../assets/images/duic60x60.png" />
           </q-avatar>配置中心
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
 
     <q-page-container>
-      <router-view />
+      <router-view class="q-pa-sm" />
     </q-page-container>
 
     <q-footer elevated class="bg-grey-8 text-white">
       <q-toolbar>
         <q-toolbar-title>
           <q-avatar>
-            <img src="../assets/duic60x60.png" />
+            <img src="../assets/images/duic60x60.png" />
           </q-avatar>Title
         </q-toolbar-title>
       </q-toolbar>
@@ -26,7 +26,7 @@
   </q-layout>
 </template>
 
-<script>
+<script lang="ts">
 export default {
   data() {
     return {}

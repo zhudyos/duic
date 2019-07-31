@@ -1,54 +1,20 @@
 {
-  "rulesDirectory": ["tslint-plugin-prettier"],
-  "extends": ["tslint:latest", "tslint-config-prettier"],
-  "rules": {
-    "prettier": [
-      true,
-      null,
-      {
-        "editorconfig": false
-      }
-    ],
-    "no-implicit-dependencies": false,
-    "ordered-imports": [
-      true,
-      {
-        "import-sources-order": "lowercase-first",
-        "named-imports-order": "lowercase-first",
-        "grouped-imports": true,
-        "groups": [
-          {
-            "name": "third-party modules",
-            "match": "^[a-z].*",
-            "order": 10
-          },
-          {
-            "name": "projects modules",
-            "match": "^@/.*",
-            "order": 20
-          },
-          {
-            "name": "upper two levels modules",
-            "match": "^\\.\\.",
-            "order": 30
-          },
-          {
-            "name": "upper level modules",
-            "match": "^\\.",
-            "order": 40
-          }
-        ]
-      }
-    ],
-    "object-literal-sort-keys": false,
-    "no-namespace": false,
-    "interface-over-type-literal": false,
-    "react-hooks-nesting": false,
-    "no-submodule-imports": false,
-    "no-string-literal": false,
-    "no-var-requires": false
-  },
+  "defaultSeverity": "warning",
+  "extends": [
+    "tslint:recommended"
+  ],
   "linterOptions": {
-    "exclude": ["node_modules", "web/static", "web/assets", "*.vue"]
+    "exclude": [
+      "node_modules/**"
+    ]
+  },
+  "rules": {
+    "quotemark": [true, "single"],
+    "indent": [true, "spaces", 2],
+    "semicolon": [true, "never"],
+    "interface-name": false,
+    "ordered-imports": false,
+    "object-literal-sort-keys": false,
+    "no-consecutive-blank-lines": false
   }
 }

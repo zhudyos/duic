@@ -5,7 +5,7 @@
         <q-card-section>
           <div class="text-h6">
             <q-avatar>
-              <img src="../assets/duic60x60.png" />
+              <img src="../assets/images/duic60x60.png" />
             </q-avatar>
             <span>登录</span>
           </div>
@@ -20,7 +20,7 @@
               :rules="[ v => !!v || '邮箱不能为空', checkEmail ]"
             >
               <template v-slot:prepend>
-                <q-icon name="fas fa-envelope" />
+                <q-icon name="email" />
               </template>
             </q-input>
 
@@ -32,7 +32,7 @@
               :rules="[ v=> !!v || '密码不能为空' ]"
             >
               <template v-slot:prepend>
-                <q-icon name="fas fa-key" />
+                <q-icon name="vpn_key" />
               </template>
             </q-input>
           </q-form>
@@ -59,14 +59,7 @@
             href="https://hub.docker.com/r/zhudyos/duic"
             target="_blank"
           />
-          <q-btn
-            flat
-            round
-            icon="fas fa-envelope"
-            type="a"
-            href="mailto:kevinz@weghst.com"
-            target="_blank"
-          />
+          <q-btn flat round icon="email" type="a" href="mailto:kevinz@weghst.com" target="_blank" />
         </q-card-actions>
 
         <q-card-section>
@@ -81,8 +74,10 @@
     </div>
   </q-page>
 </template>
-<script>
-import { Promise } from 'q'
+<script lang="ts">
+// tslint:disable-next-line:max-line-length
+const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+
 export default {
   name: 'Login',
   data: () => ({
@@ -90,13 +85,9 @@ export default {
     password: null,
   }),
   methods: {
-    checkEmail(v) {
+    checkEmail(v: any) {
       return new Promise((resolve) => {
-        resolve(
-          /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
-            v
-          ) || '错误的邮箱'
-        )
+        resolve(emailRegex.test(v) || '错误的邮箱')
       })
     },
   },
@@ -104,7 +95,7 @@ export default {
 </script>
 <style lang="stylus" scoped>
 .login {
-  background: url('../assets/login_bg.jpg') center;
+  background: url('../assets/images/login_bg.jpg') center;
   background-size: cover;
   position: relative;
 }

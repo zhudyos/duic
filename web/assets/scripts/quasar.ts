@@ -23,6 +23,11 @@ import Quasar, {
   QItemSection,
   QLayout,
   QList,
+  // table
+  QTable,
+  QTh,
+  QTr,
+  QTd,
   // plugins
   QPage,
   QPageContainer,
@@ -59,6 +64,10 @@ Vue.use(Quasar, {
     QCardActions,
     QBtnToggle,
     QSpace,
+    QTable,
+    QTh,
+    QTr,
+    QTd,
   },
   plugins: {
     Loading,

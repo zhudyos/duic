@@ -11,11 +11,11 @@ const routes = [
   {
     path: '/',
     meta: { title: '主页 - DUIC' },
-    component: () => import('@/pages/Main.vue'),
+    component: () => import('@/pages/Layout.vue'),
     children: [
       {
-        path: '/home',
-        component: () => import('@/pages/App.vue'),
+        path: '/apps',
+        component: () => import('@/pages/apps/AppList.vue'),
       },
     ],
   },
