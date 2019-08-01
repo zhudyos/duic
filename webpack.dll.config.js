@@ -8,7 +8,7 @@ const dllPath = 'web/assets/dll'
 module.exports = {
   entry: {
     // 所有在开发中不会更改的包
-    vendor: ['vue', 'vue-router', 'whatwg-fetch']
+    vendor: ['vue', 'vue-router', 'axios']
   },
   output: {
     path: path.resolve(__dirname, 'web/static/js'),

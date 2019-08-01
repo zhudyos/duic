@@ -39,7 +39,13 @@
         </q-card-section>
 
         <q-card-actions>
-          <q-btn color="black" class="full-width" label="登 录" />
+          <q-btn
+            :loading="loginBtnLoading"
+            color="black"
+            class="full-width"
+            label="登 录"
+            @click="login"
+          />
         </q-card-actions>
 
         <q-card-actions>
@@ -82,7 +88,8 @@
   </q-page>
 </template>
 <script>
-import { fetch } from "whatwg-fetch";
+import axios from "axios";
+import { debuglog } from "util";
 
 // eslint-disable-next-line
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -91,7 +98,8 @@ export default {
   name: "Login",
   data: () => ({
     email: null,
-    password: null
+    password: null,
+    loginBtnLoading: false
   }),
   methods: {
     checkEmail(v) {
@@ -100,9 +108,34 @@ export default {
       });
     },
     login() {
-      fetch("/api/admins").then(response => {
-        console.log(response);
-      });
+      this.loginBtnLoading = true;
+
+      axios
+        .post("/api/admins/login", {
+          email: this.email,
+          password: this.password
+        })
+        .then(response => {
+          this.loginBtnLoading = false;
+          // todo
+        })
+        .catch(error => {
+          this.loginBtnLoading = false;
+
+          const d = error.response.data || {};
+          let text = "登录失败";
+          if (d.code === 2000) {
+            text = "用户不存在";
+          } else if (d.code === 2001) {
+            text = "密码错误";
+          }
+
+          this.$q.notify({
+            color: "negative",
+            message: text,
+            position: "top"
+          });
+        });
     }
   }
 };
