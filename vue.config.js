@@ -34,7 +34,7 @@ module.exports = {
   transpileDependencies: [/[\\\/]node_modules[\\\/]quasar[\\\/]/],
   pages: {
     index: {
-      entry: src('main.ts'),
+      entry: src('main.js'),
       template: src('index.html'),
       // 自定义数据 可以在 template 中使用
       dllJs: `/static/js/${require(dll('assets.json')).vendor.js}`,

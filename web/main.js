@@ -1,7 +1,5 @@
 import Vue from 'vue'
-
-import '@/assets/scripts/lib_vendor'
-
+import './quasar'
 import Main from './pages/Main.vue'
 import router from './router'
 

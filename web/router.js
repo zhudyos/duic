@@ -6,16 +6,16 @@ const routes = [
   {
     path: '/login',
     meta: { title: '登录 - DUIC' },
-    component: () => import('@/pages/Login.vue'),
+    component: () => import('./pages/Login.vue'),
   },
   {
     path: '/',
     meta: { title: '主页 - DUIC' },
-    component: () => import('@/pages/Layout.vue'),
+    component: () => import('./pages/Layout.vue'),
     children: [
       {
         path: '/apps',
-        component: () => import('@/pages/apps/AppList.vue'),
+        component: () => import('./pages/apps/AppList.vue'),
       },
     ],
   },

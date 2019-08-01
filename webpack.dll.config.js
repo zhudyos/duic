@@ -3,7 +3,6 @@ const webpack = require('webpack')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const AssetsPlugin = require('assets-webpack-plugin')
 
-const root = (pathName = '') => path.resolve(__dirname, pathName)
 const dllPath = 'web/assets/dll'
 
 module.exports = {
@@ -12,16 +11,16 @@ module.exports = {
     vendor: ['vue', 'vue-router', 'whatwg-fetch']
   },
   output: {
-    path: root('static/js'),
-    filename: 'dll_[name]_[hash:6].js',
+    path: path.resolve(__dirname, 'web/static/js'),
+    filename: 'dll-[name]-[hash:6].js',
     library: '[name]_[hash:6]'
   },
   plugins: [
     new CleanWebpackPlugin({
-      cleanOnceBeforeBuildPatterns: ['dll_*'],
+      cleanOnceBeforeBuildPatterns: ['dll*'],
     }),
     new webpack.DllPlugin({
-      path: root(`${dllPath}/manifest.json`),
+      path: `${dllPath}/manifest.json`,
       name: '[name]_[hash:6]' // 必须与 output.library 一致
     }),
     new AssetsPlugin({

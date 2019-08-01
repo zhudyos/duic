@@ -28,6 +28,9 @@ import Quasar, {
   QTh,
   QTr,
   QTd,
+  // tab
+  QTabs,
+  QRouteTab,
   // plugins
   QPage,
   QPageContainer,
@@ -35,7 +38,9 @@ import Quasar, {
   QToolbar,
   QToolbarTitle,
 } from 'quasar'
-import iconSet from 'quasar/icon-set/material-icons.js'
+import iconSet from 'quasar/icon-set/fontawesome-v5.js'
+import '@quasar/extras/fontawesome-v5/fontawesome-v5.css'
+import './quasar-variables.styl'
 import Vue from 'vue'
 
 Vue.use(Quasar, {
@@ -68,6 +73,8 @@ Vue.use(Quasar, {
     QTh,
     QTr,
     QTd,
+    QTabs,
+    QRouteTab,
   },
   plugins: {
     Loading,

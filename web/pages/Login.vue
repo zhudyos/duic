@@ -20,7 +20,7 @@
               :rules="[ v => !!v || '邮箱不能为空', checkEmail ]"
             >
               <template v-slot:prepend>
-                <q-icon name="email" />
+                <q-icon name="fas fa-envelope" />
               </template>
             </q-input>
 
@@ -32,7 +32,7 @@
               :rules="[ v=> !!v || '密码不能为空' ]"
             >
               <template v-slot:prepend>
-                <q-icon name="vpn_key" />
+                <q-icon name="fas fa-key" />
               </template>
             </q-input>
           </q-form>
@@ -59,7 +59,14 @@
             href="https://hub.docker.com/r/zhudyos/duic"
             target="_blank"
           />
-          <q-btn flat round icon="email" type="a" href="mailto:kevinz@weghst.com" target="_blank" />
+          <q-btn
+            flat
+            round
+            icon="fas fa-envelope"
+            type="a"
+            href="mailto:kevinz@weghst.com"
+            target="_blank"
+          />
         </q-card-actions>
 
         <q-card-section>
@@ -74,24 +81,31 @@
     </div>
   </q-page>
 </template>
-<script lang="ts">
-// tslint:disable-next-line:max-line-length
-const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+<script>
+import { fetch } from "whatwg-fetch";
+
+// eslint-disable-next-line
+const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
 export default {
-  name: 'Login',
+  name: "Login",
   data: () => ({
     email: null,
-    password: null,
+    password: null
   }),
   methods: {
-    checkEmail(v: any) {
-      return new Promise((resolve) => {
-        resolve(emailRegex.test(v) || '错误的邮箱')
-      })
+    checkEmail(v) {
+      return new Promise(resolve => {
+        resolve(emailRegex.test(v) || "错误的邮箱");
+      });
     },
-  },
-}
+    login() {
+      fetch("/api/admins").then(response => {
+        console.log(response);
+      });
+    }
+  }
+};
 </script>
 <style lang="stylus" scoped>
 .login {
