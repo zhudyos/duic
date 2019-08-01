@@ -58,3 +58,4 @@ bin/*
 .classpath
 .project
 .settings
+application.pid
