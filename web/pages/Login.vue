@@ -12,7 +12,7 @@
         </q-card-section>
 
         <q-card-section>
-          <q-form>
+          <q-form ref="loginForm">
             <q-input
               dark
               v-model="email"
@@ -20,7 +20,7 @@
               :rules="[ v => !!v || '邮箱不能为空', checkEmail ]"
             >
               <template v-slot:prepend>
-                <q-icon name="fas fa-envelope" />
+                <q-icon name="mdi-email" />
               </template>
             </q-input>
 
@@ -32,7 +32,7 @@
               :rules="[ v=> !!v || '密码不能为空' ]"
             >
               <template v-slot:prepend>
-                <q-icon name="fas fa-key" />
+                <q-icon name="mdi-key" />
               </template>
             </q-input>
           </q-form>
@@ -52,7 +52,7 @@
           <q-btn
             flat
             round
-            icon="fab fa-github"
+            icon="mdi-github-box"
             type="a"
             href="https://github.com/zhudyos/duic"
             target="_blank"
@@ -60,7 +60,7 @@
           <q-btn
             flat
             round
-            icon="fab fa-docker"
+            icon="mdi-docker"
             type="a"
             href="https://hub.docker.com/r/zhudyos/duic"
             target="_blank"
@@ -68,7 +68,7 @@
           <q-btn
             flat
             round
-            icon="fas fa-envelope"
+            icon="mdi-email"
             type="a"
             href="mailto:kevinz@weghst.com"
             target="_blank"
@@ -89,7 +89,6 @@
 </template>
 <script>
 import axios from "axios";
-import { debuglog } from "util";
 
 // eslint-disable-next-line
 const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -108,34 +107,39 @@ export default {
       });
     },
     login() {
-      this.loginBtnLoading = true;
+      this.$refs.loginForm.validate().then(valid => {
+        if (!valid) {
+          return;
+        }
+        this.loginBtnLoading = true;
 
-      axios
-        .post("/api/admins/login", {
-          email: this.email,
-          password: this.password
-        })
-        .then(response => {
-          this.loginBtnLoading = false;
-          // todo
-        })
-        .catch(error => {
-          this.loginBtnLoading = false;
+        axios
+          .post("/api/admins/login", {
+            email: this.email,
+            password: this.password
+          })
+          .then(response => {
+            this.loginBtnLoading = false;
+            this.$router.push("/");
+          })
+          .catch(error => {
+            this.loginBtnLoading = false;
 
-          const d = error.response.data || {};
-          let text = "登录失败";
-          if (d.code === 2000) {
-            text = "用户不存在";
-          } else if (d.code === 2001) {
-            text = "密码错误";
-          }
+            const d = error.response.data || {};
+            let text = "登录失败";
+            if (d.code === 2000) {
+              text = "用户不存在";
+            } else if (d.code === 2001) {
+              text = "密码错误";
+            }
 
-          this.$q.notify({
-            color: "negative",
-            message: text,
-            position: "top"
+            this.$q.notify({
+              color: "negative",
+              message: text,
+              position: "top"
+            });
           });
-        });
+      });
     }
   }
 };

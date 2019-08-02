@@ -6,6 +6,7 @@ import Quasar, {
   QAjaxBar,
   QAvatar,
   QBtn,
+  QBtnDropdown,
   QBtnToggle,
   QCard,
   QCardActions,
@@ -37,11 +38,12 @@ import Quasar, {
   QSpace,
   QToolbar,
   QToolbarTitle,
-} from 'quasar'
-import iconSet from 'quasar/icon-set/fontawesome-v5.js'
-import '@quasar/extras/fontawesome-v5/fontawesome-v5.css'
-import './quasar-variables.styl'
-import Vue from 'vue'
+  Cookies
+} from "quasar";
+import iconSet from "quasar/icon-set/mdi-v3";
+import "@quasar/extras/mdi-v3/mdi-v3.css";
+import "./quasar-variables.styl";
+import Vue from "vue";
 
 Vue.use(Quasar, {
   iconSet,
@@ -57,6 +59,7 @@ Vue.use(Quasar, {
     QToolbar,
     QToolbarTitle,
     QBtn,
+    QBtnDropdown,
     QIcon,
     QList,
     QItem,
@@ -74,11 +77,12 @@ Vue.use(Quasar, {
     QTr,
     QTd,
     QTabs,
-    QRouteTab,
+    QRouteTab
   },
   plugins: {
     Loading,
     Dialog,
     Notify,
-  },
-})
+    Cookies
+  }
+});

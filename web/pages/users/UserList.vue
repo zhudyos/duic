@@ -7,7 +7,7 @@
         <q-btn flat>复制</q-btn>
         <q-btn flat>删除</q-btn>
       </q-card-actions>
-      <q-table flat title="应用列表" :data="data" :columns="columns" row-key="name" dark>
+      <q-table flat title="用户列表" :data="data" :columns="columns" row-key="name" dark>
         <template v-slot:top-right>
           <q-input dark v-model="filter" placeholder="Search">
             <template v-slot:append>

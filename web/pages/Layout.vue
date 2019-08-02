@@ -7,16 +7,24 @@
         <q-space />
 
         <q-tabs stretch shrink>
-          <q-route-tab name="a" label="配置" to="#" exact />
-          <q-route-tab name="c" label="集群" to="#" exact />
-          <q-route-tab name="b" label="用户" to="#" exact />
+          <q-route-tab name="a" label="配置" to="/apps?page=1&size=20" />
+          <q-route-tab name="c" label="集群" to="#" />
+          <q-route-tab name="b" label="用户" to="/users?page=1&size=20" />
         </q-tabs>
 
-        <q-separator dark vertical />
+        <q-separator vertical />
 
-        <q-btn stretch flat label="kevinz@weghst.com" />
+        <q-btn-dropdown stretch flat :label="email">
+          <q-list>
+            <q-item clickable v-close-popup>
+              <q-item-section>
+                <q-item-label>修改密码</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
         <q-btn stretch flat>
-          <q-icon name="fas fa-sign-out-alt" />
+          <q-icon name="mdi-logout" />
         </q-btn>
       </q-toolbar>
     </q-header>
@@ -24,23 +32,22 @@
     <q-page-container>
       <router-view class="q-pa-sm" />
     </q-page-container>
-
-    <q-footer elevated class="bg-grey-8 text-white">
-      <q-toolbar>
-        <q-toolbar-title>
-          <q-avatar>
-            <img src="../assets/images/duic60x60.png" />
-          </q-avatar>Title
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-footer>
   </q-layout>
 </template>
 
 <script>
 export default {
-  data() {
-    return { tab: 'tab1' }
-  },
-}
+  data: () => ({
+    email: ""
+  }),
+  created() {
+    const email = this.$q.cookies.get("email");
+    const state = !!email;
+    if (state) {
+      this.email = email;
+    } else {
+      this.$router.push("/login");
+    }
+  }
+};
 </script>
