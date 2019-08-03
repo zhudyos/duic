@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh lpR fFf" class>
+  <q-layout view="hHh lpR fFf">
     <q-header elevated class="bg-black">
       <q-toolbar>
         <q-toolbar-title>DUIC 配置中心</q-toolbar-title>

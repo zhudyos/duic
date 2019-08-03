@@ -1,37 +1,42 @@
-import Vue from 'vue'
-import VueRouter from 'vue-router'
-Vue.use(VueRouter)
+import Vue from "vue";
+import VueRouter from "vue-router";
+Vue.use(VueRouter);
 
 const routes = [
   {
-    path: '/login',
-    meta: { title: '登录 - DUIC' },
-    component: () => import('./pages/Login.vue'),
+    path: "/login",
+    meta: { title: "登录 - DUIC" },
+    component: () => import("./pages/Login.vue")
   },
   {
-    path: '/',
-    meta: { title: '主页 - DUIC' },
-    component: () => import('./pages/Layout.vue'),
+    path: "/",
+    meta: { title: "主页 - DUIC" },
+    component: () => import("./pages/Layout.vue"),
     children: [
       {
-        path: '/apps',
-        component: () => import('./pages/apps/AppList.vue'),
+        path: "/apps",
+        component: () => import("./pages/apps/AppList.vue")
       },
       {
-        path: '/users',
-        component: () => import('./pages/users/UserList.vue'),
-      },
-    ],
+        path: "/users",
+        component: () => import("./pages/users/UserList.vue")
+      }
+    ]
   },
-]
+  {
+    path: "/config-edit",
+    meta: { title: "配置编辑" },
+    component: () => import("./pages/config-edit/Index.vue")
+  }
+];
 
-const router = new VueRouter({ routes })
+const router = new VueRouter({ routes });
 
 // tslint:disable-next-line: variable-name
 router.beforeEach((to, _from, next) => {
-  const title = to.meta.title || '配置中心 - DUIC'
-  document.title = title
-  next()
-})
+  const title = to.meta.title || "配置中心 - DUIC";
+  document.title = title;
+  next();
+});
 
-export default router
+export default router;
