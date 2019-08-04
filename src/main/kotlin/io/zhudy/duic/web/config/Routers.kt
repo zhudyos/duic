@@ -74,7 +74,7 @@ class Routers(
             GET("/user/root", adminResource::rootUser)
 
             POST("/users", adminResource::insertUser)
-            GET("/users/", adminResource::findPageUser)
+            GET("/users", adminResource::findPageUser)
             GET("/users/emails", adminResource::findAllEmail)
             DELETE("/users/{email}", RootRoleHandler(adminResource::deleteUser))
             PUT("/users/password", adminResource::updateUserPassword)
