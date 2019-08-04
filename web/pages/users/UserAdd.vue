@@ -1,15 +1,16 @@
 <template>
-  <q-dialog ref="dialog" style="sm" @keyup.enter="onOk">
-    <q-card class="full-width">
+  <q-dialog ref="dialog" @keyup.enter="onOk">
+    <q-card dark class="full-width bg-grey-9">
       <q-card-section>
         <div class="text-h6">创建用户</div>
       </q-card-section>
 
-      <q-separator />
+      <q-separator dark />
 
       <q-card-section>
         <q-form ref="form">
           <q-input
+            dark
             v-model="email"
             autofocus
             placeholder="邮箱"
@@ -21,6 +22,7 @@
           </q-input>
 
           <q-input
+            dark
             :type="isPwd ? 'password' : 'text'"
             v-model="password"
             placeholder="密码"
@@ -40,10 +42,10 @@
         </q-form>
       </q-card-section>
 
-      <q-separator />
+      <q-separator dark />
 
       <q-card-actions align="right">
-        <q-btn flat @click="onOk">保 存</q-btn>
+        <q-btn flat @click="onOk">保存</q-btn>
       </q-card-actions>
     </q-card>
   </q-dialog>

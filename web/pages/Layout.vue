@@ -1,6 +1,6 @@
 <template>
-  <q-layout view="hHh lpR fFf">
-    <q-header elevated class="bg-black">
+  <q-layout>
+    <q-header class="bg-black">
       <q-toolbar>
         <q-toolbar-title>DUIC 配置中心</q-toolbar-title>
 
@@ -12,10 +12,10 @@
           <q-route-tab name="b" label="用户" to="/users" />
         </q-tabs>
 
-        <q-separator vertical />
+        <q-separator dark vertical inset />
 
         <q-btn-dropdown stretch flat :label="email">
-          <q-list>
+          <q-list dark class="bg-grey-7">
             <q-item clickable v-close-popup>
               <q-item-section>
                 <q-item-label>修改密码</q-item-label>
@@ -23,6 +23,7 @@
             </q-item>
           </q-list>
         </q-btn-dropdown>
+
         <q-btn stretch flat>
           <q-icon name="mdi-logout" />
         </q-btn>

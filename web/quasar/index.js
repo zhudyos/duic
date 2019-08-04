@@ -37,9 +37,10 @@ import Quasar, {
   QRouteTab,
   QPage,
   QPageContainer,
-  QSpace,
   QToolbar,
-  QToolbarTitle
+  QToolbarTitle,
+  QSpace,
+  QSeparator
 } from "quasar";
 import langZhHans from "quasar/lang/zh-hans";
 import iconSet from "quasar/icon-set/mdi-v3";
@@ -75,13 +76,14 @@ Vue.use(Quasar, {
     QCardSection,
     QCardActions,
     QBtnToggle,
-    QSpace,
     QTable,
     QTh,
     QTr,
     QTd,
     QTabs,
-    QRouteTab
+    QRouteTab,
+    QSpace,
+    QSeparator
   },
   plugins: {
     Loading,

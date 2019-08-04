@@ -1,10 +1,12 @@
 <template>
   <q-page>
-    <q-card dark class="bg-black">
+    <q-card dark class="bg-grey-9">
       <q-card-actions dark>
         <q-space />
         <q-btn flat @click="addUser">创建</q-btn>
       </q-card-actions>
+
+      <q-separator dark />
 
       <q-table
         flat
@@ -106,12 +108,8 @@ export default {
       this.$q
         .dialog({
           dark: true,
-          options: {
-            noFocus: true
-          },
           title: "删除用户",
           message: `确认删除用户 ${email}，同时删除用户已关联的配置权限`,
-          prompt: {},
           cancel: true
         })
         .onOk(() => {

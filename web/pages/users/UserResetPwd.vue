@@ -1,21 +1,22 @@
 <template>
-  <q-dialog ref="dialog" style="sm" @keyup.enter="onOk">
-    <q-card class="full-width">
+  <q-dialog ref="dialog" @keyup.enter="onOk">
+    <q-card dark class="full-width bg-grey-9">
       <q-card-section>
         <div class="text-h6">重置密码</div>
       </q-card-section>
 
-      <q-separator />
+      <q-separator dark />
 
       <q-card-section>
         <q-form ref="form">
-          <q-input placeholder="邮箱" readonly :value="email">
+          <q-input dark placeholder="邮箱" readonly :value="email">
             <template v-slot:prepend>
               <q-icon name="mdi-email" />
             </template>
           </q-input>
 
           <q-input
+            dark
             :type="isPwd ? 'password' : 'text'"
             autofocus
             v-model="password"
@@ -36,10 +37,10 @@
         </q-form>
       </q-card-section>
 
-      <q-separator />
+      <q-separator dark />
 
       <q-card-actions align="right">
-        <q-btn flat @click="onOk">重 置</q-btn>
+        <q-btn flat @click="onOk">重置</q-btn>
       </q-card-actions>
     </q-card>
   </q-dialog>
