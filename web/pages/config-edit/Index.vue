@@ -58,7 +58,7 @@ export default {
 
       this.editor = editor;
     },
-    changeContent(v) {
+    changeContent() {
       this.submitBtnDisabled = this.originalContent === this.editor.getValue();
     }
   }

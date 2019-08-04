@@ -11,7 +11,7 @@
           </div>
         </q-card-section>
 
-        <q-card-section>
+        <q-card-section @keyup.enter="login">
           <q-form ref="loginForm">
             <q-input
               dark
@@ -89,10 +89,7 @@
 </template>
 <script>
 import axios from "axios";
-
-// eslint-disable-next-line
-const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
+import { validEmail } from "../util/validator";
 export default {
   name: "Login",
   data: () => ({
@@ -103,7 +100,7 @@ export default {
   methods: {
     checkEmail(v) {
       return new Promise(resolve => {
-        resolve(emailRegex.test(v) || "错误的邮箱");
+        resolve(validEmail(v) || "错误的邮箱");
       });
     },
     login() {
@@ -118,7 +115,7 @@ export default {
             email: this.email,
             password: this.password
           })
-          .then(response => {
+          .then(() => {
             this.loginBtnLoading = false;
             this.$router.push("/");
           })

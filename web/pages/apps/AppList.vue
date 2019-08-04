@@ -47,7 +47,6 @@
 </template>
 <script>
 import axios from "axios";
-import { setTimeout } from "timers";
 export default {
   data: () => ({
     pagination: {

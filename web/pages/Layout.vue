@@ -7,9 +7,9 @@
         <q-space />
 
         <q-tabs stretch shrink>
-          <q-route-tab name="a" label="配置" to="/apps?page=1&size=20" />
+          <q-route-tab name="a" label="配置" to="/apps" />
           <q-route-tab name="c" label="集群" to="#" />
-          <q-route-tab name="b" label="用户" to="/users?page=1&size=20" />
+          <q-route-tab name="b" label="用户" to="/users" />
         </q-tabs>
 
         <q-separator vertical />
