@@ -5,6 +5,7 @@ import Quasar, {
   Notify,
   Cookies,
   // components
+  QBanner,
   QDialog,
   QAjaxBar,
   QAvatar,
@@ -52,6 +53,7 @@ Vue.use(Quasar, {
   lang: langZhHans,
   iconSet,
   components: {
+    QBanner,
     QDialog,
     QAjaxBar,
     QLayout,
