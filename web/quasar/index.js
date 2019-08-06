@@ -36,6 +36,7 @@ import Quasar, {
   // tab
   QTabs,
   QRouteTab,
+  QTooltip,
   QPage,
   QPageContainer,
   QToolbar,
@@ -84,6 +85,7 @@ Vue.use(Quasar, {
     QTd,
     QTabs,
     QRouteTab,
+    QTooltip,
     QSpace,
     QSeparator
   },

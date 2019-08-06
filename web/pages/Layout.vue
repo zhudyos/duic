@@ -14,10 +14,9 @@
         <q-space />
 
         <q-tabs stretch shrink>
-          <q-route-tab name="a" label="配置" to="/apps" />
-          <q-route-tab name="c" label="集群" to="#" />
-          <q-route-tab name="b" label="用户" to="/users" />
-          <q-route-tab name="d" label="OAIS" to="#" />
+          <q-route-tab name="apps" label="配置" to="/apps"></q-route-tab>
+          <q-route-tab name="clusters" label="集群" to="/clusters"></q-route-tab>
+          <q-route-tab name="users" label="用户" to="/users"></q-route-tab>
         </q-tabs>
 
         <q-separator dark vertical inset />
@@ -32,8 +31,9 @@
           </q-list>
         </q-btn-dropdown>
 
-        <q-btn stretch flat>
+        <q-btn stretch flat @click="logout">
           <q-icon name="mdi-logout" />
+          <q-tooltip>登出</q-tooltip>
         </q-btn>
       </q-toolbar>
     </q-header>
@@ -63,6 +63,7 @@
 <script>
 export default {
   data: () => ({
+    navTab: "",
     email: ""
   }),
   created() {
@@ -71,6 +72,14 @@ export default {
     if (state) {
       this.email = email;
     } else {
+      this.$router.push("/login");
+    }
+  },
+  methods: {
+    logout() {
+      const cookies = this.$q.cookies;
+      cookies.remove("email");
+      cookies.remove("token");
       this.$router.push("/login");
     }
   }
