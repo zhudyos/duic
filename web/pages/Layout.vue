@@ -1,8 +1,8 @@
 <template>
-  <q-layout>
-    <q-header class="bg-black">
+  <q-layout class="bg-grey-10 text-white">
+    <q-header class="bg-grey-9">
       <q-toolbar>
-        <q-banner dark class="bg-black">
+        <q-banner dark class="bg-grey-9">
           <template v-slot:avatar>
             <q-avatar>
               <img src="../assets/images/duic60x60.png" />
@@ -22,7 +22,7 @@
         <q-separator dark vertical inset />
 
         <q-btn-dropdown stretch flat :label="email">
-          <q-list dark class="bg-grey-7">
+          <q-list dark class="bg-grey-9">
             <q-item clickable v-close-popup>
               <q-item-section>
                 <q-item-label>修改密码</q-item-label>
@@ -42,7 +42,7 @@
       <router-view class="q-pa-sm" />
     </q-page-container>
 
-    <q-footer elevated class="bg-black text-weight-regular q-pa-xs">
+    <q-footer elevated class="bg-grey-9 text-weight-regular q-pa-xs">
       <div class="row justify-center">
         <div class="col-xs-6 col-md-3">
           <q-btn
