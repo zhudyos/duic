@@ -2,14 +2,7 @@
   <q-layout class="bg-grey-10 text-white">
     <q-header class="bg-grey-9">
       <q-toolbar>
-        <q-banner dark class="bg-grey-9">
-          <template v-slot:avatar>
-            <q-avatar>
-              <img src="../assets/images/duic60x60.png" />
-            </q-avatar>
-          </template>
-          <span class="text-h6">配置中心</span>
-        </q-banner>
+        <d-banner />
 
         <q-space />
 
@@ -53,6 +46,8 @@
             type="a"
             href="https://www.apache.org/licenses/LICENSE-2.0"
             target="_blank"
+            no-caps
+            class="text-center"
           >https://www.apache.org/licenses/LICENSE-2.0</q-btn>
         </div>
       </div>
@@ -61,7 +56,12 @@
 </template>
 
 <script>
+import DBanner from "../components/DBanner.vue";
+
 export default {
+  components: {
+    DBanner
+  },
   data: () => ({
     navTab: "",
     email: ""

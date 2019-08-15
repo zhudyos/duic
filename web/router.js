@@ -15,10 +15,12 @@ const routes = [
     children: [
       {
         path: "/apps",
+        meta: { title: "配置列表 - DUIC" },
         component: () => import("./pages/apps/AppList.vue")
       },
       {
         path: "/users",
+        meta: { title: "用户列表 - DUIC" },
         component: () => import("./pages/users/UserList.vue")
       }
     ]
@@ -31,9 +33,7 @@ const routes = [
 ];
 
 const router = new VueRouter({ routes });
-
-// tslint:disable-next-line: variable-name
-router.beforeEach((to, _from, next) => {
+router.beforeEach((to, from, next) => {
   const title = to.meta.title || "配置中心 - DUIC";
   document.title = title;
   next();

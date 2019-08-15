@@ -142,7 +142,7 @@ class AppService(
      *
      * @return 配置最后的更新时间戳（毫秒）
      */
-    fun refresh(): Mono<Long> = Mono.create<Long> { sink ->
+    fun refresh(): Mono<Long> = Mono.create { sink ->
         // 更新 APP 配置信息
         if (lastDataTime == null) {
             findAll()

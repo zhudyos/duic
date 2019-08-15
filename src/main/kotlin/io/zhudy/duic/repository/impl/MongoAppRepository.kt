@@ -99,10 +99,11 @@ open class MongoAppRepository(
      */
     override fun delete(app: App, userContext: UserContext): Mono<Void> = findOne(app.name, app.profile)
             .flatMap { dbApp ->
-                appColl.deleteOne(and(
-                        eq("name", app.name), eq("profile", app.profile)))
-                        .toMono()
-                        .then(insertHistory(dbApp, true, userContext))
+                val q = and(
+                        eq("name", app.name),
+                        eq("profile", app.profile)
+                )
+                appColl.deleteOne(q).toMono().then(insertHistory(dbApp, true, userContext))
             }
 
     /**
@@ -133,13 +134,13 @@ open class MongoAppRepository(
                 set("updated_at", updatedAt)
         )
         return findOne(app.name, app.profile).flatMap { dbApp ->
-            appColl.updateOne(q, u).toMono().flatMap { rs ->
-                if (rs.modifiedCount < 1) {
-                    throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
-                }
-
-                insertHistory(dbApp, false, userContext)
-            }
+            appColl.updateOne(q, u).toMono()
+                    .doOnNext { rs ->
+                        if (rs.modifiedCount < 1) {
+                            throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+                        }
+                    }
+                    .then(insertHistory(dbApp, false, userContext))
         }
     }
 
@@ -160,16 +161,17 @@ open class MongoAppRepository(
         )
 
         return findOne(app.name, app.profile).flatMap { dbApp ->
-            appColl.updateOne(q, u).toMono().flatMap { rs ->
-                if (rs.modifiedCount < 1) {
-                    if (app.v != dbApp.v) {
-                        throw BizCodeException(BizCodes.C_1004)
+            appColl.updateOne(q, u).toMono()
+                    .doOnNext { rs ->
+                        if (rs.modifiedCount < 1) {
+                            if (app.v != dbApp.v) {
+                                throw BizCodeException(BizCodes.C_1004)
+                            }
+                            throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
+                        }
                     }
-
-                    throw BizCodeException(BizCodes.C_1003, "修改 ${app.name}/${app.profile} 失败")
-                }
-                insertHistory(dbApp, false, userContext)
-            }.map { dbApp }
+                    .then(insertHistory(dbApp, false, userContext))
+                    .thenReturn(dbApp)
         }
     }
 

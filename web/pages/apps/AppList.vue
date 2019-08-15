@@ -15,9 +15,7 @@
       <template v-slot:top>
         <div class="col-2 q-table__title">应用列表</div>
         <q-space />
-        <q-btn flat>创建</q-btn>
-        <q-btn flat>复制</q-btn>
-        <q-btn flat>删除</q-btn>
+        <q-btn flat @click="addApp">创建</q-btn>
         <div class="col-12 row">
           <div class="offset-9 col-3">
             <q-input dark dense debounce="400" v-model="filter" placeholder="搜索" class="full-width">
@@ -39,20 +37,89 @@
         <q-tr :props="props">
           <q-td key="name" :props="props">
             {{props.row.name}}
+            <q-btn dense flat size="sm" icon="mdi-dots-vertical">
+              <q-popup-proxy>
+                <q-card dark class="bg-grey-10">
+                  <q-list padding dark class="details">
+                    <q-item-label header>详细</q-item-label>
+                    <q-item>
+                      <q-item-section side class="caption">
+                        <q-item-label caption>名称（name）</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>{{props.row.name}}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item>
+                      <q-item-section side class="caption">
+                        <q-item-label caption>环境（profile）</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>{{props.row.profile}}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item>
+                      <q-item-section side class="caption">
+                        <q-item-label caption>描述</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>{{props.row.description}}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item v-if="props.row.token">
+                      <q-item-section side class="caption">
+                        <q-item-label caption>令牌</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label style="word-break: break-all;">{{props.row.token}}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item v-if="props.row.ip_limit">
+                      <q-item-section side class="caption">
+                        <q-item-label caption>IP限制</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>{{props.row.ip_limit}}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item>
+                      <q-item-section side class="caption">
+                        <q-item-label caption>创建时间</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>{{props.row.created_at}}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                    <q-item>
+                      <q-item-section side class="caption">
+                        <q-item-label caption>修改时间</q-item-label>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label>{{props.row.updated_at}}</q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+                </q-card>
+              </q-popup-proxy>
+            </q-btn>
+          </q-td>
+          <q-td key="profile" :props="props">
+            <a
+              class="text-yellow-8 cursor-pointer"
+              @click="openNewTabEdit(props.row.name, props.row.profile)"
+            >{{props.row.profile}}</a>
+          </q-td>
+          <q-td key="description" :props="props">{{props.row.description}}</q-td>
+          <q-td key="ops" :props="props">
+            <q-btn dense flat size="sm" icon="mdi-pencil" />
+            <q-btn dense flat size="sm" icon="mdi-content-duplicate" />
             <q-btn
               dense
-              round
               flat
-              :icon="props.expand ? 'mdi-menu-up' : 'mdi-menu-down'"
-              @click="props.expand = !props.expand"
+              size="sm"
+              icon="mdi-delete"
+              @click="deleteApp(props.row.name, props.row.profile)"
             />
-          </q-td>
-          <q-td key="profile" :props="props">{{props.row.profile}}</q-td>
-          <q-td key="description" :props="props">{{props.row.description}}</q-td>
-        </q-tr>
-        <q-tr v-show="props.expand" :props="props">
-          <q-td colspan="100%">
-            <div class="text-left">This is expand slot for row above: {{ props.row.name }}.</div>
           </q-td>
         </q-tr>
       </template>
@@ -61,6 +128,8 @@
 </template>
 <script>
 import axios from "axios";
+import AppAdd from "./AppAdd.vue";
+
 export default {
   data: () => ({
     pagination: {
@@ -82,15 +151,22 @@ export default {
       {
         name: "description",
         label: "描述"
+      },
+      {
+        name: "ops",
+        label: "操作"
       }
     ],
     items: []
   }),
   mounted() {
-    this.loadApps({ pagination: this.pagination });
+    this.loadApps();
   },
   methods: {
     loadApps(props) {
+      this.loadApps0(props || { pagination: this.pagination });
+    },
+    loadApps0(props) {
       this.loading = true;
 
       let { page, rowsPerPage } = props.pagination;
@@ -105,7 +181,62 @@ export default {
           this.pagination.rowsNumber = data.total_items;
           this.loading = false;
         });
+    },
+    openNewTabEdit(name, profile) {
+      const route = this.$router.resolve({
+        path: "/config-edit",
+        query: {
+          name: name,
+          profile: profile
+        }
+      });
+      window.open(route.href, "_blank");
+    },
+    addApp() {
+      this.$q.dialog({
+        component: AppAdd,
+        root: this.$root
+      });
+    },
+    deleteApp(name, profile) {
+      this.$q
+        .dialog({
+          dark: true,
+          title: "删除应用",
+          message: `确认删除应用 ${name}/${profile}`,
+          cancel: true
+        })
+        .onOk(() => {
+          this.loading = true;
+
+          axios
+            .delete(`/api/admins/apps/${name}/${profile}`)
+            .then(() => {
+              this.loadApps();
+            })
+            .catch(error => {
+              this.loading = false;
+
+              const d = error.response.data || {};
+              let text = d.message || "删除失败";
+              this.$q.notify({
+                color: "negative",
+                message: text,
+                position: "top"
+              });
+            });
+        });
     }
   }
 };
 </script>
+<style lang="stylus" scoped>
+.details {
+  width: 400px;
+  max-width: 500px;
+
+  .caption {
+    width: 110px;
+  }
+}
+</style>
