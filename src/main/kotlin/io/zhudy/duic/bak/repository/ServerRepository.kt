@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.zhudy.duic.repository
+package io.zhudy.duic.bak.repository
 
 import io.zhudy.duic.domain.Server
 import reactor.core.publisher.Flux
@@ -45,7 +45,7 @@ interface ServerRepository {
      * @param host 服务主机
      * @param port 服务端口
      */
-    fun register(host: String, port: Int): Mono<Int>
+    fun register(host: String, port: Int): Mono<Void>
 
     /**
      * 下线集群服务。
@@ -53,7 +53,7 @@ interface ServerRepository {
      * @param host 服务主机
      * @param port 服务端口
      */
-    fun unregister(host: String, port: Int): Mono<Int>
+    fun unregister(host: String, port: Int): Mono<Void>
 
     /**
      * 服务心跳。
@@ -61,7 +61,7 @@ interface ServerRepository {
      * @param host 服务主机
      * @param port 服务端口
      */
-    fun ping(host: String, port: Int): Mono<Int>
+    fun ping(host: String, port: Int): Mono<Void>
 
     /**
      * 返回集群服务列表。
@@ -71,7 +71,7 @@ interface ServerRepository {
     /**
      * 清理过期服务。
      */
-    fun clean(): Mono<Int>
+    fun clean(): Mono<Void>
 
     /**
      * 查询数据库版本。

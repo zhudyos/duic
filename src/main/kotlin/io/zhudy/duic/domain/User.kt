@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import java.util.*
+import java.time.LocalDateTime
 
 /**
  * 用户信息数据类型。
@@ -30,6 +30,6 @@ import java.util.*
 class User(
         var email: String = "",
         var password: String = "",
-        var createdAt: Date? = null,
-        var updatedAt: Date? = null
+        var createdAt: LocalDateTime? = null,
+        var updatedAt: LocalDateTime? = null
 )

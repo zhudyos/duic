@@ -15,8 +15,9 @@
 #
 
 spring:
-  profiles:
-    include: integration-test
+  data:
+    mongodb:
+      uri: ${duic.mongodb.url}
 
 scheduling:
   enabled: false
@@ -28,6 +29,6 @@ duic:
   mongodb:
     url: mongodb://127.0.0.1:27017/duic-unit-test
   mysql:
-    url: jdbc:mysql://root:@127.0.0.1:3306/duic-unit-test?autoReconnect=true&useServerPrepStmts=true
+    url: r2dbc:mysql://root:@127.0.0.1:3306/duic-unit-test
   postgresql:
-    url: jdbc:postgresql://127.0.0.1:5432/duic-unit-test?user=postgres&password=
+    url: r2dbc:postgresql://postgres:@127.0.0.1:5432/duic-unit-test

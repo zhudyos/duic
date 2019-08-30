@@ -11,7 +11,7 @@ import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.expectError
-import io.zhudy.duic.repository.UserRepository
+import io.zhudy.duic.bak.repository.UserRepository
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.web.ServerProperties

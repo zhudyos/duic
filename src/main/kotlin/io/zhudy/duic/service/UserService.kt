@@ -22,7 +22,7 @@ import io.zhudy.duic.annotation.NoIntegrationTest
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
-import io.zhudy.duic.repository.UserRepository
+import io.zhudy.duic.bak.repository.UserRepository
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.security.crypto.password.PasswordEncoder

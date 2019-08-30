@@ -8,7 +8,7 @@ import io.zhudy.duic.UserContext
 import io.zhudy.duic.config.BasicConfiguration
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.expectError
-import io.zhudy.duic.repository.AppRepository
+import io.zhudy.duic.bak.repository.AppRepository
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.vo.RequestConfigVo
 import org.assertj.core.api.Assertions.assertThat

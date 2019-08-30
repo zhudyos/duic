@@ -22,7 +22,7 @@ import io.zhudy.duic.domain.*
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
-import io.zhudy.duic.repository.AppRepository
+import io.zhudy.duic.bak.repository.AppRepository
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.service.ip.SectionIpChecker
 import io.zhudy.duic.service.ip.SingleIpChecker

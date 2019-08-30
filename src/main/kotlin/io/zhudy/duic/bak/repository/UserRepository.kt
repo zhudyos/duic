@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.zhudy.duic.repository
+package io.zhudy.duic.bak.repository
 
+import io.zhudy.duic.domain.Page
+import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
@@ -31,17 +31,17 @@ interface UserRepository {
     /**
      * 添加一个新用户。
      */
-    fun insert(user: User): Mono<Int>
+    fun insert(user: User): Mono<Void>
 
     /**
      * 删除一个用户。
      */
-    fun delete(email: String): Mono<Int>
+    fun delete(email: String): Mono<Void>
 
     /**
      * 更新用户密码。
      */
-    fun updatePassword(email: String, password: String): Mono<Int>
+    fun updatePassword(email: String, password: String): Mono<Void>
 
     /**
      * 根据邮箱查询用户信息。
