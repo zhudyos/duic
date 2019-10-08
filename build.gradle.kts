@@ -33,8 +33,9 @@ configurations {
 }
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:2.2.0.M5"))
-    implementation(platform("org.springframework.data:spring-data-releasetrain:Moore-RC2"))
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:2.2.0.RC1"))
+    implementation(platform("org.springframework.data:spring-data-releasetrain:Moore-RELEASE"))
+    implementation(platform("io.r2dbc:r2dbc-bom:Arabba-RC2"))
     implementation(platform("com.fasterxml.jackson:jackson-bom:2.9.9"))
     implementation(platform("org.junit:junit-bom:5.5.0"))
 
@@ -62,9 +63,9 @@ dependencies {
     // reactive db
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
-    implementation("org.springframework.boot.experimental:spring-boot-starter-data-r2dbc:0.1.0.BUILD-SNAPSHOT")
-    implementation("io.r2dbc:r2dbc-postgresql:0.8.0.BUILD-SNAPSHOT")
-    implementation("com.github.mirromutth:r2dbc-mysql:0.2.0.M2")
+    implementation("io.r2dbc:r2dbc-postgresql")
+    implementation("org.springframework.data:spring-data-r2dbc:1.0.0.RC1")
+    implementation("dev.miku:r2dbc-mysql:0.8.0.RC1")
 
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.projectreactor:reactor-test")
@@ -192,6 +193,4 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven("https://repo.spring.io/milestone")
-    maven("https://repo.spring.io/snapshot")
-    maven("https://jitpack.io")
 }
