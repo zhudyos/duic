@@ -73,6 +73,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.ninja-squad:springmockk:1.1.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.testcontainers:junit-jupiter:1.12.0")
 
 //    kapt("org.springframework.boot:spring-boot-configuration-processor")
 }

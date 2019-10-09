@@ -1,6 +1,7 @@
 package io.zhudy.duic.repository
 
-import io.zhudy.duic.domain.User
+import io.zhudy.duic.dto.NewUserDto
+import io.zhudy.duic.dto.UserDto
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -22,7 +23,7 @@ abstract class AbstractRelationalUserRepository(
         private const val FIND_BY_EMAIL_SQL = "SELECT * FROM DUIC_USER WHERE email=:email"
     }
 
-    override fun insert(user: User): Mono<Int> = Mono.defer {
+    override fun insert(user: NewUserDto): Mono<Int> = Mono.defer {
         dc.execute(INSERT_SQL)
                 .bind("email", user.email)
                 .bind("password", user.password)
@@ -45,30 +46,28 @@ abstract class AbstractRelationalUserRepository(
                 .rowsUpdated()
     }
 
-    override fun findByEmail(email: String): Mono<User> = Mono.defer {
+    override fun findByEmail(email: String): Mono<UserDto> = Mono.defer {
         dc.execute(FIND_BY_EMAIL_SQL)
                 .bind("email", email)
-                .`as`(User::class.java)
+                .`as`(UserDto::class.java)
                 .fetch()
                 .one()
     }
 
-    override fun findPage(pageable: Pageable): Mono<Page<User>> = Mono.defer {
+    override fun findPage(pageable: Pageable): Mono<Page<UserDto>> = Mono.defer {
         val content = dc.select()
                 .from("DUIC_USER")
                 .page(pageable)
-                .`as`(User::class.java)
+                .`as`(UserDto::class.java)
                 .fetch()
                 .all()
 
-        val cm = dc.execute("SELECT COUNT(*) FROM DUIC_USER")
+        val count = dc.execute("SELECT COUNT(*) FROM DUIC_USER")
                 .map { row -> row.get(0) as Long }
                 .first()
                 .defaultIfEmpty(0)
 
-        content.collectList().zipWith(cm).map { t ->
-            PageImpl(t.t1, pageable, t.t2)
-        }
+        content.collectList().zipWith(count).map { PageImpl(it.t1, pageable, it.t2) }
     }
 
     override fun findAllEmail(): Flux<String> = Flux.defer {

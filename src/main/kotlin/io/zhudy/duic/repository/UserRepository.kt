@@ -15,7 +15,8 @@
  */
 package io.zhudy.duic.repository
 
-import io.zhudy.duic.domain.User
+import io.zhudy.duic.dto.NewUserDto
+import io.zhudy.duic.dto.UserDto
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import reactor.core.publisher.Flux
@@ -31,7 +32,7 @@ interface UserRepository {
     /**
      * 添加一个新用户。
      */
-    fun insert(user: User): Mono<Int>
+    fun insert(user: NewUserDto): Mono<Int>
 
     /**
      * 删除一个用户。
@@ -46,12 +47,12 @@ interface UserRepository {
     /**
      * 根据邮箱查询用户信息。
      */
-    fun findByEmail(email: String): Mono<User>
+    fun findByEmail(email: String): Mono<UserDto>
 
     /**
      * 分页查询用户列表。
      */
-    fun findPage(pageable: Pageable): Mono<Page<User>>
+    fun findPage(pageable: Pageable): Mono<Page<UserDto>>
 
     /**
      * 返回所有用户的邮箱。

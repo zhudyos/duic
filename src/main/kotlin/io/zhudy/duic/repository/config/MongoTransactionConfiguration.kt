@@ -6,13 +6,20 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory
 import org.springframework.data.mongodb.ReactiveMongoTransactionManager
+import org.springframework.data.mongodb.core.ReactiveMongoOperations
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnBean(ReactiveMongoDatabaseFactory::class)
-class MongoTransactionConfiguration {
+class MongoTransactionConfiguration(
+        ops: ReactiveMongoOperations
+) {
+
+    init {
+//        ops.createCollection("user").subscribe()
+    }
 
     @Bean
     @ConditionalOnMissingBean

@@ -1,11 +1,11 @@
 package io.zhudy.duic.repository
 
-import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.*
+import io.zhudy.duic.dto.AppQueryDto
 import org.springframework.data.r2dbc.core.DatabaseClient
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.util.*
+import java.time.Instant
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -24,7 +24,7 @@ abstract class AbstractRelationalAppRepository(
         private const val FIND_LAST_DATA_TIME_SQL = "SELECT updated_at FROM DUIC_APP ORDER BY updated_at DESC"
     }
 
-    override fun insert(app: App): Mono<Void> = Mono.defer {
+    override fun insert(app: App): Mono<Int> = Mono.defer {
         dc.execute(INSERT_SQL)
                 .bind("name", app.name)
                 .bind("profile", app.profile)
@@ -36,10 +36,9 @@ abstract class AbstractRelationalAppRepository(
                 .bind("users", app.users.joinToString(","))
                 .fetch()
                 .rowsUpdated()
-                .then()
     }
 
-    override fun delete(app: App, userContext: UserContext): Mono<Void> {
+    override fun delete(app: App): Mono<Int> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -52,7 +51,7 @@ abstract class AbstractRelationalAppRepository(
                 .one()
     }
 
-    override fun update(app: App, userContext: UserContext): Mono<Void> = Mono.defer {
+    override fun update(app: App): Mono<Int> = Mono.defer {
         dc.execute(UPDATE_SQL)
                 .bind("token", app.token)
                 .bind("ipLimit", app.ipLimit)
@@ -63,34 +62,17 @@ abstract class AbstractRelationalAppRepository(
                 .bind("v", app.v)
                 .fetch()
                 .rowsUpdated()
-                .then()
     }
 
-    override fun updateContent(app: App, userContext: UserContext): Mono<App> = Mono.defer {
-        //        dc.execute(UPDATE_CONTENT_SQL)
-//                .bind("content", app.content)
-//                .bind("name", app.name)
-//                .bind("profile", app.profile)
-//                .bind("v", app.v)
-//                .fetch()
-//                .rowsUpdated()
-//                .then()
-        Mono.empty<App>()
+    override fun updateContent(name: String, profile: String, content: String): Mono<Int> {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override fun findAll(): Flux<App> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun findPage(pageable: Pageable): Mono<Page<App>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun findPageByUser(pageable: Pageable, userContext: UserContext): Mono<Page<App>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun findByUpdatedAt(updateAt: Date): Flux<App> {
+    override fun searchPage(query: AppQueryDto, pageable: Pageable): Mono<Page<App>> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -110,7 +92,7 @@ abstract class AbstractRelationalAppRepository(
                 .all()
     }
 
-    override fun findDeletedByCreatedAt(createdAt: Date): Flux<AppHistory> {
+    override fun findDeletedByCreatedAt(createdAt: Instant): Flux<AppHistory> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

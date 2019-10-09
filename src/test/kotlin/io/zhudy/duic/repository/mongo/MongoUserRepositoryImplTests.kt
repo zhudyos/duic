@@ -1,8 +1,7 @@
-package io.zhudy.duic.repository.mysql
+package io.zhudy.duic.repository.mongo
 
-import io.r2dbc.spi.R2dbcDataIntegrityViolationException
 import io.zhudy.duic.dto.NewUserDto
-import io.zhudy.duic.repository.BasicTestRelationalConfiguration
+import io.zhudy.duic.repository.BasicTestMongoConfiguration
 import io.zhudy.duic.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -10,22 +9,22 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.reactive.TransactionalOperator
-import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootTest(classes = [
-    MySqlUserRepositoryImpl::class
+    MongoUserRepositoryImpl::class
 ])
-@ActiveProfiles("mysql")
-@ImportAutoConfiguration(classes = [BasicTestRelationalConfiguration::class])
-internal class MySqlUserRepositoryImplTests {
+@ActiveProfiles("mongodb")
+@ImportAutoConfiguration(classes = [BasicTestMongoConfiguration::class])
+internal class MongoUserRepositoryImplTests {
 
     @Autowired
     private lateinit var userRepository: UserRepository
@@ -53,8 +52,7 @@ internal class MySqlUserRepositoryImplTests {
                 )
 
         assertThatThrownBy { transactionalOperator.transactional(p).block() }
-                .isInstanceOf(DataIntegrityViolationException::class.java)
-                .hasCauseInstanceOf(R2dbcDataIntegrityViolationException::class.java)
+                .isInstanceOf(DuplicateKeyException::class.java)
                 .hasMessageContaining("Duplicate")
     }
 
@@ -87,7 +85,7 @@ internal class MySqlUserRepositoryImplTests {
 
         val p = userRepository.insert(NewUserDto(email = email, password = password))
                 .then(
-                        userRepository.updatePassword(email, password)
+                        userRepository.updatePassword(email, "[NEW-PASSWORD]")
                 )
         val n = transactionalOperator.transactional(p).block()
         assertThat(n).isEqualTo(1)
@@ -120,42 +118,33 @@ internal class MySqlUserRepositoryImplTests {
     }
 
     @Test
-    fun `findByEmail not found`() {
-        val email = "integration-test@mail.com"
-
-        val p = userRepository.findByEmail(email)
-        val u = transactionalOperator.transactional(p).block()
-        assertThat(u).isNull()
-    }
-
-    @Test
     fun findPage() {
-        // FIXME 这里有 bug 等待修复
-        val c = 2
-        val prepare = Flux.range(0, c).map {
-            NewUserDto(email = "integration-test$it@mail.com", password = "[PASSWORD]")
-        }.flatMap(userRepository::insert)
-
-        val n = transactionalOperator.transactional(prepare).blockLast()
-        println(n)
+        val c = 30
+        var prepare = Mono.empty<Int>()
+        for (i in 1..30) {
+            val dto = NewUserDto(email = "integration-test$i@mail.com", password = "[PASSWORD]")
+            prepare = prepare.then(userRepository.insert(dto))
+        }
 
         val pageRequest = PageRequest.of(0, 15)
-//        val p = prepare.then(userRepository.findPage(pageRequest))
-//
-//        val page = transactionalOperator.transactional(p).block()
-//        assertThat(page).isNotNull
+        val p = prepare.then(userRepository.findPage(pageRequest))
+
+        val page = transactionalOperator.transactional(p).block()
+        assertThat(page).isNotNull
+        assertThat(page.totalElements).isGreaterThanOrEqualTo(c.toLong())
     }
 
     @Test
     fun findAllEmail() {
         val c = 30
-        val prepare = Flux.range(0, c).map {
-            NewUserDto(email = "integration-test$it@mail.com", password = "[PASSWORD]")
-        }.flatMap(userRepository::insert)
+        var prepare = Mono.empty<Int>()
+        for (i in 1..30) {
+            val dto = NewUserDto(email = "integration-test$i@mail.com", password = "[PASSWORD]")
+            prepare = prepare.then(userRepository.insert(dto))
+        }
 
         val p = prepare.thenMany(userRepository.findAllEmail())
         val list = transactionalOperator.transactional(p).collectList().block()
         assertThat(list).hasSizeGreaterThanOrEqualTo(c)
     }
-
 }

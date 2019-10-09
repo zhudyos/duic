@@ -1,7 +1,7 @@
 package io.zhudy.duic.repository.postgresql
 
 import io.r2dbc.spi.R2dbcDataIntegrityViolationException
-import io.zhudy.duic.domain.User
+import io.zhudy.duic.dto.NewUserDto
 import io.zhudy.duic.repository.BasicTestRelationalConfiguration
 import io.zhudy.duic.repository.UserRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -37,7 +37,7 @@ internal class PostgreSqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(User(email = email, password = password))
+        val p = userRepository.insert(NewUserDto(email = email, password = password))
         val n = transactionalOperator.transactional(p).block()
         assertThat(n).isEqualTo(1)
     }
@@ -47,9 +47,9 @@ internal class PostgreSqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(User(email = email, password = password))
+        val p = userRepository.insert(NewUserDto(email = email, password = password))
                 .then(
-                        userRepository.insert(User(email = email, password = password))
+                        userRepository.insert(NewUserDto(email = email, password = password))
                 )
 
         assertThatThrownBy { transactionalOperator.transactional(p).block() }
@@ -63,7 +63,7 @@ internal class PostgreSqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(User(email = email, password = password))
+        val p = userRepository.insert(NewUserDto(email = email, password = password))
                 .then(
                         userRepository.delete(email)
                 )
@@ -85,7 +85,7 @@ internal class PostgreSqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(User(email = email, password = password))
+        val p = userRepository.insert(NewUserDto(email = email, password = password))
                 .then(
                         userRepository.updatePassword(email, password)
                 )
@@ -108,7 +108,7 @@ internal class PostgreSqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(User(email = email, password = password))
+        val p = userRepository.insert(NewUserDto(email = email, password = password))
                 .then(
                         userRepository.findByEmail(email)
                 )
@@ -134,7 +134,7 @@ internal class PostgreSqlUserRepositoryImplTests {
         val pageRequest = PageRequest.of(0, 15)
 
         val prepare = Flux.range(0, c).map {
-            User(email = "integration-test$it@mail.com", password = "[PASSWORD]")
+            NewUserDto(email = "integration-test$it@mail.com", password = "[PASSWORD]")
         }.flatMap(userRepository::insert)
 
         val p = prepare.then(userRepository.findPage(pageRequest))
@@ -148,7 +148,7 @@ internal class PostgreSqlUserRepositoryImplTests {
     fun findAllEmail() {
         val c = 30
         val prepare = Flux.range(0, c).map {
-            User(email = "integration-test$it@mail.com", password = "[PASSWORD]")
+            NewUserDto(email = "integration-test$it@mail.com", password = "[PASSWORD]")
         }.flatMap(userRepository::insert)
 
         val p = prepare.thenMany(userRepository.findAllEmail())

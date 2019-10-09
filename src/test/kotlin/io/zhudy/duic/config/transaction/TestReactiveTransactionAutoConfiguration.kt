@@ -23,7 +23,6 @@ class TestReactiveTransactionAutoConfiguration {
                 return operator.execute { t ->
                     // 单元测试环境事务自动回滚
                     t.setRollbackOnly()
-
                     action.doInTransaction(t)
                 }
             }
