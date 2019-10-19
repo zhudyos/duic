@@ -87,7 +87,6 @@ class Routers(
             DELETE("/apps/{name}/{profile}", adminResource::deleteApp)
             GET("/apps/{name}/{profile}", adminResource::findOneApp)
             GET("/apps/{name}/{profile}/histories", adminResource::findAppContentHistory)
-            POST("/apps/duplicates/{name}/{profile}", adminResource::insertAppForApp)
             GET("/apps/last-data-time", adminResource::findLastDataTime)
 
             GET("/tests/apps/names", adminResource::findAllNames)

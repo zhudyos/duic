@@ -1,7 +1,7 @@
 package io.zhudy.duic.repository
 
-import io.zhudy.duic.dto.NewUserDto
 import io.zhudy.duic.dto.UserDto
+import io.zhudy.duic.vo.UserVo
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -23,10 +23,10 @@ abstract class AbstractRelationalUserRepository(
         private const val FIND_BY_EMAIL_SQL = "SELECT * FROM DUIC_USER WHERE email=:email"
     }
 
-    override fun insert(user: NewUserDto): Mono<Int> = Mono.defer {
+    override fun insert(vo: UserVo.NewUser): Mono<Int> = Mono.defer {
         dc.execute(INSERT_SQL)
-                .bind("email", user.email)
-                .bind("password", user.password)
+                .bind("email", vo.email)
+                .bind("password", vo.password)
                 .fetch()
                 .rowsUpdated()
     }

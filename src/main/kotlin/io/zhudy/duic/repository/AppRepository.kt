@@ -15,8 +15,13 @@
  */
 package io.zhudy.duic.repository
 
-import io.zhudy.duic.domain.*
-import io.zhudy.duic.dto.AppQueryDto
+import io.zhudy.duic.domain.App
+import io.zhudy.duic.domain.AppContentHistory
+import io.zhudy.duic.domain.AppHistory
+import io.zhudy.duic.domain.AppPair
+import io.zhudy.duic.vo.AppVo
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.time.Instant
@@ -31,9 +36,9 @@ interface AppRepository {
     /**
      * 保存应用配置信息。
      *
-     * @param app 应用配置信息
+     * @param vo 应用配置信息
      */
-    fun insert(app: App): Mono<Int>
+    fun insert(vo: AppVo.NewApp): Mono<Int>
 
     /**
      * 保存应用配置历史信息。
@@ -48,32 +53,30 @@ interface AppRepository {
      * @param name 应用名称
      * @param profile 应用配置
      */
-    fun delete(name: String, profile: String): Mono<Int>
+    fun delete(ap: AppPair): Mono<Int>
 
     /**
      * 返回指定的应用配置信息。
      *
-     * @param name 应用名称
+     * @param ap 应用名称
      * @param profile 应用配置
      */
-    fun findOne(name: String, profile: String): Mono<App>
+    fun findOne(ap: AppPair): Mono<App>
 
     /**
      * 更新指定的应用配置信息。
      *
-     * @param app 更新的应用配置信息
+     * @param ap 更新的应用配置信息
      */
-    fun update(app: App): Mono<Int>
+    fun update(ap: AppPair, vo: AppVo.UpdateBasicInfo): Mono<Int>
 
     /**
      * 更新应用配置信息。
      *
-     * @param name 应用名称
-     * @param profile 应用配置
-     * @param content 应用配置内容
-     * @return 历史版本的应用配置信息
+     * @param vo 修改的应用配置信息
+     * @return 返回最新的数据版本号
      */
-    fun updateContent(name: String, profile: String, content: String): Mono<Int>
+    fun updateContent(ap: AppPair, vo: AppVo.UpdateContent): Mono<Int>
 
     /**
      * 返回所有应用配置信息，并且按更新时间 `updated_at` 升序排列。
@@ -86,22 +89,22 @@ interface AppRepository {
      * @param q 搜索关键字
      * @param pageable 分页参数
      */
-    fun searchPage(query: AppQueryDto, pageable: Pageable): Mono<Page<App>>
+    fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>>
 
     /**
      * 返回大于指定更新时间的应用配置信息，并且按更新时间 `updated_at` 升序排列。
      *
-     * @param updateAt 应用更新时间
+     * @param time 应用更新时间
      */
-    fun findByUpdatedAt(updateAt: Instant): Flux<App>
+    fun find4UpdatedAt(time: Instant): Flux<App>
 
     /**
      * 返回应用配置最新 50 条修改记录信息。
      *
-     * @param name 应用名称
-     * @param profile 应用配置
+     * @param ap 应用名称
+     * @param pageable 应用配置
      */
-    fun findLast50History(name: String, profile: String): Flux<AppContentHistory>
+    fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHistory>
 
     /**
      * 返回所有的应用名称。
@@ -116,9 +119,9 @@ interface AppRepository {
     /**
      * 返回指定时间以后删除的应用配置信息。
      *
-     * @param createdAt 删除时间
+     * @param time 删除时间
      */
-    fun findDeletedByCreatedAt(createdAt: Instant): Flux<AppHistory>
+    fun findLatestDeleted(time: Instant): Flux<AppHistory>
 
     /**
      * 返回数据库中最新配置信息的修改时间戳。

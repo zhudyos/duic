@@ -15,8 +15,8 @@
  */
 package io.zhudy.duic.repository
 
-import io.zhudy.duic.dto.NewUserDto
 import io.zhudy.duic.dto.UserDto
+import io.zhudy.duic.vo.UserVo
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import reactor.core.publisher.Flux
@@ -32,7 +32,7 @@ interface UserRepository {
     /**
      * 添加一个新用户。
      */
-    fun insert(user: NewUserDto): Mono<Int>
+    fun insert(vo: UserVo.NewUser): Mono<Int>
 
     /**
      * 删除一个用户。

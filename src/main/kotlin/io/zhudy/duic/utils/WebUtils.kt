@@ -15,8 +15,9 @@
  */
 package io.zhudy.duic.utils
 
-import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.web.queryInt
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.web.reactive.function.server.ServerRequest
 
 /**
@@ -38,7 +39,7 @@ object WebUtils {
     fun getPage(request: ServerRequest): Pageable {
         val p = request.queryInt("page")
         val s = request.queryInt("size")
-        return Pageable(p, s)
+        return PageRequest.of(p, s)
     }
 
 //    /**

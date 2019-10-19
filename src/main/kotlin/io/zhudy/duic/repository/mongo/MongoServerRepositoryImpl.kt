@@ -2,6 +2,7 @@ package io.zhudy.duic.repository.mongo
 
 import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.UpdateOptions
+import com.mongodb.client.model.Updates.combine
 import com.mongodb.client.model.Updates.set
 import io.zhudy.duic.domain.Server
 import io.zhudy.duic.repository.ServerRepository
@@ -11,6 +12,7 @@ import org.bson.Document
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
+import java.time.Instant
 import java.time.LocalDateTime
 
 /**
@@ -24,33 +26,27 @@ class MongoServerRepositoryImpl(
         ops.execute("server") { coll ->
             coll.updateOne(
                     eq("_id", "${host}_$port"),
-                    Document("\$set", mapOf(
-                            "host" to host,
-                            "port" to port,
-                            "init_at" to LocalDateTime.now(),
-                            "active_at" to LocalDateTime.now()
-                    )),
+                    combine(
+                            set("host", host),
+                            set("port", port),
+                            set("init_at", Instant.now()),
+                            set("active_at", Instant.now())
+                    ),
                     UpdateOptions().upsert(true)
             )
-        }.next().map {
-            if (it.upsertedId != null) 1 else it.modifiedCount.toInt()
-        }
+        }.map { if (it.upsertedId != null) 1 else it.modifiedCount.toInt() }.next()
     }
 
     override fun unregister(host: String, port: Int): Mono<Int> = Mono.defer {
         ops.execute("server") { coll ->
             coll.deleteOne(eq("_id", "${host}_$port"))
-        }.next().map {
-            it.deletedCount.toInt()
-        }
+        }.map { it.deletedCount.toInt() }.next()
     }
 
     override fun ping(host: String, port: Int): Mono<Int> = Mono.defer {
         ops.execute("server") { coll ->
             coll.updateOne(eq("_id", "${host}_$port"), set("active_at", LocalDateTime.now()))
-        }.next().map {
-            it.modifiedCount.toInt()
-        }
+        }.map { it.modifiedCount.toInt() }.next()
     }
 
     override fun findServers(): Flux<Server> = Flux.defer {
@@ -69,16 +65,12 @@ class MongoServerRepositoryImpl(
     override fun clean(): Mono<Int> = Mono.defer {
         ops.execute("server") { coll ->
             coll.deleteMany(lt("active_at", LocalDateTime.now().minus(CLEAN_BEFORE)))
-        }.next().map {
-            it.deletedCount.toInt()
-        }
+        }.map { it.deletedCount.toInt() }.next()
     }
 
     override fun findDbVersion(): Mono<String> = Mono.defer {
         ops.execute { db ->
             db.runCommand(Document("buildinfo", 1))
-        }.next().map {
-            it.getString("version")
-        }
+        }.map { it.getString("version") }.next()
     }
 }

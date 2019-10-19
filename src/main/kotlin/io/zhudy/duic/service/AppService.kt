@@ -16,27 +16,27 @@
 package io.zhudy.duic.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.difflib.text.DiffRowGenerator
 import io.zhudy.duic.*
 import io.zhudy.duic.domain.*
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
-import io.zhudy.duic.bak.repository.AppRepository
+import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.service.ip.SectionIpChecker
 import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
+import io.zhudy.duic.vo.AppVo
 import io.zhudy.duic.vo.RequestConfigVo
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.bson.types.ObjectId
-import org.simplejavamail.email.EmailBuilder
-import org.simplejavamail.mailer.MailerBuilder
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -46,8 +46,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.MonoSink
 import reactor.core.scheduler.Schedulers
-import java.time.OffsetDateTime
-import java.util.*
+import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -84,9 +83,9 @@ class AppService(
     private val appCaches = Caffeine.newBuilder().build<String, CachedApp>()
 
     @Volatile
-    private var lastDataTime: Date? = null
+    private var lastDataTime: Instant? = null
     @Volatile
-    private var lastAppHistoryCreatedAt = Date()
+    private var lastAppHistoryCreatedAt = Instant.now()
     private val yaml = Yaml()
 
     /**
@@ -127,14 +126,15 @@ class AppService(
     @Scheduled(initialDelay = 1000, fixedDelayString = "%{duic.app.watch.deleted.fixed-delay:600000}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
-        appRepository.findDeletedByCreatedAt(lastAppHistoryCreatedAt).doOnError {
-            log.error("evict app config: ", it)
-        }.doFinally {
-            log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.time)
-        }.subscribe {
-            appCaches.invalidate(localKey(it.name, it.profile))
-            lastAppHistoryCreatedAt = it.createdAt!!
-        }
+        appRepository.findLatestDeleted(lastAppHistoryCreatedAt)
+                .doOnError {
+                    log.error("evict app config: ", it)
+                }.doFinally {
+                    log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.toEpochMilli())
+                }.subscribe {
+                    appCaches.invalidate(localKey(it.name, it.profile))
+                    lastAppHistoryCreatedAt = it.createdAt!!
+                }
     }
 
     /**
@@ -147,13 +147,13 @@ class AppService(
         if (lastDataTime == null) {
             findAll()
         } else {
-            findByUpdatedAt(lastDataTime!!)
+            find4UpdatedAt(lastDataTime!!)
         }.doOnError {
             log.error("refresh app config: ", it)
         }.doFinally {
-            log.debug("lastDataTime={}", lastDataTime?.time)
+            log.debug("lastDataTime={}", lastDataTime?.toEpochMilli())
         }.doOnComplete {
-            sink.success(lastDataTime?.time ?: 0L)
+            sink.success(lastDataTime?.toEpochMilli() ?: 0L)
         }.subscribe {
             // 刷新缓存配置
             val k = localKey(it.name, it.profile)
@@ -183,98 +183,109 @@ class AppService(
     /**
      * 获取内存配置状态，如果当前不存在任何配置则返回0。
      */
-    fun getMemoryLastDataTime() = lastDataTime?.time ?: 0
+    fun getMemoryLastDataTime() = lastDataTime?.toEpochMilli() ?: 0
 
     /**
      * 保存应用。
      */
-    fun insert(app: App): Mono<Void> {
-        app.id = ObjectId().toHexString()
-        app.createdAt = Date()
-        app.updatedAt = Date()
-        return appRepository.insert(app)
+    fun insert(vo: AppVo.NewApp): Mono<Int> {
+        return appRepository.insert(vo)
     }
 
     /**
      * 删除应用。
      */
-    fun delete(app: App, userContext: UserContext): Mono<Void> = checkPermission(app.name, app.profile, userContext).flatMap {
-        appRepository.delete(app, userContext)
-    }
+    fun delete(ap: AppPair, uc: UserContext): Mono<Int> = checkPermission(ap, uc)
+            .flatMap {
+                appRepository.delete(ap).flatMap { n ->
+                    val history = AppHistory()
+                    // FIXME 完善逻辑
+                    appRepository.insertHistory(history).map { n }
+                }
+            }
 
     /**
      * 更新应用。
      */
-    fun update(app: App, userContext: UserContext): Mono<Void> = checkPermission(app.name, app.profile, userContext).flatMap {
-        appRepository.update(app, userContext)
-    }
+    fun update(ap: AppPair, vo: AppVo.UpdateBasicInfo, uc: UserContext): Mono<Int> = checkPermission(ap, uc)
+            .flatMap {
+                appRepository.update(ap, vo).flatMap { n ->
+                    val history = AppHistory()
+                    // FIXME 完善逻辑
+                    appRepository.insertHistory(history).map { n }
+                }
+            }
 
     /**
      * 更新应用配置。
      */
-    fun updateContent(app: App, userContext: UserContext): Mono<*> {
+    fun updateContent(ap: AppPair, vo: AppVo.UpdateContent, uc: UserContext): Mono<*> {
         try {
-            yaml.load<Map<String, Any>>(app.content)
+            yaml.load<Map<String, Any>>(vo.content)
         } catch (e: Exception) {
             log.debug("YAML 格式错误", e)
             throw BizCodeException(BizCodes.C_1006)
         }
 
-        return checkPermission(app.name, app.profile, userContext).flatMap {
-            appRepository.updateContent(app, userContext)
+        return checkPermission(ap, uc).flatMap {
+            appRepository.updateContent(ap, vo).flatMap { v ->
+                val history = AppHistory()
+                // FIXME 完善逻辑
+                appRepository.insertHistory(history).map { v }
+            }
         }.doOnSuccess { dbApp ->
-            Mono.defer {
-                val generator = DiffRowGenerator.create()
-                        .showInlineDiffs(true)
-                        .mergeOriginalRevised(true)
-                        .inlineDiffByWord(true)
-                        .oldTag {
-                            if (it) """<del style="background-color: #fdb8c0;">""" else "</del>"
-                        }
-                        .newTag {
-                            if (it) """<span style="background-color: #acf2bd;">""" else "</span>"
-                        }
-                        .build()
-
-                val rows = generator.generateDiffRows(dbApp.content.lines(), app.content.lines())
-                val html = StringBuilder()
-                html.apply {
-                    append("<p>修改应用信息：</p>")
-                    append("<ul>")
-                    append("<li>应用名称（name）：").append(app.name).append("</li>")
-                    append("<li>应用环境（profile）：").append(app.profile).append("</li>")
-                    append("<li>修改人（updated_by）：").append(userContext.email).append("</li>")
-                    append("<li>修改时间（updated_at）：").append(OffsetDateTime.now()).append("</li>")
-                    append("</ul>")
-                }
-
-                html.apply {
-                    append("<p>修改配置信息：</p>")
-                    append("<pre>")
-                    rows.forEach {
-                        appendln(it.oldLine)
-                    }
-                    append("</pre>")
-                }
-
-                val mailer = Config.monitorEmail.smtp.run {
-                    MailerBuilder.withSMTPServer(host, port, username, password).buildMailer()
-                }
-
-                val email = Config.monitorEmail.run {
-                    EmailBuilder.startingBlank()
-                            .from(fromAddress)
-                            .to(toAddress)
-                            .withSubject("${userContext.email} 修改了配置 ${app.name}/${app.profile}")
-                            .withHTMLText(html.toString())
-                            .buildEmail()
-                }
-                mailer.sendMail(email, true)
-
-                Mono.just(dbApp)
-            }.subscribeOn(Schedulers.elastic()).subscribe()
-        }.flatMap { dbApp ->
-            refresh().map { dbApp.v + 1 }
+            //            Mono.defer {
+//                val generator = DiffRowGenerator.create()
+//                        .showInlineDiffs(true)
+//                        .mergeOriginalRevised(true)
+//                        .inlineDiffByWord(true)
+//                        .oldTag {
+//                            if (it) """<del style="background-color: #fdb8c0;">""" else "</del>"
+//                        }
+//                        .newTag {
+//                            if (it) """<span style="background-color: #acf2bd;">""" else "</span>"
+//                        }
+//                        .build()
+//
+//                val rows = generator.generateDiffRows(dbApp.content.lines(), ap.content.lines())
+//                val html = StringBuilder()
+//                html.apply {
+//                    append("<p>修改应用信息：</p>")
+//                    append("<ul>")
+//                    append("<li>应用名称（name）：").append(ap.name).append("</li>")
+//                    append("<li>应用环境（profile）：").append(ap.profile).append("</li>")
+//                    append("<li>修改人（updated_by）：").append(uc.email).append("</li>")
+//                    append("<li>修改时间（updated_at）：").append(OffsetDateTime.now()).append("</li>")
+//                    append("</ul>")
+//                }
+//
+//                html.apply {
+//                    append("<p>修改配置信息：</p>")
+//                    append("<pre>")
+//                    rows.forEach {
+//                        appendln(it.oldLine)
+//                    }
+//                    append("</pre>")
+//                }
+//
+//                val mailer = Config.monitorEmail.smtp.run {
+//                    MailerBuilder.withSMTPServer(host, port, username, password).buildMailer()
+//                }
+//
+//                val email = Config.monitorEmail.run {
+//                    EmailBuilder.startingBlank()
+//                            .from(fromAddress)
+//                            .to(toAddress)
+//                            .withSubject("${uc.email} 修改了配置 ${ap.name}/${ap.profile}")
+//                            .withHTMLText(html.toString())
+//                            .buildEmail()
+//                }
+//                mailer.sendMail(email, true)
+//
+//                Mono.just(dbApp)
+//            }.subscribeOn(Schedulers.elastic()).subscribe()
+        }.flatMap { v ->
+            refresh().map { v }
         }.doOnSuccess {
             // 刷新集群配置
             refreshClusterConfig()
@@ -411,9 +422,9 @@ class AppService(
     /**
      * 查询指定的应用详细信息。
      */
-    fun findOne(name: String, profile: String): Mono<App> = appRepository.findOne(name, profile)
+    fun findOne(ap: AppPair): Mono<App> = appRepository.findOne(ap)
             .switchIfEmpty(Mono.defer {
-                throw BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile")
+                throw BizCodeException(BizCodes.C_1000, "未找到应用 ${ap.name}/${ap.profile}")
             })
 
     /**
@@ -424,38 +435,29 @@ class AppService(
     /**
      * 查询在指定更新时间之后的应用详细信息。
      *
-     * @param updateAt 更新时间
+     * @param time 更新时间
      */
-    fun findByUpdatedAt(updateAt: Date): Flux<App> = appRepository.findByUpdatedAt(updateAt)
-
-    /**
-     * 分页查询应用详细信息。
-     */
-    fun findPage(pageable: Pageable): Mono<Page<App>> = appRepository.findPage(pageable)
-
-    /**
-     * 分页查询用户所有的应用详细信息。
-     */
-    fun findPageByUser(pageable: Pageable, userContext: UserContext): Mono<Page<App>> = if (userContext.isRoot) {
-        findPage(pageable)
-    } else {
-        appRepository.findPageByUser(pageable, userContext)
-    }
+    fun find4UpdatedAt(time: Instant): Flux<App> = appRepository.find4UpdatedAt(time)
 
     /**
      * 全文检索配置。
      */
-    fun searchPageByUser(q: String, pageable: Pageable, userContext: UserContext): Mono<Page<App>> = if (userContext.isRoot) {
-        appRepository.searchPage(q, pageable)
-    } else {
-        appRepository.searchPageByUser(q, pageable, userContext)
+    fun search(q: String?, pageable: Pageable, uc: UserContext): Mono<Page<App>> {
+        val vo = if (uc.isRoot) {
+            AppVo.UserQuery(q = q)
+        } else {
+            AppVo.UserQuery(q = q, email = uc.email)
+        }
+
+        return appRepository.search(vo, pageable)
     }
 
     /**
      * 查询应用更新的最新 50 条更新记录。
      */
-    fun findLast50History(name: String, profile: String, userContext: UserContext): Flux<AppContentHistory> = checkPermission(name, profile, userContext).flatMapMany {
-        appRepository.findLast50History(name, profile)
+    fun findLast50History(ap: AppPair, uc: UserContext): Flux<AppContentHistory> = checkPermission(ap, uc).flatMapMany {
+        // FIXME 修复
+        appRepository.findAppHistory(ap, PageRequest.of(1, 10))
     }
 
     /**
@@ -473,13 +475,13 @@ class AppService(
      */
     fun findLastDataTime() = appRepository.findLastDataTime()
 
-    private fun checkPermission(name: String, profile: String, userContext: UserContext): Mono<Unit> {
-        if (userContext.isRoot) {
+    private fun checkPermission(ap: AppPair, uc: UserContext): Mono<Unit> {
+        if (uc.isRoot) {
             return Mono.just(Unit)
         }
 
-        return appRepository.findOne(name, profile).flatMap {
-            if (!it.users.contains(userContext.email)) {
+        return appRepository.findOne(ap).flatMap {
+            if (!it.users.contains(uc.email)) {
                 // 用户没有修改该 APP 的权限
                 throw BizCodeException(BizCode.Classic.C_403)
             }
@@ -518,16 +520,17 @@ class AppService(
 
     internal fun loadOne(name: String, profile: String): Mono<CachedApp> {
         val k = localKey(name, profile)
-        return Mono.justOrEmpty<CachedApp>(appCaches.getIfPresent(k))
-                .switchIfEmpty(
-                        findOne(name, profile).map {
-                            val c = mapToCachedApp(it)
-                            appCaches.put(k, c)
-                            c
-                        }.switchIfEmpty(Mono.create {
-                            it.error(BizCodeException(BizCodes.C_1000, "未找到应用 $name/$profile"))
-                        })
-                )
+        return Mono.justOrEmpty<CachedApp>(appCaches.getIfPresent(k)).switchIfEmpty(Mono.defer {
+            findOne(AppPair(name, profile))
+                    .map {
+                        val c = mapToCachedApp(it)
+                        appCaches.put(k, c)
+                        c
+                    }
+                    .switchIfEmpty(Mono.defer {
+                        throw BizCodeException(BizCodes.C_1000, "未找到应用 ${name}/${profile}")
+                    })
+        })
     }
 
     private fun configState0(name: String, profiles: List<String>): Mono<String> {
@@ -666,7 +669,7 @@ class AppService(
                     })
                     .bodyToMono(ServerRefreshDto::class.java)
                     .handle<ServerRefreshDto> { t, u ->
-                        val luat = lastDataTime!!.time
+                        val luat = lastDataTime!!.toEpochMilli()
                         if (t.lastDataTime != luat) {
                             u.error(IllegalStateException("${s.host}:${s.port} 刷新最终更新时间不一致 local-lastDataTime: $luat, remote-lastDataTime: ${t.lastDataTime}"))
                         }

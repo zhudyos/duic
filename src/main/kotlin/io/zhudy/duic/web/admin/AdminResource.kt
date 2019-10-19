@@ -20,14 +20,15 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.zhudy.duic.BizCode
 import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.Config
-import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.AppContentHistory
+import io.zhudy.duic.domain.AppPair
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.ServerService
 import io.zhudy.duic.service.UserService
 import io.zhudy.duic.utils.WebUtils
+import io.zhudy.duic.vo.AppVo
 import io.zhudy.duic.web.pathString
 import io.zhudy.duic.web.security.userContext
 import org.springframework.http.ResponseCookie
@@ -147,65 +148,42 @@ class AdminResource(
     /**
      * 保存应用.
      */
-    fun insertApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java)
+    fun insertApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(AppVo.NewApp::class.java)
             .doOnNext {
                 validate(it) {
                     val standardChar = "/^[A-Za-z0-9\\.\\-]+\$/".toRegex()
-                    validate(App::name).hasSize(min = 1, max = 64).matches(standardChar)
-                    validate(App::profile).hasSize(min = 1, max = 64).matches(standardChar)
-                    validate(App::description).hasSize(max = 1024)
-                    validate(App::token).hasSize(max = 64)
-                    validate(App::ipLimit).hasSize(max = 1024)
-                    validate(App::users).hasSize(max = 50)
+                    validate(AppVo.NewApp::name).hasSize(min = 1, max = 64).matches(standardChar)
+                    validate(AppVo.NewApp::profile).hasSize(min = 1, max = 64).matches(standardChar)
+                    validate(AppVo.NewApp::description).hasSize(max = 1024)
+                    validate(AppVo.NewApp::token).hasSize(max = 64)
+                    validate(AppVo.NewApp::ipLimit).hasSize(max = 1024)
+                    validate(AppVo.NewApp::users).hasSize(max = 50)
                 }
             }
             .flatMap(appService::insert)
             .then(ok().build())
 
     /**
-     * 从已经存在的应用信息中插入一个应用。
-     */
-    fun insertAppForApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java)
-            .flatMap { newApp ->
-                appService.findOne(request.pathString("name"), request.pathString("profile")).flatMap {
-                    if (newApp.name.isEmpty()) {
-                        throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
-                    }
-                    if (newApp.profile.isEmpty()) {
-                        throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
-                    }
-                    newApp.content = it.content
-
-                    appService.insert(newApp)
-                }
-            }.then(ok().build())
-
-    /**
      *
      */
-    fun updateApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java)
-            .doOnNext {
-                if (it.name.isEmpty()) {
-                    throw BizCodeException(BizCode.Classic.C_999, "应用名称不能为空")
-                }
-                if (it.profile.isEmpty()) {
-                    throw BizCodeException(BizCode.Classic.C_999, "应用环境不能为空")
-                }
-            }
-            .flatMap {
-                appService.update(it, request.userContext())
+    fun updateApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(AppVo.UpdateBasicInfo::class.java)
+            .flatMap { vo ->
+                val ap = AppPair(request.pathVariable("name"), request.pathVariable("profile"))
+                appService.update(ap, vo, request.userContext())
                         .map { v -> mapOf("v" to v) }
-                        .flatMap(ok()::syncBody)
+                        .flatMap(ok()::bodyValue)
             }
 
     /**
      *
      */
-    fun updateAppContent(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(App::class.java).flatMap {
-        appService.updateContent(it, request.userContext())
-                .map { v -> mapOf("v" to v) }
-                .flatMap(ok()::syncBody)
-    }
+    fun updateAppContent(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(AppVo.UpdateContent::class.java)
+            .flatMap { vo ->
+                val ap = AppPair(request.pathVariable("name"), request.pathVariable("profile"))
+                appService.updateContent(ap, vo, request.userContext())
+                        .map { v -> mapOf("v" to v) }
+                        .flatMap(ok()::bodyValue)
+            }
 
     /**
      *
@@ -213,25 +191,24 @@ class AdminResource(
     fun deleteApp(request: ServerRequest): Mono<ServerResponse> {
         val name = request.pathString("name")
         val profile = request.pathString("profile")
-        return appService.delete(App(name = name, profile = profile), request.userContext())
+        return appService.delete(AppPair(name = name, profile = profile), request.userContext())
                 .then(noContent().build())
     }
 
     /**
      * 查询单个应用配置.
      */
-    fun findOneApp(request: ServerRequest): Mono<ServerResponse> = appService.findOne(
-            request.pathString("name"),
-            request.pathString("profile")
-    ).flatMap(ok()::syncBody)
+    fun findOneApp(request: ServerRequest): Mono<ServerResponse> = appService.findOne(getAppPair(request))
+            .flatMap(ok()::bodyValue)
 
     /**
      * 查询用户的 apps.
      */
-    fun findAppByUser(request: ServerRequest): Mono<ServerResponse> = appService.findPageByUser(
+    fun findAppByUser(request: ServerRequest): Mono<ServerResponse> = appService.search(
+            request.queryParam("q").orElse(null),
             WebUtils.getPage(request),
             request.userContext()
-    ).flatMap(ok()::syncBody)
+    ).flatMap(ok()::bodyValue)
 
     /**
      * 搜索配置。
@@ -239,33 +216,30 @@ class AdminResource(
     fun searchAppByUser(request: ServerRequest): Mono<ServerResponse> {
         val page = WebUtils.getPage(request)
         val q = request.queryParam("q").orElse("").trim()
-        return appService.searchPageByUser(q, page, request.userContext()).flatMap(ok()::syncBody)
+        return appService.search(q, page, request.userContext()).flatMap(ok()::syncBody)
     }
 
     /**
      * 查询 App 内容历史记录.
      */
     fun findAppContentHistory(request: ServerRequest): Mono<ServerResponse> {
-        val name = request.pathString("name")
-        val profile = request.pathString("profile")
-
-        return ok().body(appService.findLast50History(name, profile, request.userContext()),
+        return ok().body(appService.findLast50History(getAppPair(request), request.userContext()),
                 AppContentHistory::class.java)
     }
 
     fun findAllNames(request: ServerRequest): Mono<ServerResponse> = appService.findAllNames().collectList()
-            .flatMap(ok()::syncBody)
+            .flatMap(ok()::bodyValue)
 
     fun findProfilesByName(request: ServerRequest): Mono<ServerResponse> = appService.findProfilesByName(request.pathString("name"))
             .collectList()
-            .flatMap(ok()::syncBody)
+            .flatMap(ok()::bodyValue)
 
     /**
      *
      */
     fun findLastDataTime(request: ServerRequest): Mono<ServerResponse> = appService.findLastDataTime()
             .map { mapOf("last_data_time" to it) }
-            .flatMap(ok()::syncBody)
+            .flatMap(ok()::bodyValue)
 
     // ======================================= APP ======================================================= //
 
@@ -274,4 +248,9 @@ class AdminResource(
     fun loadServerStates(request: ServerRequest): Mono<ServerResponse> = ok().body(serverService.loadServerStates())
 
     // ======================================= SERVER ==================================================== //
+
+    private fun getAppPair(request: ServerRequest) = AppPair(
+            name = request.pathVariable("name"),
+            profile = request.pathVariable("profile")
+    )
 }

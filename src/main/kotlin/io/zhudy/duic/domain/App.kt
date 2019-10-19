@@ -15,35 +15,33 @@
  */
 package io.zhudy.duic.domain
 
-import java.util.*
+import java.time.Instant
 
 /**
  * 应用配置信息。
  *
- * @property id 主键
  * @property name 应用名称
- * @property profile 应用配置
+ * @property profile 应用环境
  * @property description 应用描述
+ * @property content 应用配置内容
  * @property token 访问令牌
  * @property ipLimit 可访问 IP
  * @property v 应用版本
  * @property createdAt 应用创建时间
  * @property updatedAt 应用修改时间
- * @property content 应用配置内容
  * @property users 应用所属用户
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class App(
-        var id: String = "",
-        var name: String = "",
-        var profile: String = "",
-        var description: String = "",
-        var token: String = "",
-        var ipLimit: String = "",
-        var v: Int = 1,
-        var createdAt: Date? = null,
-        var updatedAt: Date? = null,
-        var content: String = "",
-        var users: List<String> = emptyList()
+data class App(
+        val name: String,
+        val profile: String,
+        val description: String,
+        val content: String,
+        val token: String,
+        val ipLimit: String,
+        val v: Int,
+        val createdAt: Instant,
+        val updatedAt: Instant,
+        val users: List<String>
 )

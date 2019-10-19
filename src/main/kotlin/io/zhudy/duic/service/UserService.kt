@@ -19,12 +19,12 @@ import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
 import io.zhudy.duic.annotation.NoIntegrationTest
-import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.User
 import io.zhudy.duic.dto.ResetPasswordDto
-import io.zhudy.duic.bak.repository.UserRepository
+import io.zhudy.duic.repository.UserRepository
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
+import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
@@ -37,8 +37,9 @@ import javax.annotation.PostConstruct
  */
 @Service
 @DependsOn("io.zhudy.duic.Config")
-class UserService(val userRepository: UserRepository,
-                  val passwordEncoder: PasswordEncoder) {
+class UserService(
+        val userRepository: UserRepository,
+        val passwordEncoder: PasswordEncoder) {
 
     @NoIntegrationTest
     @Configuration
@@ -82,8 +83,9 @@ class UserService(val userRepository: UserRepository,
      * 保存用户。
      */
     fun insert(user: User): Mono<*> {
-        user.password = passwordEncoder.encode(user.password)
-        return userRepository.insert(user)
+//        user.password = passwordEncoder.encode(user.password)
+//        return userRepository.insert(user)
+        TODO()
     }
 
     /**
@@ -94,32 +96,35 @@ class UserService(val userRepository: UserRepository,
      * @param newPassword 新密码
      */
     fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Void> {
-        return userRepository.findByEmail(email).single().flatMap {
-            if (passwordEncoder.matches(oldPassword, it.password)) {
-                return@flatMap userRepository.updatePassword(email, passwordEncoder.encode(newPassword))
-            }
-            throw BizCodeException(BizCodes.C_2001)
-        }
+        TODO()
+//        return userRepository.findByEmail(email).single().flatMap {
+//            if (passwordEncoder.matches(oldPassword, it.password)) {
+//                return@flatMap userRepository.updatePassword(email, passwordEncoder.encode(newPassword))
+//            }
+//            throw BizCodeException(BizCodes.C_2001)
+//        }
     }
 
     /**
      * 删除用户。
      */
     fun delete(email: String): Mono<Void> = Mono.defer {
-        if (email == Config.rootEmail) {
-            throw BizCodeException(BizCodes.C_2002)
-        }
-        userRepository.delete(email)
+        TODO()
+//        if (email == Config.rootEmail) {
+//            throw BizCodeException(BizCodes.C_2002)
+//        }
+//        userRepository.delete(email)
     }
 
     /**
      * 重置密码。
      */
     fun resetPassword(dto: ResetPasswordDto): Mono<Void> = Mono.defer {
-        if (dto.email == Config.rootEmail) {
-            throw BizCodeException(BizCodes.C_2003)
-        }
-        userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
+        TODO()
+//        if (dto.email == Config.rootEmail) {
+//            throw BizCodeException(BizCodes.C_2003)
+//        }
+//        userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
     }
 
     /**

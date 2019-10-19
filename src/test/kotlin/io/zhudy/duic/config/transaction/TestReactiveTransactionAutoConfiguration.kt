@@ -7,6 +7,7 @@ import org.springframework.transaction.ReactiveTransactionManager
 import org.springframework.transaction.reactive.TransactionCallback
 import org.springframework.transaction.reactive.TransactionalOperator
 import reactor.core.publisher.Flux
+import reactor.core.publisher.Mono
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -19,6 +20,11 @@ class TestReactiveTransactionAutoConfiguration {
     fun transactionalOperator(transactionManager: ReactiveTransactionManager): TransactionalOperator {
         val operator = TransactionalOperator.create(transactionManager)
         return object : TransactionalOperator {
+
+            override fun <T : Any?> transactional(mono: Mono<T>): Mono<T> {
+                return transactional(mono.flux()).next()
+            }
+
             override fun <T : Any?> execute(action: TransactionCallback<T>): Flux<T> {
                 return operator.execute { t ->
                     // 单元测试环境事务自动回滚

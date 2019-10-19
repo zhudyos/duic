@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import java.util.*
+import java.time.Instant
 
 /**
  * 应用配置修改历史信息。
@@ -44,7 +44,7 @@ class AppHistory(
         var token: String = "",
         var ipLimit: String = "",
         var v: Int = 1,
-        var createdAt: Date? = null,
+        var createdAt: Instant? = null,
         var updatedBy: String = "",
         var deletedBy: String = "",
         var users: List<String> = emptyList()

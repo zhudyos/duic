@@ -12,7 +12,7 @@ plugins {
     kotlin("plugin.spring") version "1.3.41"
 
 //    id("io.spring.dependency-management") version "1.0.8.RELEASE"
-    id("org.springframework.boot") version "2.1.5.RELEASE"
+    id("org.springframework.boot") version "2.2.0.RELEASE"
     id("com.moowork.node") version "1.3.1"
     id("com.github.hierynomus.license") version "0.15.0"
     id("com.bmuschko.docker-remote-api") version "4.10.0"
@@ -33,7 +33,7 @@ configurations {
 }
 
 dependencies {
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:2.2.0.RC1"))
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:2.2.0.RELEASE"))
     implementation(platform("org.springframework.data:spring-data-releasetrain:Moore-RELEASE"))
     implementation(platform("io.r2dbc:r2dbc-bom:Arabba-RC2"))
     implementation(platform("com.fasterxml.jackson:jackson-bom:2.9.9"))
@@ -71,8 +71,9 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("com.squareup.okhttp3:mockwebserver:3.14.2")
     testImplementation("io.mockk:mockk:1.9.3")
-    testImplementation("com.ninja-squad:springmockk:1.1.2")
+    testImplementation("com.ninja-squad:springmockk:1.1.3")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot.experimental:spring-boot-starter-data-r2dbc:0.1.0.M2")
     testImplementation("org.testcontainers:junit-jupiter:1.12.0")
 
 //    kapt("org.springframework.boot:spring-boot-configuration-processor")
