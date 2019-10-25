@@ -14,5 +14,10 @@
 # limitations under the License.
 #
 
+spring:
+  data:
+    mongodb:
+      uri: ${duic.mongodb.url}
+
 duic:
   dbms: MongoDB

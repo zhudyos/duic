@@ -22,7 +22,6 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.dao.PersistenceExceptionTranslationAutoConfiguration
 import org.springframework.boot.autoconfigure.http.codec.CodecsAutoConfiguration
-import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration
 import org.springframework.boot.autoconfigure.transaction.TransactionAutoConfiguration
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration
 import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration
@@ -41,7 +40,6 @@ import org.springframework.context.ApplicationListener
             "io.zhudy.duic"
         ],
         exclude = [
-            MongoReactiveAutoConfiguration::class,
             RestTemplateAutoConfiguration::class,
             ErrorWebFluxAutoConfiguration::class,
             CodecsAutoConfiguration::class,

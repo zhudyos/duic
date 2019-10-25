@@ -1,6 +1,9 @@
 package io.zhudy.duic.repository.mongo
 
 import com.mongodb.client.model.Filters.eq
+import com.mongodb.client.model.IndexModel
+import com.mongodb.client.model.IndexOptions
+import com.mongodb.client.model.Indexes
 import com.mongodb.client.model.Projections.include
 import com.mongodb.client.model.Updates.set
 import io.zhudy.duic.dto.UserDto
@@ -23,6 +26,32 @@ import java.time.Instant
 class MongoUserRepositoryImpl(
         private val ops: ReactiveMongoOperations
 ) : UserRepository {
+
+    init {
+        val coll = ops.getCollection("user")
+        coll.listIndexes()
+                .toFlux()
+                .collectMap { it.getString("name") }
+                .flatMapMany {
+                    val indexes = mutableListOf<IndexModel>()
+
+                    // email unique index
+                    val emailUnique = "email_unique"
+                    if (!it.containsKey(emailUnique)) {
+                        indexes.add(IndexModel(
+                                Indexes.ascending("email"),
+                                IndexOptions().name(emailUnique).background(true).unique(true)
+                        ))
+                    }
+
+                    if (indexes.isEmpty()) {
+                        Flux.empty()
+                    } else {
+                        coll.createIndexes(indexes)
+                    }
+                }
+                .subscribe()
+    }
 
     override fun insert(vo: UserVo.NewUser): Mono<Int> = Mono.defer {
         ops.execute("user") { coll ->

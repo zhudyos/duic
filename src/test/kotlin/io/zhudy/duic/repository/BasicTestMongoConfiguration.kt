@@ -1,7 +1,7 @@
 package io.zhudy.duic.repository
 
 import io.zhudy.duic.config.transaction.TestReactiveTransactionAutoConfiguration
-import io.zhudy.duic.repository.config.MongoTransactionConfiguration
+import io.zhudy.duic.repository.config.MongoConfiguration
 import org.springframework.boot.autoconfigure.data.mongo.MongoReactiveDataAutoConfiguration
 import org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration
 import org.springframework.context.annotation.Import
@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Import
 @Import(value = [
     MongoReactiveAutoConfiguration::class,
     MongoReactiveDataAutoConfiguration::class,
-    MongoTransactionConfiguration::class,
+    MongoConfiguration::class,
     TestReactiveTransactionAutoConfiguration::class
 ])
 class BasicTestMongoConfiguration

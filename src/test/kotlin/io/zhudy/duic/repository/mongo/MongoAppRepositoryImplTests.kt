@@ -4,7 +4,6 @@ import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 import io.zhudy.duic.domain.AppHistory
 import io.zhudy.duic.domain.AppPair
-import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.repository.BasicTestMongoConfiguration
 import io.zhudy.duic.vo.AppVo
@@ -14,6 +13,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.reactive.TransactionalOperator
@@ -199,18 +199,18 @@ internal class MongoAppRepositoryImplTests {
     fun search() {
         val q = "game"
         val vo = AppVo.UserQuery(q = q)
-        val pageable = Pageable()
+        val pageable = PageRequest.of(1, 10)
 
         val app = newApp("game: League of Legends")
 
         val p = appRepository.insert(app).then(appRepository.search(vo, pageable))
         val page = transactionalOperator.transactional(p).block()
-        assertThat(page.totalItems).isGreaterThanOrEqualTo(1)
-        assertThat(page.items).allMatch {
+        assertThat(page.totalElements).isGreaterThanOrEqualTo(1)
+        assertThat(page.content).allMatch {
             it.name.contains(q, ignoreCase = true)
                     || it.profile.contains(q, ignoreCase = true)
                     || it.content.contains(q, ignoreCase = true)
-        }.containsAll(page.items)
+        }.containsAll(page.content)
     }
 
     @Test
