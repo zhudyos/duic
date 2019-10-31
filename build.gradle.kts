@@ -43,6 +43,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1")
 
+    // FIXME
+    implementation("io.zhudy.kitty:core:2.0.0")
+    implementation("io.zhudy.kitty:rest-problem:2.0.0")
+    implementation("io.zhudy.kitty.extensions:spring-webflux:2.0.0")
+
     val resilience4jVersion = "0.16.0"
     implementation("io.github.resilience4j:resilience4j-ratelimiter:$resilience4jVersion")
     implementation("io.github.resilience4j:resilience4j-reactor:$resilience4jVersion")
@@ -60,7 +65,7 @@ dependencies {
     implementation("io.github.java-diff-utils:java-diff-utils:4.0")
     implementation("org.springframework.security:spring-security-crypto:5.0.4.RELEASE")
 
-    // reactive db
+    implementation("io.projectreactor.tools:blockhound:1.0.1.RELEASE")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
     implementation("io.r2dbc:r2dbc-postgresql")
@@ -194,5 +199,6 @@ tasks {
 repositories {
     mavenLocal()
     mavenCentral()
+    maven("https://jitpack.io")
     maven("https://repo.spring.io/milestone")
 }
