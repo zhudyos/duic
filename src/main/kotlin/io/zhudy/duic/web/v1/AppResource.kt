@@ -15,19 +15,18 @@
  */
 package io.zhudy.duic.web.v1
 
-import io.zhudy.duic.BizCode
-import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.vo.RequestConfigVo
-import io.zhudy.duic.web.WebConstants
-import io.zhudy.duic.web.pathString
+import io.zhudy.kitty.core.biz.BizCode
+import io.zhudy.kitty.core.biz.BizCodeException
+import io.zhudy.kitty.spring.webflux.ip
+import io.zhudy.kitty.spring.webflux.pathString
 import org.springframework.util.StringUtils
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
 import reactor.core.publisher.Mono
-import java.net.Inet4Address
 
 /**
  * `/api/v1/apps`。
@@ -99,38 +98,24 @@ class AppResource(
                 name = request.pathString("name"),
                 profiles = getProfiles(request),
                 configTokens = getConfigToken(request),
-                clientIpv4 = getClientIp(request)
+                clientIpv4 = request.ip()
         )
     }
 
     private fun getProfiles(request: ServerRequest): List<String> {
         val profiles = request.pathString("profile").split(",").filter { it.isNotEmpty() }
         if (profiles.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "缺少 profile 参数")
+            throw BizCodeException(BizCode.C999, "缺少 profile 参数")
         }
         return profiles
     }
 
     private fun getConfigToken(request: ServerRequest): List<String> {
-        val s = request.headers().header(WebConstants.X_CONFIG_TOKEN).firstOrNull()
+        val s = request.headers().header("x-config-token").firstOrNull()
         if (s.isNullOrEmpty()) {
             return emptyList()
         }
         return StringUtils.commaDelimitedListToStringArray(s).toList()
     }
 
-    private fun getClientIp(request: ServerRequest): String {
-        val ip = request.headers().header(WebConstants.X_REAL_IP).firstOrNull()
-        if (ip != null) {
-            return ip
-        }
-
-        val swe = request.exchange()
-        val address = swe.request.remoteAddress?.address
-        if (address is Inet4Address) {
-            return address.hostAddress
-        }
-        // TODO: 后期将支持 IPv6
-        return ""
-    }
 }

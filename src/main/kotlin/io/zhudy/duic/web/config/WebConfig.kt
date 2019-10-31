@@ -16,6 +16,8 @@
 package io.zhudy.duic.web.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.zhudy.kitty.rest.problem.RestProblemResolver
+import io.zhudy.kitty.spring.webflux.RestWebExceptionHandler
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -77,4 +79,7 @@ class WebConfig(private val objectMapper: ObjectMapper) : WebFluxConfigurer {
         source.registerCorsConfiguration("/api/**", c)
         return CorsWebFilter(source)
     }
+
+    @Bean
+    fun restWebExceptionHandler() = RestWebExceptionHandler(RestProblemResolver(), objectMapper)
 }

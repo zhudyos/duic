@@ -23,6 +23,11 @@ package io.zhudy.duic
 object Config {
 
     /**
+     * Spring IoC 容器管理的 bean 对象名称。
+     */
+    const val BEAN_NAME = "io.zhudy.duic.Config"
+
+    /**
      * 服务信息。
      */
     lateinit var server: Server

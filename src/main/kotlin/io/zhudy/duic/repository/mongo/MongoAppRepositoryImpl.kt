@@ -17,8 +17,12 @@ import org.bson.types.ObjectId
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.mongodb.core.findAll
+import org.springframework.data.mongodb.core.index.CompoundIndexDefinition
+import org.springframework.data.mongodb.core.index.Index
+import org.springframework.data.mongodb.core.index.TextIndexDefinition
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
@@ -31,6 +35,42 @@ import java.time.Instant
 class MongoAppRepositoryImpl(
         private val ops: ReactiveMongoOperations
 ) : AppRepository {
+
+    init {
+        // app indices
+        // name&profile unique index
+        val app = ops.indexOps("app")
+        app.ensureIndex(
+                CompoundIndexDefinition(Document("name", 1).append("profile", 1))
+                        .named("name&profile_unique")
+                        .unique()
+                        .background()
+        ).subscribe()
+
+        Flux.just("created_at", "updated_at", "users")
+                .map { Index(it, Sort.Direction.ASC).named(it).background() }
+                .flatMap(app::ensureIndex)
+                .subscribe()
+
+        app.ensureIndex(
+                TextIndexDefinition.builder()
+                        .onFields("content", "name", "profile")
+                        .named("fts_text_c&n&p")
+                        .build()
+        ).subscribe()
+
+        // app_history indices
+        val appHistory = ops.indexOps("app_history")
+        appHistory.ensureIndex(
+                CompoundIndexDefinition(Document("name", 1).append("profile", 1))
+                        .named("name&profile_unique")
+                        .background()
+        ).subscribe()
+
+        appHistory.ensureIndex(
+                Index("created_at", Sort.Direction.ASC).named("created_at").background()
+        ).subscribe()
+    }
 
     override fun insert(vo: AppVo.NewApp): Mono<Int> = Mono.defer {
         val doc = Document()

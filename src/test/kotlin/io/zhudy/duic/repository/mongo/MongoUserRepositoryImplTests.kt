@@ -1,8 +1,8 @@
 package io.zhudy.duic.repository.mongo
 
-import io.zhudy.duic.dto.NewUserDto
 import io.zhudy.duic.repository.BasicTestMongoConfiguration
 import io.zhudy.duic.repository.UserRepository
+import io.zhudy.duic.vo.UserVo
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -36,7 +36,7 @@ internal class MongoUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
         val n = transactionalOperator.transactional(p).block()
         assertThat(n).isEqualTo(1)
     }
@@ -46,9 +46,9 @@ internal class MongoUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
-                        userRepository.insert(NewUserDto(email = email, password = password))
+                        userRepository.insert(UserVo.NewUser(email = email, password = password))
                 )
 
         assertThatThrownBy { transactionalOperator.transactional(p).block() }
@@ -61,7 +61,7 @@ internal class MongoUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
                         userRepository.delete(email)
                 )
@@ -83,7 +83,7 @@ internal class MongoUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
                         userRepository.updatePassword(email, "[NEW-PASSWORD]")
                 )
@@ -106,7 +106,7 @@ internal class MongoUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
                         userRepository.findByEmail(email)
                 )
@@ -122,7 +122,7 @@ internal class MongoUserRepositoryImplTests {
         val c = 30
         var prepare = Mono.empty<Int>()
         for (i in 1..30) {
-            val dto = NewUserDto(email = "integration-test$i@mail.com", password = "[PASSWORD]")
+            val dto = UserVo.NewUser(email = "integration-test$i@mail.com", password = "[PASSWORD]")
             prepare = prepare.then(userRepository.insert(dto))
         }
 
@@ -139,7 +139,7 @@ internal class MongoUserRepositoryImplTests {
         val c = 30
         var prepare = Mono.empty<Int>()
         for (i in 1..30) {
-            val dto = NewUserDto(email = "integration-test$i@mail.com", password = "[PASSWORD]")
+            val dto = UserVo.NewUser(email = "integration-test$i@mail.com", password = "[PASSWORD]")
             prepare = prepare.then(userRepository.insert(dto))
         }
 

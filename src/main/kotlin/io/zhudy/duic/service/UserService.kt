@@ -15,18 +15,20 @@
  */
 package io.zhudy.duic.service
 
-import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
 import io.zhudy.duic.annotation.NoIntegrationTest
-import io.zhudy.duic.domain.User
-import io.zhudy.duic.dto.ResetPasswordDto
+import io.zhudy.duic.dto.UserDto
 import io.zhudy.duic.repository.UserRepository
+import io.zhudy.duic.vo.UserVo
+import io.zhudy.kitty.core.biz.BizCode
+import io.zhudy.kitty.core.biz.BizCodeException
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
 import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
 import javax.annotation.PostConstruct
 
@@ -36,26 +38,22 @@ import javax.annotation.PostConstruct
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
-@DependsOn("io.zhudy.duic.Config")
+@DependsOn(Config.BEAN_NAME)
 class UserService(
-        val userRepository: UserRepository,
-        val passwordEncoder: PasswordEncoder) {
+        private val userRepository: UserRepository,
+        private val passwordEncoder: PasswordEncoder
+) {
 
+    // FIXME 完善业务，该业务应该被提取到外部
     @NoIntegrationTest
     @Configuration
     inner class Lifecycle {
 
         @PostConstruct
         fun init() {
-            this@UserService.initRootUser()
-        }
-    }
-
-    fun initRootUser() {
-        userRepository.findByEmail(Config.rootEmail).hasElement().subscribe {
-            if (!it) {
-                insert(User(email = Config.rootEmail, password = Config.rootPassword)).subscribe()
-            }
+            userRepository.findByEmail(Config.rootEmail)
+                    .thenEmpty { insert(UserVo.NewUser(Config.rootEmail, Config.rootPassword)) }
+                    .subscribe()
         }
     }
 
@@ -68,63 +66,85 @@ class UserService(
      *
      * @throws BizCodeException
      */
-    fun login(email: String, password: String): Mono<User> {
-        return userRepository.findByEmail(email).single().map {
-            if (!passwordEncoder.matches(password, it.password)) {
-                throw BizCodeException(BizCodes.C_2001)
+    fun login(email: String, password: String): Mono<UserDto> = userRepository.findByEmail(email).single()
+            .doOnNext {
+                if (!passwordEncoder.matches(password, it.password)) {
+                    throw BizCodeException(BizCodes.C_2001)
+                }
             }
-            it
-        }.onErrorResume(NoSuchElementException::class.java) {
-            throw BizCodeException(BizCodes.C_2000)
-        }.cast(User::class.java)
-    }
+            .onErrorResume(NoSuchElementException::class.java) {
+                throw BizCodeException(BizCodes.C_2000)
+            }
 
     /**
      * 保存用户。
      */
-    fun insert(user: User): Mono<*> {
-//        user.password = passwordEncoder.encode(user.password)
-//        return userRepository.insert(user)
-        TODO()
+    @Transactional
+    fun insert(vo: UserVo.NewUser): Mono<Void> = Mono.defer {
+        val newUser = vo.copy(password = passwordEncoder.encode(vo.password))
+
+        userRepository.insert(newUser)
+                .doOnNext { n ->
+                    if (n != 1) {
+                        throw BizCodeException(BizCode.C811, "新增 [${vo.email}] 用户，预期影响行记录 1 实际影响 $n")
+                    }
+                }
+                .then()
     }
 
     /**
      * 更新用户密码。
      *
-     * @param email 邮箱
-     * @param oldPassword 原密码
-     * @param newPassword 新密码
+     * @param vo 修改密码值对象
      */
-    fun updatePassword(email: String, oldPassword: String, newPassword: String): Mono<Void> {
-        TODO()
-//        return userRepository.findByEmail(email).single().flatMap {
-//            if (passwordEncoder.matches(oldPassword, it.password)) {
-//                return@flatMap userRepository.updatePassword(email, passwordEncoder.encode(newPassword))
-//            }
-//            throw BizCodeException(BizCodes.C_2001)
-//        }
+    @Transactional
+    fun updatePassword(vo: UserVo.UpdatePassword): Mono<Void> = Mono.defer {
+        userRepository.findByEmail(vo.email).single()
+                .onErrorMap(NoSuchElementException::class.java) { BizCodeException(BizCodes.C_2000) }
+                .doOnNext {
+                    if (!passwordEncoder.matches(vo.oldPassword, it.password)) {
+                        throw BizCodeException(BizCodes.C_2001)
+                    }
+                }
+                .then(userRepository.updatePassword(vo.email, passwordEncoder.encode(vo.newPassword)))
+                .doOnNext { n ->
+                    if (n != 1) {
+                        throw BizCodeException(BizCode.C811, "修改 [${vo.email}] 密码，预期影响行记录 1 实际影响 $n")
+                    }
+                }
+                .then()
     }
 
     /**
      * 删除用户。
      */
     fun delete(email: String): Mono<Void> = Mono.defer {
-        TODO()
-//        if (email == Config.rootEmail) {
-//            throw BizCodeException(BizCodes.C_2002)
-//        }
-//        userRepository.delete(email)
+        if (email == Config.rootEmail) {
+            throw BizCodeException(BizCodes.C_2002)
+        }
+        userRepository.delete(email)
+                .doOnNext { n ->
+                    if (n != 1) {
+                        throw BizCodeException(BizCode.C811, "删除 [${email}] 用户，预期影响行记录 1 实际影响 $n")
+                    }
+                }
+                .then()
     }
 
     /**
      * 重置密码。
      */
-    fun resetPassword(dto: ResetPasswordDto): Mono<Void> = Mono.defer {
-        TODO()
-//        if (dto.email == Config.rootEmail) {
-//            throw BizCodeException(BizCodes.C_2003)
-//        }
-//        userRepository.updatePassword(dto.email, passwordEncoder.encode(dto.password))
+    fun resetPassword(vo: UserVo.ResetPassword): Mono<Void> = Mono.defer {
+        if (vo.email == Config.rootEmail) {
+            throw BizCodeException(BizCodes.C_2003)
+        }
+        userRepository.updatePassword(vo.email, passwordEncoder.encode(vo.password))
+                .doOnNext { n ->
+                    if (n != 1) {
+                        throw BizCodeException(BizCode.C811, "重置 [${vo.email}] 用户密码，预期影响行记录 1 实际影响 $n")
+                    }
+                }
+                .then()
     }
 
     /**

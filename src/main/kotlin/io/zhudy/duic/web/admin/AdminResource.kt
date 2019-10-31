@@ -17,23 +17,21 @@ package io.zhudy.duic.web.admin
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import io.zhudy.duic.BizCode
-import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.Config
 import io.zhudy.duic.domain.AppContentHistory
 import io.zhudy.duic.domain.AppPair
-import io.zhudy.duic.domain.User
-import io.zhudy.duic.dto.ResetPasswordDto
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.ServerService
 import io.zhudy.duic.service.UserService
-import io.zhudy.duic.utils.WebUtils
 import io.zhudy.duic.vo.AppVo
-import io.zhudy.duic.web.pathString
+import io.zhudy.duic.vo.UserVo
 import io.zhudy.duic.web.security.userContext
+import io.zhudy.kitty.core.biz.BizCode
+import io.zhudy.kitty.core.biz.BizCodeException
+import io.zhudy.kitty.spring.webflux.pathString
+import io.zhudy.kitty.spring.webflux.popularParams
 import org.springframework.http.ResponseCookie
 import org.springframework.stereotype.Controller
-import org.springframework.web.reactive.function.BodyExtractors
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.noContent
@@ -64,7 +62,7 @@ class AdminResource(
     /**
      * 登录.
      */
-    fun login(request: ServerRequest): Mono<ServerResponse> = request.body(BodyExtractors.toMono(LoginUser::class.java)).flatMap {
+    fun login(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(LoginUser::class.java).flatMap {
         userService.login(it.email, it.password).flatMap { user ->
             val expiresAt = Instant.now().plus(Duration.ofSeconds(Config.jwt.expiresIn))
             val token = JWT.create().withJWTId(user.email)
@@ -91,17 +89,17 @@ class AdminResource(
     /**
      * 返回 `root` 用户登录名.
      */
-    fun rootUser(request: ServerRequest): Mono<ServerResponse> = ok().syncBody(mapOf("root" to Config.rootEmail))
+    fun rootUser(request: ServerRequest): Mono<ServerResponse> = ok().bodyValue(mapOf("root" to Config.rootEmail))
 
     /**
      * 保存用户.
      */
-    fun insertUser(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(User::class.java).flatMap {
+    fun insertUser(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(UserVo.NewUser::class.java).flatMap {
         if (it.email.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "email 不能为空")
+            throw BizCodeException(BizCode.C999, "email 不能为空")
         }
         if (it.password.isEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_999, "密码不能为空")
+            throw BizCodeException(BizCode.C999, "密码不能为空")
         }
 
         userService.insert(it).then(ok().build())
@@ -118,28 +116,33 @@ class AdminResource(
      */
     fun updateUserPassword(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(UpdatePassword::class.java)
             .flatMap {
-                val userContext = request.userContext()
-                userService.updatePassword(userContext.email, it.oldPassword, it.newPassword)
+                val uc = request.userContext()
+                val vo = UserVo.UpdatePassword(
+                        email = uc.email,
+                        oldPassword = it.oldPassword,
+                        newPassword = it.newPassword
+                )
+                userService.updatePassword(vo)
                         .then(noContent().build())
             }
 
     /**
      * 重置用户密码.
      */
-    fun resetUserPassword(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(ResetPasswordDto::class.java)
+    fun resetUserPassword(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(UserVo.ResetPassword::class.java)
             .flatMap(userService::resetPassword)
             .then(noContent().build())
 
     /**
      */
-    fun findPageUser(request: ServerRequest): Mono<ServerResponse> = userService.findPage(WebUtils.getPage(request))
-            .flatMap(ok()::syncBody)
+    fun findPageUser(request: ServerRequest): Mono<ServerResponse> = userService.findPage(request.popularParams().pageable())
+            .flatMap(ok()::bodyValue)
 
     /**
      *
      */
     fun findAllEmail(request: ServerRequest): Mono<ServerResponse> = userService.findAllEmail().collectList()
-            .flatMap(ok()::syncBody)
+            .flatMap(ok()::bodyValue)
     // ======================================= USER ====================================================== //
 
 
@@ -206,7 +209,7 @@ class AdminResource(
      */
     fun findAppByUser(request: ServerRequest): Mono<ServerResponse> = appService.search(
             request.queryParam("q").orElse(null),
-            WebUtils.getPage(request),
+            request.popularParams().pageable(),
             request.userContext()
     ).flatMap(ok()::bodyValue)
 
@@ -214,9 +217,9 @@ class AdminResource(
      * 搜索配置。
      */
     fun searchAppByUser(request: ServerRequest): Mono<ServerResponse> {
-        val page = WebUtils.getPage(request)
+        val page = request.popularParams().pageable()
         val q = request.queryParam("q").orElse("").trim()
-        return appService.search(q, page, request.userContext()).flatMap(ok()::syncBody)
+        return appService.search(q, page, request.userContext()).flatMap(ok()::bodyValue)
     }
 
     /**

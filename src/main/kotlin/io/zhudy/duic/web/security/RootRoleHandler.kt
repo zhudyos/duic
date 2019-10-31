@@ -15,8 +15,8 @@
  */
 package io.zhudy.duic.web.security
 
-import io.zhudy.duic.BizCode
-import io.zhudy.duic.BizCodeException
+import io.zhudy.kitty.core.biz.BizCode
+import io.zhudy.kitty.core.biz.BizCodeException
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
@@ -32,7 +32,7 @@ class RootRoleHandler(private val next: (ServerRequest) -> Mono<ServerResponse>)
     override fun invoke(request: ServerRequest): Mono<ServerResponse> {
         val userContext = request.userContext()
         if (!userContext.isRoot) {
-            throw BizCodeException(BizCode.Classic.C_403)
+            throw BizCodeException(BizCode.C403)
         }
         return next(request)
     }

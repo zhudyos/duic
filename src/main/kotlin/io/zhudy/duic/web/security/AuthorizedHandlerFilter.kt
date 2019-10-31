@@ -19,10 +19,10 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTDecodeException
 import com.auth0.jwt.exceptions.SignatureVerificationException
-import io.zhudy.duic.BizCode
-import io.zhudy.duic.BizCodeException
 import io.zhudy.duic.Config
 import io.zhudy.duic.UserContext
+import io.zhudy.kitty.core.biz.BizCode
+import io.zhudy.kitty.core.biz.BizCodeException
 import org.springframework.web.reactive.function.server.HandlerFilterFunction
 import org.springframework.web.reactive.function.server.HandlerFunction
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -42,23 +42,23 @@ class AuthorizedHandlerFilter(
         }
         val token = request.cookies().getFirst("token")?.value
         if (token.isNullOrEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_401, "缺少 token")
+            throw BizCodeException(BizCode.C401, "缺少 token")
         }
         val jwt = try {
             JWT.decode(token)
         } catch (e: JWTDecodeException) {
-            throw BizCodeException(BizCode.Classic.C_401, "解析 token 失败 ${e.message}")
+            throw BizCodeException(BizCode.C401, "解析 token 失败 ${e.message}")
         }
         try {
             jwtAlgorithm.verify(jwt)
         } catch (e: SignatureVerificationException) {
-            throw BizCodeException(BizCode.Classic.C_401, "access_token 校验失败")
+            throw BizCodeException(BizCode.C401, "access_token 校验失败")
         }
         if ((jwt.expiresAt?.time ?: 0) < System.currentTimeMillis()) {
-            throw BizCodeException(BizCode.Classic.C_401, "token 已经过期请重新登录")
+            throw BizCodeException(BizCode.C401, "token 已经过期请重新登录")
         }
         if (jwt.id.isNullOrEmpty()) {
-            throw BizCodeException(BizCode.Classic.C_401, "错误的 token")
+            throw BizCodeException(BizCode.C401, "错误的 token")
         }
 
         request.attributes()[UserContext.CONTEXT_KEY] = object : UserContext {

@@ -34,7 +34,7 @@ class BasicConfiguration {
         }
     }
 
-    @Bean("io.zhudy.duic.Config")
+    @Bean(Config.BEAN_NAME)
     @ConfigurationProperties(prefix = "duic")
     fun config(serverProperties: ServerProperties): Config {
         val c = Config

@@ -1,9 +1,9 @@
 package io.zhudy.duic.repository.mysql
 
 import io.r2dbc.spi.R2dbcDataIntegrityViolationException
-import io.zhudy.duic.dto.NewUserDto
 import io.zhudy.duic.repository.BasicTestRelationalConfiguration
 import io.zhudy.duic.repository.UserRepository
+import io.zhudy.duic.vo.UserVo
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
@@ -37,7 +37,7 @@ internal class MySqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
         val n = transactionalOperator.transactional(p).block()
         assertThat(n).isEqualTo(1)
     }
@@ -47,9 +47,9 @@ internal class MySqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
-                        userRepository.insert(NewUserDto(email = email, password = password))
+                        userRepository.insert(UserVo.NewUser(email = email, password = password))
                 )
 
         assertThatThrownBy { transactionalOperator.transactional(p).block() }
@@ -63,7 +63,7 @@ internal class MySqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
                         userRepository.delete(email)
                 )
@@ -85,7 +85,7 @@ internal class MySqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
                         userRepository.updatePassword(email, password)
                 )
@@ -108,7 +108,7 @@ internal class MySqlUserRepositoryImplTests {
         val email = "integration-test@mail.com"
         val password = "[PASSWORD]"
 
-        val p = userRepository.insert(NewUserDto(email = email, password = password))
+        val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
                         userRepository.findByEmail(email)
                 )
@@ -133,7 +133,7 @@ internal class MySqlUserRepositoryImplTests {
         // FIXME 这里有 bug 等待修复
         val c = 2
         val prepare = Flux.range(0, c).map {
-            NewUserDto(email = "integration-test$it@mail.com", password = "[PASSWORD]")
+            UserVo.NewUser(email = "integration-test$it@mail.com", password = "[PASSWORD]")
         }.flatMap(userRepository::insert)
 
         val n = transactionalOperator.transactional(prepare).blockLast()
@@ -150,7 +150,7 @@ internal class MySqlUserRepositoryImplTests {
     fun findAllEmail() {
         val c = 30
         val prepare = Flux.range(0, c).map {
-            NewUserDto(email = "integration-test$it@mail.com", password = "[PASSWORD]")
+            UserVo.NewUser(email = "integration-test$it@mail.com", password = "[PASSWORD]")
         }.flatMap(userRepository::insert)
 
         val p = prepare.thenMany(userRepository.findAllEmail())

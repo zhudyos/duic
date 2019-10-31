@@ -16,7 +16,9 @@
 package io.zhudy.duic.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.zhudy.duic.*
+import io.zhudy.duic.BizCodes
+import io.zhudy.duic.Config
+import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.*
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
@@ -28,6 +30,8 @@ import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
 import io.zhudy.duic.vo.AppVo
 import io.zhudy.duic.vo.RequestConfigVo
+import io.zhudy.kitty.core.biz.BizCode
+import io.zhudy.kitty.core.biz.BizCodeException
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -57,7 +61,7 @@ import java.util.concurrent.TimeUnit
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
-@DependsOn("io.zhudy.duic.Config")
+@DependsOn(Config.BEAN_NAME)
 class AppService(
         private val appRepository: AppRepository,
         private val serverRepository: ServerRepository,
@@ -483,7 +487,7 @@ class AppService(
         return appRepository.findOne(ap).flatMap {
             if (!it.users.contains(uc.email)) {
                 // 用户没有修改该 APP 的权限
-                throw BizCodeException(BizCode.Classic.C_403)
+                throw BizCodeException(BizCode.C403)
             }
 
             Mono.just(Unit)
@@ -495,7 +499,7 @@ class AppService(
             if (app.ipLimit.isNotEmpty()) {
                 // 校验访问 IP
                 if (vo.clientIpv4.isEmpty()) {
-                    throw BizCodeException(BizCode.Classic.C_403, "${app.name}/${app.profile} 禁止访问")
+                    throw BizCodeException(BizCode.C403, "${app.name}/${app.profile} 禁止访问")
                 }
 
                 val ipl = IpUtils.ipv4ToLong(vo.clientIpv4)
@@ -508,12 +512,12 @@ class AppService(
                 }
 
                 if (!r) {
-                    throw BizCodeException(BizCode.Classic.C_403, "${app.name}/${app.profile} 禁止 ${vo.clientIpv4} 访问")
+                    throw BizCodeException(BizCode.C403, "${app.name}/${app.profile} 禁止 ${vo.clientIpv4} 访问")
                 }
             }
 
             if (app.token.isNotEmpty() && !vo.configTokens.contains(app.token)) {
-                throw BizCodeException(BizCode.Classic.C_401, "${app.name}/${app.profile} 认证失败")
+                throw BizCodeException(BizCode.C401, "${app.name}/${app.profile} 认证失败")
             }
         }
     }).collectList()

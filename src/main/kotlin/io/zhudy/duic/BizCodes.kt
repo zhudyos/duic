@@ -15,12 +15,14 @@
  */
 package io.zhudy.duic
 
+import io.zhudy.kitty.core.biz.BizCode
+
 /**
  * 错误码定义枚举。
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-enum class BizCodes(override val code: Int, override val msg: String, override val status: Int = 400) : BizCode {
+enum class BizCodes(override val code: Int, override val message: String, override val status: Int = 400) : BizCode {
 
     // 应用错误码
     C_1000(1000, "未找到应用"),

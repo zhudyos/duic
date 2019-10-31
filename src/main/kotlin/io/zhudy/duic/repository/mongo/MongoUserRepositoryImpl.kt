@@ -1,9 +1,6 @@
 package io.zhudy.duic.repository.mongo
 
 import com.mongodb.client.model.Filters.eq
-import com.mongodb.client.model.IndexModel
-import com.mongodb.client.model.IndexOptions
-import com.mongodb.client.model.Indexes
 import com.mongodb.client.model.Projections.include
 import com.mongodb.client.model.Updates.set
 import io.zhudy.duic.dto.UserDto
@@ -13,7 +10,9 @@ import org.bson.Document
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
+import org.springframework.data.mongodb.core.index.Index
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
@@ -28,29 +27,10 @@ class MongoUserRepositoryImpl(
 ) : UserRepository {
 
     init {
-        val coll = ops.getCollection("user")
-        coll.listIndexes()
-                .toFlux()
-                .collectMap { it.getString("name") }
-                .flatMapMany {
-                    val indexes = mutableListOf<IndexModel>()
-
-                    // email unique index
-                    val emailUnique = "email_unique"
-                    if (!it.containsKey(emailUnique)) {
-                        indexes.add(IndexModel(
-                                Indexes.ascending("email"),
-                                IndexOptions().name(emailUnique).background(true).unique(true)
-                        ))
-                    }
-
-                    if (indexes.isEmpty()) {
-                        Flux.empty()
-                    } else {
-                        coll.createIndexes(indexes)
-                    }
-                }
-                .subscribe()
+        // email unique index
+        ops.indexOps("user").ensureIndex(
+                Index("email", Sort.Direction.ASC).named("email_unique").unique().background()
+        ).subscribe()
     }
 
     override fun insert(vo: UserVo.NewUser): Mono<Int> = Mono.defer {

@@ -43,7 +43,7 @@ import javax.annotation.PreDestroy
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @Service
-@DependsOn("io.zhudy.duic.Config")
+@DependsOn(Config.BEAN_NAME)
 class ServerService(
         val serverRepository: ServerRepository,
         val webClientBuilder: WebClient.Builder,
