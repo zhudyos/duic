@@ -61,19 +61,19 @@ class UserService(
      * 用户登录。
      *
      * 错误返回
-     * - [BizCodes.C_2000]
-     * - [BizCodes.C_2001]
+     * - [BizCodes.C2000]
+     * - [BizCodes.C2001]
      *
      * @throws BizCodeException
      */
     fun login(email: String, password: String): Mono<UserDto> = userRepository.findByEmail(email).single()
             .doOnNext {
                 if (!passwordEncoder.matches(password, it.password)) {
-                    throw BizCodeException(BizCodes.C_2001)
+                    throw BizCodeException(BizCodes.C2001)
                 }
             }
             .onErrorResume(NoSuchElementException::class.java) {
-                throw BizCodeException(BizCodes.C_2000)
+                throw BizCodeException(BizCodes.C2000)
             }
 
     /**
@@ -100,10 +100,10 @@ class UserService(
     @Transactional
     fun updatePassword(vo: UserVo.UpdatePassword): Mono<Void> = Mono.defer {
         userRepository.findByEmail(vo.email).single()
-                .onErrorMap(NoSuchElementException::class.java) { BizCodeException(BizCodes.C_2000) }
+                .onErrorMap(NoSuchElementException::class.java) { BizCodeException(BizCodes.C2000) }
                 .doOnNext {
                     if (!passwordEncoder.matches(vo.oldPassword, it.password)) {
-                        throw BizCodeException(BizCodes.C_2001)
+                        throw BizCodeException(BizCodes.C2001)
                     }
                 }
                 .then(userRepository.updatePassword(vo.email, passwordEncoder.encode(vo.newPassword)))
@@ -120,7 +120,7 @@ class UserService(
      */
     fun delete(email: String): Mono<Void> = Mono.defer {
         if (email == Config.rootEmail) {
-            throw BizCodeException(BizCodes.C_2002)
+            throw BizCodeException(BizCode.C403, "ROOT 用户禁止删除")
         }
         userRepository.delete(email)
                 .doOnNext { n ->
@@ -136,7 +136,7 @@ class UserService(
      */
     fun resetPassword(vo: UserVo.ResetPassword): Mono<Void> = Mono.defer {
         if (vo.email == Config.rootEmail) {
-            throw BizCodeException(BizCodes.C_2003)
+            throw BizCodeException(BizCode.C403, "ROOT 用户禁止重置密码")
         }
         userRepository.updatePassword(vo.email, passwordEncoder.encode(vo.password))
                 .doOnNext { n ->

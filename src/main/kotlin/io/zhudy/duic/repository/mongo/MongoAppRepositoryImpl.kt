@@ -183,8 +183,20 @@ class MongoAppRepositoryImpl(
         }.map(::mapToApp)
     }
 
-    override fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHistory> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHistory> = Flux.defer {
+        ops.execute("app_history") { coll ->
+            coll.find(and(eq("name", ap.name), eq("profile", ap.profile), ne("updated_by", "")))
+                    .sort(descending("created_at"))
+                    .skip(pageable.offset.toInt())
+                    .limit(pageable.pageSize)
+        }.map {
+            AppContentHistory(
+                    hid = it.getString("hid"),
+                    content = it.getString("content"),
+                    updatedBy = it.getString("updated_by"),
+                    updatedAt = it.getDate("created_at").toInstant()
+            )
+        }
     }
 
     override fun findAllNames(): Flux<String> = Flux.defer {
@@ -199,8 +211,10 @@ class MongoAppRepositoryImpl(
         }.map { it.getString("profile") }
     }
 
-    override fun findLatestDeleted(time: Instant): Flux<AppHistory> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun findLatestDeleted(time: Instant): Flux<AppHistory> = Flux.defer {
+        ops.execute("app_history") { coll ->
+            coll.find(and(gt("created_at", time), ne("deleted_by", ""))).sort(ascending("created_at"))
+        }.map(::mapToAppHistory)
     }
 
     override fun findLastDataTime(): Mono<Long> = Mono.defer {
@@ -222,5 +236,19 @@ class MongoAppRepositoryImpl(
             users = doc["users"] as List<String>,
             createdAt = doc.getDate("created_at").toInstant(),
             updatedAt = doc.getDate("updated_at").toInstant()
+    )
+
+    private fun mapToAppHistory(doc: Document) = AppHistory(
+            name = doc.getString("name"),
+            profile = doc.getString("profile"),
+            description = doc.getString("description"),
+            content = doc.getString("content"),
+            token = doc.getString("token") ?: "",
+            ipLimit = doc.getString("ip_limit") ?: "",
+            v = doc.getInteger("v"),
+            updatedBy = doc.getString("updated_by") ?: "",
+            deletedBy = doc.getString("deleted_by") ?: "",
+            users = doc["users"] as List<String>,
+            createdAt = doc.getDate("created_at").toInstant()
     )
 }

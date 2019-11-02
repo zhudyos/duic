@@ -4,6 +4,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.zhudy.duic.Config
+import io.zhudy.kitty.core.jackson.KittyModule
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer
 import org.springframework.boot.autoconfigure.web.ServerProperties
@@ -33,6 +34,9 @@ class BasicConfiguration {
             setIgnoreUnresolvablePlaceholders(true)
         }
     }
+
+    @Bean
+    fun kittyModule() = KittyModule()
 
     @Bean(Config.BEAN_NAME)
     @ConfigurationProperties(prefix = "duic")

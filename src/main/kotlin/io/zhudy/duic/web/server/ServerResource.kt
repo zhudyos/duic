@@ -26,7 +26,6 @@ import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
 import org.springframework.web.reactive.function.server.ServerResponse.status
 import reactor.core.publisher.Mono
-import reactor.core.publisher.toMono
 
 /**
  *`/servers`。
@@ -43,13 +42,13 @@ class ServerResource(
      * 刷新内存配置。
      */
     fun refreshApp(request: ServerRequest): Mono<ServerResponse> = appService.refresh()
-            .map { ServerRefreshDto(it) }
-            .flatMap(ok()::syncBody)
+            .map(::ServerRefreshDto)
+            .flatMap(ok()::bodyValue)
 
     /**
      * 获取内存配置最后更新时间。
      */
-    fun getLastDataTime(request: ServerRequest): Mono<ServerResponse> = ok().syncBody(ServerRefreshDto(appService.getMemoryLastDataTime()))
+    fun getLastDataTime(request: ServerRequest): Mono<ServerResponse> = ok().bodyValue(ServerRefreshDto(appService.getMemoryLastDataTime()))
 
     /**
      * 返回服务信息。
@@ -59,13 +58,16 @@ class ServerResource(
     /**
      * 健康检查。
      */
-    fun health(request: ServerRequest): Mono<ServerResponse> = serverService.health().flatMap {
-        ok().syncBody(mapOf("status" to "UP"))
-    }.onErrorResume(HealthCheckException::class.java) {
-        status(it.code).syncBody(mapOf(
-                "status" to "DOWN",
-                "description" to it.description
-        )).toMono()
-    }
+    fun health(request: ServerRequest): Mono<ServerResponse> = serverService.health()
+            .map { mapOf("status" to "UP") }
+            .flatMap(ok()::bodyValue)
+            .onErrorResume(HealthCheckException::class.java) {
+                status(it.code).bodyValue(
+                        mapOf(
+                                "status" to "DOWN",
+                                "description" to it.description
+                        )
+                )
+            }
 
 }

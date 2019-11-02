@@ -78,9 +78,11 @@ internal class MongoAppRepositoryImplTests {
                 profile = "integration-test",
                 description = "integration-test",
                 content = "integration-test: true",
-                users = listOf("integration-test@mail.com"),
+                v = 1,
                 updatedBy = "integration-test@mail.com",
-                deletedBy = "integration-test@mail.com"
+                deletedBy = "integration-test@mail.com",
+                users = listOf("integration-test@mail.com"),
+                createdAt = Instant.now()
         )
         val ap = AppPair(appHistory.name, appHistory.profile)
         val p = appRepository.insertHistory(appHistory).flatMap { n ->

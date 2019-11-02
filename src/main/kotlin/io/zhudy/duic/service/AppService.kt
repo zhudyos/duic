@@ -39,11 +39,11 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.reactive.function.client.WebClient
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
@@ -192,6 +192,7 @@ class AppService(
     /**
      * 保存应用。
      */
+    @Transactional
     fun insert(vo: AppVo.NewApp): Mono<Int> {
         return appRepository.insert(vo)
     }
@@ -199,101 +200,69 @@ class AppService(
     /**
      * 删除应用。
      */
-    fun delete(ap: AppPair, uc: UserContext): Mono<Int> = checkPermission(ap, uc)
-            .flatMap {
-                appRepository.delete(ap).flatMap { n ->
-                    val history = AppHistory()
-                    // FIXME 完善逻辑
-                    appRepository.insertHistory(history).map { n }
+    @Transactional
+    fun delete(ap: AppPair, uc: UserContext): Mono<Int> = findOne(ap)
+            .doOnNext { checkPermission(it, uc) }
+            .flatMap { dbApp ->
+                val appHistory = dbApp.run {
+                    AppHistory(
+                            name = name,
+                            profile = profile,
+                            description = description,
+                            content = content,
+                            token = token,
+                            ipLimit = ipLimit,
+                            v = v,
+                            deletedBy = uc.email,
+                            users = users,
+                            createdAt = Instant.now()
+                    )
                 }
+                appRepository.insertHistory(appHistory).then(appRepository.delete(ap))
             }
 
     /**
      * 更新应用。
      */
-    fun update(ap: AppPair, vo: AppVo.UpdateBasicInfo, uc: UserContext): Mono<Int> = checkPermission(ap, uc)
-            .flatMap {
-                appRepository.update(ap, vo).flatMap { n ->
-                    val history = AppHistory()
-                    // FIXME 完善逻辑
-                    appRepository.insertHistory(history).map { n }
+    @Transactional
+    fun update(ap: AppPair, vo: AppVo.UpdateBasicInfo, uc: UserContext): Mono<Int> = findOne(ap)
+            .doOnNext { checkPermission(it, uc) }
+            .flatMap { dbApp ->
+                val appHistory = dbApp.run {
+                    AppHistory(
+                            name = name,
+                            profile = profile,
+                            description = description,
+                            content = content,
+                            token = token,
+                            ipLimit = ipLimit,
+                            v = v,
+                            deletedBy = uc.email,
+                            users = users,
+                            createdAt = Instant.now()
+                    )
                 }
+                appRepository.insertHistory(appHistory).then(appRepository.update(ap, vo))
             }
 
     /**
      * 更新应用配置。
      */
-    fun updateContent(ap: AppPair, vo: AppVo.UpdateContent, uc: UserContext): Mono<*> {
+    @Transactional
+    fun updateContent(ap: AppPair, vo: AppVo.UpdateContent, uc: UserContext): Mono<*> = Mono.defer {
         try {
             yaml.load<Map<String, Any>>(vo.content)
         } catch (e: Exception) {
             log.debug("YAML 格式错误", e)
-            throw BizCodeException(BizCodes.C_1006)
+            throw BizCodeException(BizCodes.C1006)
         }
-
-        return checkPermission(ap, uc).flatMap {
-            appRepository.updateContent(ap, vo).flatMap { v ->
-                val history = AppHistory()
-                // FIXME 完善逻辑
-                appRepository.insertHistory(history).map { v }
-            }
-        }.doOnSuccess { dbApp ->
-            //            Mono.defer {
-//                val generator = DiffRowGenerator.create()
-//                        .showInlineDiffs(true)
-//                        .mergeOriginalRevised(true)
-//                        .inlineDiffByWord(true)
-//                        .oldTag {
-//                            if (it) """<del style="background-color: #fdb8c0;">""" else "</del>"
-//                        }
-//                        .newTag {
-//                            if (it) """<span style="background-color: #acf2bd;">""" else "</span>"
-//                        }
-//                        .build()
-//
-//                val rows = generator.generateDiffRows(dbApp.content.lines(), ap.content.lines())
-//                val html = StringBuilder()
-//                html.apply {
-//                    append("<p>修改应用信息：</p>")
-//                    append("<ul>")
-//                    append("<li>应用名称（name）：").append(ap.name).append("</li>")
-//                    append("<li>应用环境（profile）：").append(ap.profile).append("</li>")
-//                    append("<li>修改人（updated_by）：").append(uc.email).append("</li>")
-//                    append("<li>修改时间（updated_at）：").append(OffsetDateTime.now()).append("</li>")
-//                    append("</ul>")
-//                }
-//
-//                html.apply {
-//                    append("<p>修改配置信息：</p>")
-//                    append("<pre>")
-//                    rows.forEach {
-//                        appendln(it.oldLine)
-//                    }
-//                    append("</pre>")
-//                }
-//
-//                val mailer = Config.monitorEmail.smtp.run {
-//                    MailerBuilder.withSMTPServer(host, port, username, password).buildMailer()
-//                }
-//
-//                val email = Config.monitorEmail.run {
-//                    EmailBuilder.startingBlank()
-//                            .from(fromAddress)
-//                            .to(toAddress)
-//                            .withSubject("${uc.email} 修改了配置 ${ap.name}/${ap.profile}")
-//                            .withHTMLText(html.toString())
-//                            .buildEmail()
-//                }
-//                mailer.sendMail(email, true)
-//
-//                Mono.just(dbApp)
-//            }.subscribeOn(Schedulers.elastic()).subscribe()
-        }.flatMap { v ->
-            refresh().map { v }
-        }.doOnSuccess {
-            // 刷新集群配置
-            refreshClusterConfig()
-        }
+        findOne(ap)
+                .doOnNext { checkPermission(it, uc) }
+                .flatMap { dbApp ->
+                    // FIXME 保存 APP_HISTORY
+                    appRepository.updateContent(ap, vo)
+                }
+                .doOnSuccess { refresh().subscribe() } // FIXME 优化刷新本地缓存
     }
 
     /**
@@ -327,7 +296,7 @@ class AppService(
                         "\n [watchRequestLimit={}]",
                         watchRequestLimit
                 )
-                throw BizCodeException(BizCodes.C_1429, "Supporting maximum request $watchRequestLimit.")
+                throw BizCodeException(BizCodes.C1429, "Supporting maximum request $watchRequestLimit.")
             }
 
             // 如果监控请求达到预设的阀值，打印警告信息提示。
@@ -428,7 +397,7 @@ class AppService(
      */
     fun findOne(ap: AppPair): Mono<App> = appRepository.findOne(ap)
             .switchIfEmpty(Mono.defer {
-                throw BizCodeException(BizCodes.C_1000, "未找到应用 ${ap.name}/${ap.profile}")
+                throw BizCodeException(BizCodes.C1000, "未找到应用 ${ap.name}/${ap.profile}")
             })
 
     /**
@@ -459,9 +428,8 @@ class AppService(
     /**
      * 查询应用更新的最新 50 条更新记录。
      */
-    fun findLast50History(ap: AppPair, uc: UserContext): Flux<AppContentHistory> = checkPermission(ap, uc).flatMapMany {
-        // FIXME 修复
-        appRepository.findAppHistory(ap, PageRequest.of(1, 10))
+    fun findLast50History(ap: AppPair, uc: UserContext): Flux<AppContentHistory> = Flux.defer {
+        TODO("还未实现")
     }
 
     /**
@@ -479,18 +447,10 @@ class AppService(
      */
     fun findLastDataTime() = appRepository.findLastDataTime()
 
-    private fun checkPermission(ap: AppPair, uc: UserContext): Mono<Unit> {
-        if (uc.isRoot) {
-            return Mono.just(Unit)
-        }
-
-        return appRepository.findOne(ap).flatMap {
-            if (!it.users.contains(uc.email)) {
-                // 用户没有修改该 APP 的权限
-                throw BizCodeException(BizCode.C403)
-            }
-
-            Mono.just(Unit)
+    private fun checkPermission(app: App, uc: UserContext) {
+        if (!uc.isRoot && !app.users.contains(uc.email)) {
+            // 用户没有修改该 APP 的权限
+            throw BizCodeException(BizCode.C403)
         }
     }
 
@@ -532,7 +492,7 @@ class AppService(
                         c
                     }
                     .switchIfEmpty(Mono.defer {
-                        throw BizCodeException(BizCodes.C_1000, "未找到应用 ${name}/${profile}")
+                        throw BizCodeException(BizCodes.C1000, "未找到应用 ${name}/${profile}")
                     })
         })
     }
@@ -573,7 +533,7 @@ class AppService(
 
                 val o = a[k]
                 if (o != null && o !is Map<*, *>) {
-                    throw BizCodeException(BizCodes.C_1005, "[$field] 数据类型为 [${o.javaClass}] 不能与 [Object] 合并")
+                    throw BizCodeException(BizCodes.C1005, "[$field] 数据类型为 [${o.javaClass}] 不能与 [Object] 合并")
                 }
 
                 val m = (o as? Map<Any, Any>)?.toMutableMap() ?: hashMapOf()

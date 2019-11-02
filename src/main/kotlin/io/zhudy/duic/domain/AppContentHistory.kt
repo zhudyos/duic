@@ -15,21 +15,21 @@
  */
 package io.zhudy.duic.domain
 
-import java.util.*
+import java.time.Instant
 
 /**
  * 应用配置修改历史信息。
  *
  * @property hid 主键
- * @property updatedBy 修改者
  * @property content 已改前的内容
+ * @property updatedBy 修改者
  * @property updatedAt 修改时间
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class AppContentHistory(
-        var hid: String = "",
-        var updatedBy: String = "",
-        var content: String = "",
-        var updatedAt: Date? = null
+data class AppContentHistory(
+        val hid: String,
+        val content: String,
+        val updatedBy: String,
+        val updatedAt: Instant
 )

@@ -44,5 +44,5 @@ class OAIResource {
     /**
      * 获取 OpenAPI。
      */
-    fun index(request: ServerRequest): Mono<ServerResponse> = ok().syncBody(apiData)
+    fun index(request: ServerRequest): Mono<ServerResponse> = ok().bodyValue(apiData)
 }

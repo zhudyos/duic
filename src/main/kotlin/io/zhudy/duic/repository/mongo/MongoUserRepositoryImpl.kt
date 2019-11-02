@@ -66,7 +66,10 @@ class MongoUserRepositoryImpl(
     override fun findPage(pageable: Pageable): Mono<Page<UserDto>> = Mono.defer {
         ops.execute("user") { coll ->
             // 记录列表
-            coll.find().skip(pageable.offset.toInt()).limit(pageable.pageSize).toFlux()
+            coll.find()
+                    .skip(pageable.offset.toInt())
+                    .limit(pageable.pageSize)
+                    .toFlux()
                     .map(::mapToUser)
                     .collectList()
                     .flatMap { items ->
@@ -90,6 +93,6 @@ class MongoUserRepositoryImpl(
             email = doc.getString("email"),
             password = doc.getString("password"),
             createdAt = doc.getDate("created_at").toInstant(),
-            updatedAt = doc.getDate("updated_at").toInstant()
+            updatedAt = doc.getDate("updated_at")?.toInstant()
     )
 }

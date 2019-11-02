@@ -45,7 +45,7 @@ class AppResource(
         val vo = getRequestConfigVo(request)
         return appService.getConfigState(vo)
                 .map { mapOf("state" to it) }
-                .flatMap(ok()::syncBody)
+                .flatMap(ok()::bodyValue)
     }
 
     /**
@@ -56,7 +56,7 @@ class AppResource(
         val oldState = request.queryParam("state").orElse("")
         return appService.watchConfigState(vo, oldState)
                 .map { mapOf("state" to it) }
-                .flatMap(ok()::syncBody)
+                .flatMap(ok()::bodyValue)
     }
 
     /**
@@ -65,7 +65,7 @@ class AppResource(
     fun getSpringCloudConfig(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
         return appService.loadSpringCloudConfig(vo)
-                .flatMap(ok()::syncBody)
+                .flatMap(ok()::bodyValue)
     }
 
     /**
@@ -77,7 +77,7 @@ class AppResource(
     fun getConfigByNameProfile(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
         return appService.loadConfigByNameProfile(vo)
-                .flatMap(ok()::syncBody)
+                .flatMap(ok()::bodyValue)
     }
 
     /**
@@ -90,7 +90,7 @@ class AppResource(
         val vo = getRequestConfigVo(request)
         vo.key = request.pathString("key")
         return appService.loadConfigByNameProfileKey(vo)
-                .flatMap(ok()::syncBody)
+                .flatMap(ok()::bodyValue)
     }
 
     private fun getRequestConfigVo(request: ServerRequest): RequestConfigVo {

@@ -35,17 +35,16 @@ import java.time.Instant
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class AppHistory(
-        var id: String = "",
-        var name: String = "",
-        var profile: String = "",
-        var description: String = "",
-        var content: String = "",
-        var token: String = "",
-        var ipLimit: String = "",
-        var v: Int = 1,
-        var createdAt: Instant? = null,
-        var updatedBy: String = "",
-        var deletedBy: String = "",
-        var users: List<String> = emptyList()
+data class AppHistory(
+        val name: String,
+        val profile: String,
+        val description: String,
+        val content: String,
+        val token: String = "",
+        val ipLimit: String = "",
+        val v: Int,
+        val updatedBy: String = "",
+        val deletedBy: String = "",
+        val users: List<String>,
+        val createdAt: Instant
 )

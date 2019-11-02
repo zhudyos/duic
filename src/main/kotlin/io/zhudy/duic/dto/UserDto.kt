@@ -11,5 +11,5 @@ data class UserDto(
         @JsonIgnore
         val password: String,
         val createdAt: Instant,
-        val updatedAt: Instant
+        val updatedAt: Instant?
 )
