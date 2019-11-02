@@ -98,7 +98,7 @@ class AppResource(
                 name = request.pathString("name"),
                 profiles = getProfiles(request),
                 configTokens = getConfigToken(request),
-                clientIpv4 = request.ip()
+                clientIpv4 = request.ip
         )
     }
 

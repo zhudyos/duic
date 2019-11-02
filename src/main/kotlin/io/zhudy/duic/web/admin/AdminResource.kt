@@ -135,7 +135,7 @@ class AdminResource(
 
     /**
      */
-    fun findPageUser(request: ServerRequest): Mono<ServerResponse> = userService.findPage(request.popularParams().pageable())
+    fun findPageUser(request: ServerRequest): Mono<ServerResponse> = userService.findPage(request.popularParams.pageable)
             .flatMap(ok()::bodyValue)
 
     /**
@@ -209,7 +209,7 @@ class AdminResource(
      */
     fun findAppByUser(request: ServerRequest): Mono<ServerResponse> = appService.search(
             request.queryParam("q").orElse(null),
-            request.popularParams().pageable(),
+            request.popularParams.pageable,
             request.userContext()
     ).flatMap(ok()::bodyValue)
 
@@ -217,7 +217,7 @@ class AdminResource(
      * 搜索配置。
      */
     fun searchAppByUser(request: ServerRequest): Mono<ServerResponse> {
-        val page = request.popularParams().pageable()
+        val page = request.popularParams.pageable
         val q = request.queryParam("q").orElse("").trim()
         return appService.search(q, page, request.userContext()).flatMap(ok()::bodyValue)
     }
