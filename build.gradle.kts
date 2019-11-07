@@ -34,10 +34,8 @@ configurations {
 
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:2.2.0.RELEASE"))
-    implementation(platform("org.springframework.data:spring-data-releasetrain:Moore-RELEASE"))
     implementation(platform("io.r2dbc:r2dbc-bom:Arabba-RC2"))
     implementation(platform("com.fasterxml.jackson:jackson-bom:2.9.9"))
-    implementation(platform("org.junit:junit-bom:5.5.0"))
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
