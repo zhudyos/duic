@@ -139,3 +139,6 @@ image::doc/images/know-users/2339.png[么么直播]
 . https://projects.spring.io/spring-boot/[Spring Boot]
 . https://docs.spring.io/spring/docs/current/spring-framework-reference/web-reactive.html[Spring WebFlux]
 . https://vuetifyjs.com[Vuetify]
+
+== 感谢
+image::doc/images/jetbrains-blackandwhite.png[JetBrains,100,100,link="https://www.jetbrains.com/?from=duic"]
