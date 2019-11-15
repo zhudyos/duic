@@ -1,20 +1,19 @@
 <template>
   <q-dialog ref="dialog" @keyup.enter="onOk">
-    <q-card dark class="full-width bg-grey-9">
+    <q-card class="full-width bg-grey-9">
       <q-card-section>
         <div class="text-h6">创建用户</div>
       </q-card-section>
 
-      <q-separator dark />
+      <q-separator />
 
       <q-card-section>
         <q-form ref="form">
           <q-input
-            dark
             v-model="email"
             autofocus
             placeholder="邮箱"
-            :rules="[ v => !!v || '邮箱不能为空', checkEmail ]"
+            :rules="[v => !!v || '邮箱不能为空', checkEmail]"
           >
             <template v-slot:prepend>
               <q-icon name="mdi-email" />
@@ -22,11 +21,10 @@
           </q-input>
 
           <q-input
-            dark
             :type="isPwd ? 'password' : 'text'"
             v-model="password"
             placeholder="密码"
-            :rules="[ v=> !!v || '密码不能为空' ]"
+            :rules="[v => !!v || '密码不能为空']"
           >
             <template v-slot:prepend>
               <q-icon name="mdi-key" />
@@ -42,7 +40,7 @@
         </q-form>
       </q-card-section>
 
-      <q-separator dark />
+      <q-separator />
 
       <q-card-actions align="right">
         <q-btn flat @click="onOk">保存</q-btn>
@@ -107,4 +105,3 @@ export default {
   }
 };
 </script>
-

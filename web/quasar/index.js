@@ -4,6 +4,7 @@ import Quasar, {
   Loading,
   Notify,
   Cookies,
+  Dark,
   // components
   QLayout,
   QPage,
@@ -99,6 +100,7 @@ Vue.use(Quasar, {
     Loading,
     Dialog,
     Notify,
-    Cookies
+    Cookies,
+    Dark
   }
 });

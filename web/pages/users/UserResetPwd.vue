@@ -1,27 +1,26 @@
 <template>
   <q-dialog ref="dialog" @keyup.enter="onOk">
-    <q-card dark class="full-width bg-grey-9">
+    <q-card class="full-width bg-grey-9">
       <q-card-section>
         <div class="text-h6">重置密码</div>
       </q-card-section>
 
-      <q-separator dark />
+      <q-separator />
 
       <q-card-section>
         <q-form ref="form">
-          <q-input dark placeholder="邮箱" readonly :value="email">
+          <q-input placeholder="邮箱" readonly :value="email">
             <template v-slot:prepend>
               <q-icon name="mdi-email" />
             </template>
           </q-input>
 
           <q-input
-            dark
             :type="isPwd ? 'password' : 'text'"
             autofocus
             v-model="password"
             placeholder="密码"
-            :rules="[ v=> !!v || '密码不能为空' ]"
+            :rules="[v => !!v || '密码不能为空']"
           >
             <template v-slot:prepend>
               <q-icon name="mdi-key" />
@@ -37,7 +36,7 @@
         </q-form>
       </q-card-section>
 
-      <q-separator dark />
+      <q-separator />
 
       <q-card-actions align="right">
         <q-btn flat @click="onOk">重置</q-btn>
@@ -95,6 +94,3 @@ export default {
   }
 };
 </script>
-
-            
-        

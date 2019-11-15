@@ -1,5 +1,5 @@
 <template>
-  <q-layout class="bg-grey-10">
+  <q-layout>
     <q-page-container>
       <router-view></router-view>
     </q-page-container>
@@ -8,6 +8,11 @@
 
 <script>
 export default {
-  name: 'Index',
-}
+  name: "Index",
+
+  created() {
+    // 设置为 dark 模式
+    this.$q.dark.set(true);
+  }
+};
 </script>

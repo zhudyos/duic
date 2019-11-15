@@ -1,7 +1,7 @@
 <template>
   <q-page class="login row">
     <div class="offset-7 col-3" style="margin-top: 8%;">
-      <q-card dark class="bg-grey-9">
+      <q-card>
         <q-card-section>
           <div class="text-h6">
             <q-avatar>
@@ -14,7 +14,6 @@
         <q-card-section @keyup.enter="login">
           <q-form ref="loginForm">
             <q-input
-              dark
               v-model="email"
               placeholder="邮箱"
               :rules="[ v => !!v || '邮箱不能为空', checkEmail ]"
@@ -25,7 +24,6 @@
             </q-input>
 
             <q-input
-              dark
               type="password"
               v-model="password"
               placeholder="密码"

@@ -1,5 +1,5 @@
 <template>
-  <q-banner dark class="bg-grey-9">
+  <q-banner>
     <template v-slot:avatar>
       <q-avatar>
         <img src="../assets/images/duic60x60.png" />

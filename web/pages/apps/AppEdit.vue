@@ -2,7 +2,7 @@
   <q-dialog ref="dialog" @keyup.enter="onOk">
     <q-card class="full-width" style="min-width: 700px;">
       <q-card-section>
-        <div class="text-h6">创建应用</div>
+        <div class="text-h6">编辑应用</div>
       </q-card-section>
 
       <q-card-section>
@@ -12,12 +12,14 @@
             label="应用名称"
             :rules="[v => !!v || '名称不能为空', checkName]"
             hint="格式：^[a-zA-Z0-9\-_]+$"
+            readonly
           ></q-input>
           <q-input
             v-model="app.profile"
             label="应用环境"
             :rules="[v => !!v || '环境不能为空', checkName]"
             hint="格式：^[a-zA-Z0-9\-_]+$"
+            readonly
           ></q-input>
           <q-input
             type="textarea"
@@ -65,6 +67,7 @@ import { generateToken, nameValidate } from "./app.js";
 
 export default {
   name: "AppAdd",
+  props: ["name", "profile"],
   data: () => ({
     app: {
       name: "",
@@ -83,8 +86,11 @@ export default {
       this.filteredUsers = response.data;
     });
 
-    const email = this.$q.cookies.get("email");
-    this.app.users.push(email);
+    axios
+      .get(`/api/admins/apps/${this.name}/${this.profile}`)
+      .then(response => {
+        Object.assign(this.app, response.data);
+      });
   },
   methods: {
     show() {
@@ -124,7 +130,27 @@ export default {
         );
       });
     },
-    submit() {}
+    submit() {
+      axios
+        .put(`/api/admins/apps`, this.app)
+        .then(() => {
+          this.$q.notify({
+            color: "positive",
+            message: "修改成功",
+            position: "top"
+          });
+
+          this.$emit("ok");
+          this.hide();
+        })
+        .catch(error => {
+          this.$q.notify({
+            color: "negative",
+            message: d.message || "修改失败",
+            position: "top"
+          });
+        });
+    }
   }
 };
 </script>

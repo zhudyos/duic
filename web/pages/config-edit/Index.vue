@@ -1,6 +1,6 @@
 <template>
   <q-layout>
-    <q-header elevated class="bg-grey-9">
+    <q-header elevated class="bg-dark">
       <q-toolbar>
         <d-banner />
 

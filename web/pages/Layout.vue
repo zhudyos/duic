@@ -1,21 +1,25 @@
 <template>
-  <q-layout class="bg-grey-10 text-white">
-    <q-header class="bg-grey-9">
+  <q-layout>
+    <q-header class="bg-dark">
       <q-toolbar>
         <d-banner />
 
         <q-space />
 
-        <q-tabs stretch shrink>
+        <q-tabs stretch>
           <q-route-tab name="apps" label="配置" to="/apps"></q-route-tab>
-          <q-route-tab name="clusters" label="集群" to="/clusters"></q-route-tab>
+          <q-route-tab
+            name="clusters"
+            label="集群"
+            to="/clusters"
+          ></q-route-tab>
           <q-route-tab name="users" label="用户" to="/users"></q-route-tab>
         </q-tabs>
 
-        <q-separator dark vertical inset />
+        <q-separator vertical inset />
 
         <q-btn-dropdown stretch flat :label="email">
-          <q-list dark class="bg-grey-9">
+          <q-list>
             <q-item clickable v-close-popup>
               <q-item-section>
                 <q-item-label>修改密码</q-item-label>
@@ -35,22 +39,18 @@
       <router-view class="q-pa-sm" />
     </q-page-container>
 
-    <q-footer elevated class="bg-grey-9 text-weight-regular q-pa-xs">
-      <div class="row justify-center">
-        <div class="col-xs-6 col-md-3">
-          <q-btn
-            flat
-            dense
-            unelevated
-            size="xs"
-            type="a"
-            href="https://www.apache.org/licenses/LICENSE-2.0"
-            target="_blank"
-            no-caps
-            class="text-center"
-          >https://www.apache.org/licenses/LICENSE-2.0</q-btn>
-        </div>
-      </div>
+    <q-footer class="bg-dark text-center">
+      <q-btn
+        dense
+        unelevated
+        size="xs"
+        type="a"
+        href="https://www.apache.org/licenses/LICENSE-2.0"
+        target="_blank"
+        no-caps
+        class="text-center"
+        >https://www.apache.org/licenses/LICENSE-2.0</q-btn
+      >
     </q-footer>
   </q-layout>
 </template>
