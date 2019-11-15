@@ -156,7 +156,7 @@ class MongoAppRepositoryImpl(
     override fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>> = Mono.defer {
         val filters = mutableListOf<Bson>()
         vo.run {
-            if (q != null) {
+            if (q != null && q.isNotBlank()) {
                 filters.add(text(q))
             }
             if (email != null) {

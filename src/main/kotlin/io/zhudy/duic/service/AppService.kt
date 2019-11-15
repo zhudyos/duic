@@ -54,6 +54,7 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * 应用配置逻辑处理实现。
@@ -107,20 +108,20 @@ class AppService(
     /**
      * 客户端监控状态的缓存对象。
      */
-    private data class WatchStateSink(
+    private class WatchStateSink(
             val sink: MonoSink<String>,
             val name: String,
             val profiles: List<String>,
             val state: String,
             val startTime: Long,
-
-            /**
-             * 如果 `done` 为 `true` 表示该操作已经成功完成，应该即时清理内存信息。
-             */
-            @Volatile
-            var done: Boolean = false,
             var timeoutJob: Job? = null
-    )
+    ) {
+
+        /**
+         *
+         */
+        val done = AtomicBoolean(false)
+    }
 
     @Scheduled(initialDelay = 1000, fixedDelayString = "%{duic.app.watch.updated.fixed-delay:60000}")
     fun watchApps() {
@@ -178,7 +179,7 @@ class AppService(
                                     watchStateSinks.remove(wss)
                                     wss.sink.success(state)
                                     wss.timeoutJob?.cancel()
-                                    wss.done = true
+                                    wss.done.compareAndSet(false, true)
                                 }
                     }
         }
@@ -325,7 +326,7 @@ class AppService(
             wss.timeoutJob = GlobalScope.launch {
                 delay(watchStateTimeout)
                 watchStateSinks.remove(wss)
-                wss.done = true
+                wss.done.compareAndSet(false, true)
 
                 sink.success(state)
 
