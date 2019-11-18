@@ -3,7 +3,6 @@
 image:https://img.shields.io/travis/zhudyos/duic.svg["Travis",link="https://travis-ci.org/zhudyos/duic"]
 image:https://img.shields.io/docker/pulls/zhudyos/duic.svg["Docker Pulls",link="https://hub.docker.com/r/zhudyos/duic/"]
 image:https://img.shields.io/github/license/zhudyos/duic.svg["GitHub license",link="https://github.com/zhudyos/duic/blob/master/LICENSE"]
-image:http://pub.idqqimg.com/wpa/images/group.png["DuiC 配置中心",link="//shang.qq.com/wpa/qunwpa?idkey=b1ab19f9f50a82c26bbf75b42bfaab90f1d5071b9927f08669dfb63635c57e14"]
 
 ```
  ______              _    ______
