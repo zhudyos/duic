@@ -42,16 +42,7 @@
             label="IP 限制"
             hint="示例：192.168.1.36,192.168.1.1-192.168.1.244"
           ></q-input>
-          <q-select
-            options-dark
-            multiple
-            use-input
-            use-chips
-            v-model="app.users"
-            :options="filteredUsers"
-            input-debounce="0"
-            @filter="filterUser"
-          />
+          <d-user-email-select v-model="app.users" />
         </q-form>
       </q-card-section>
 
@@ -64,10 +55,12 @@
 <script>
 import axios from "axios";
 import { generateToken, nameValidate } from "./app.js";
+import DUserEmailSelect from "../../components/DUserEmailSelect.vue";
 
 export default {
   name: "AppAdd",
   props: ["name", "profile"],
+  components: [DUserEmailSelect],
   data: () => ({
     app: {
       name: "",
@@ -76,16 +69,9 @@ export default {
       token: "",
       ip_limit: "",
       users: []
-    },
-    users: [],
-    filteredUsers: []
+    }
   }),
   mounted() {
-    axios.get(`/api/admins/users/emails`).then(response => {
-      this.users = response.data;
-      this.filteredUsers = response.data;
-    });
-
     axios
       .get(`/api/admins/apps/${this.name}/${this.profile}`)
       .then(response => {
@@ -115,28 +101,22 @@ export default {
         resolve(nameValidate(v) || "格式错误");
       });
     },
-    filterUser(val, update) {
-      if (val === "") {
-        update(() => {
-          this.filteredUsers = this.users;
-        });
-        return;
-      }
-
-      update(() => {
-        const needle = val.toLowerCase();
-        this.filteredUsers = this.users.filter(
-          v => v.toLowerCase().indexOf(needle) > -1
-        );
-      });
-    },
     submit() {
+      const app = this.app;
+      const newApp = {
+        description: app.description,
+        token: app.token,
+        ip_limit: app.ip_limit,
+        v: app.v,
+        users: app.users
+      };
+
       axios
-        .put(`/api/admins/apps`, this.app)
+        .put(`/api/admins/apps/${app.name}/${app.profile}`, newApp)
         .then(() => {
           this.$q.notify({
             color: "positive",
-            message: "修改成功",
+            message: "配置修改成功",
             position: "top"
           });
 
@@ -144,9 +124,10 @@ export default {
           this.hide();
         })
         .catch(error => {
+          const d = error.response.data || {};
           this.$q.notify({
             color: "negative",
-            message: d.message || "修改失败",
+            message: `配置修改失败：${d.message}`,
             position: "top"
           });
         });

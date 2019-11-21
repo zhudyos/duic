@@ -72,7 +72,6 @@
               icon="mdi-pencil"
               @click="editApp(props.row.name, props.row.profile)"
             />
-            <q-btn dense flat size="sm" icon="mdi-content-duplicate" />
             <q-btn
               dense
               flat
@@ -226,10 +225,14 @@ export default {
       window.open(route.href, "_blank");
     },
     addApp() {
-      this.$q.dialog({
-        component: AppAdd,
-        root: this.$root
-      });
+      this.$q
+        .dialog({
+          component: AppAdd,
+          root: this.$root
+        })
+        .onOk(() => {
+          this.loadApps();
+        });
     },
     editApp(name, profile) {
       this.$q.dialog({
@@ -261,7 +264,7 @@ export default {
               const d = error.response.data || {};
               this.$q.notify({
                 color: "negative",
-                message: d.message || "删除失败",
+                message: `配置删除失败：${d.message}`,
                 position: "top"
               });
             });

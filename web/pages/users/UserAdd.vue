@@ -76,10 +76,10 @@ export default {
         if (!valid) {
           return;
         }
-        this.save();
+        this.submit();
       });
     },
-    save() {
+    submit() {
       const u = { email: this.email, password: this.password };
       axios
         .post(`/api/admins/users`, u)
@@ -97,7 +97,7 @@ export default {
           const d = error.response.data || {};
           this.$q.notify({
             color: "negative",
-            message: d.message || "用户添加失败",
+            message: `用户添加失败：${d.message}`,
             position: "top"
           });
         });
