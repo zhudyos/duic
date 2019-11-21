@@ -245,6 +245,12 @@ class AppService(
                 }
                 appRepository.insertHistory(appHistory).then(appRepository.update(ap, vo))
             }
+            .doOnNext {
+                if (it != 1) {
+                    throw BizCodeException(BizCode.C811)
+                }
+            }
+            .map { vo.v + 1 }
 
     /**
      * 更新应用配置。

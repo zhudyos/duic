@@ -134,7 +134,8 @@ class MongoAppRepositoryImpl(
                             set("description", vo.description),
                             set("token", vo.token),
                             set("ip_limit", vo.ipLimit),
-                            set("users", vo.users)
+                            set("users", vo.users),
+                            inc("v", 1)
                     )
             )
         }.map { it.modifiedCount.toInt() }.next()
