@@ -15,11 +15,14 @@
  */
 package io.zhudy.duic.web.v1
 
+import org.springframework.http.HttpStatus
+import org.springframework.util.DigestUtils
 import org.springframework.util.ResourceUtils
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.ok
+import org.springframework.web.reactive.function.server.ServerResponse.status
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Mono
 
@@ -31,18 +34,26 @@ import reactor.core.publisher.Mono
 @RestController
 class OAIResource {
 
-    private val apiData: String by lazy {
+    private val openapi: Pair<String, String> by lazy {
         val stream = ResourceUtils.getURL("classpath:duic-oas3.yml").openStream()
-        stream.use {
+        val data = stream.use {
             val yaml = Yaml()
             val d = yaml.load<Map<String, Any>>(it).toMutableMap()
             d.remove("servers")
             yaml.dump(d)
         }
+
+        val eTag = DigestUtils.md5DigestAsHex(data.toByteArray())
+        Pair(data, eTag)
     }
 
     /**
      * 获取 OpenAPI。
      */
-    fun index(request: ServerRequest): Mono<ServerResponse> = ok().bodyValue(apiData)
+    fun index(request: ServerRequest): Mono<ServerResponse> {
+        if (request.exchange().checkNotModified(openapi.second)) {
+            return status(HttpStatus.NOT_MODIFIED).build()
+        }
+        return ok().bodyValue(openapi.first)
+    }
 }
