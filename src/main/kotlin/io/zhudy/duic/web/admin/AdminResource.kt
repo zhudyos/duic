@@ -154,7 +154,7 @@ class AdminResource(
     fun insertApp(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(AppVo.NewApp::class.java)
             .doOnNext {
                 validate(it) {
-                    val standardChar = "/^[A-Za-z0-9\\.\\-]+\$/".toRegex()
+                    val standardChar = "^[A-Za-z0-9\\.\\-]+$".toRegex()
                     validate(AppVo.NewApp::name).hasSize(min = 1, max = 64).matches(standardChar)
                     validate(AppVo.NewApp::profile).hasSize(min = 1, max = 64).matches(standardChar)
                     validate(AppVo.NewApp::description).hasSize(max = 1024)
