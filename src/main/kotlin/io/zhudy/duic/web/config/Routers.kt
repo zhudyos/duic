@@ -81,7 +81,7 @@ class Routers(
             PATCH("/users/password", RootRoleHandler(adminResource::resetUserPassword))
 
             POST("/apps", adminResource::insertApp)
-            PUT("/apps", adminResource::updateApp)
+            PUT("/apps/{name}/{profile}", adminResource::updateApp)
             PUT("/apps/contents", adminResource::updateAppContent)
             GET("/apps/user", adminResource::findAppByUser)
             DELETE("/apps/{name}/{profile}", adminResource::deleteApp)
