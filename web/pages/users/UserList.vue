@@ -121,7 +121,8 @@ export default {
         .dialog({
           title: "删除用户",
           message: `确认删除用户 ${email}，同时删除用户已关联的配置权限`,
-          cancel: true
+          cancel: true,
+          focus: "cancel"
         })
         .onOk(() => {
           this.loading = true;

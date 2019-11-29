@@ -248,7 +248,8 @@ export default {
           title: "删除应用",
           message: `确认删除应用 <label class="text-negative text-weight-bold">${name}/${profile}</label>`,
           html: true,
-          cancel: true
+          cancel: true,
+          focus: "cancel"
         })
         .onOk(() => {
           this.loading = true;
