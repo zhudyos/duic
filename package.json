@@ -19,7 +19,7 @@
     "axios": "^0.19.0",
     "js-yaml": "^3.13.1",
     "monaco-editor": "^0.18.1",
-    "quasar": "^1.4.3",
+    "quasar": "^1.5.1",
     "vue": "^2.6.10",
     "vue-clipboard2": "^0.3.1",
     "vue-router": "^3.1.3"
