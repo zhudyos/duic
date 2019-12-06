@@ -153,8 +153,10 @@ internal class MySqlUserRepositoryImplTests {
             UserVo.NewUser(email = "integration-test$it@mail.com", password = "[PASSWORD]")
         }.flatMap(userRepository::insert)
 
-        val p = prepare.thenMany(userRepository.findAllEmail())
-        val list = transactionalOperator.transactional(p).collectList().block()
+        val list = prepare.thenMany(userRepository.findAllEmail())
+                .`as`(transactionalOperator::transactional)
+                .collectList()
+                .block()
         assertThat(list).hasSizeGreaterThanOrEqualTo(c)
     }
 

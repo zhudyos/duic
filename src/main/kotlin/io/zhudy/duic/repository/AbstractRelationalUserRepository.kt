@@ -74,7 +74,7 @@ abstract class AbstractRelationalUserRepository(
         dc.select()
                 .from("DUIC_USER")
                 .project("email")
-                .map { row -> row.get(0, String::class.java) }
+                .map { row -> row[0] as String }
                 .all()
     }
 }

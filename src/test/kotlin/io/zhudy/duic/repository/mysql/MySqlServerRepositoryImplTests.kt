@@ -34,8 +34,9 @@ internal class MySqlServerRepositoryImplTests {
     fun register() {
         val host = "integration-test"
         val port = 7777
-        val p = serverRepository.register(host, port)
-        val n = transactionalOperator.transactional(p).block()
+        val n = serverRepository.register(host, port)
+                .`as`(transactionalOperator::transactional)
+                .block()
         assertThat(n).isEqualTo(1)
     }
 

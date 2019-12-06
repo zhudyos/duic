@@ -25,11 +25,13 @@ import io.zhudy.kitty.core.biz.BizCode
 import io.zhudy.kitty.core.biz.BizCodeException
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.data.domain.Pageable
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import reactor.core.publisher.Mono
+import reactor.kotlin.core.publisher.onErrorMap
 import javax.annotation.PostConstruct
 
 /**
@@ -84,6 +86,10 @@ class UserService(
         val newUser = vo.copy(password = passwordEncoder.encode(vo.password))
 
         userRepository.insert(newUser)
+                .onErrorMap(DuplicateKeyException::class) {
+                    // email 重复
+                    throw BizCodeException(BizCode.C810, it.message)
+                }
                 .doOnNext { n ->
                     if (n != 1) {
                         throw BizCodeException(BizCode.C811, "新增 [${vo.email}] 用户，预期影响行记录 1 实际影响 $n")

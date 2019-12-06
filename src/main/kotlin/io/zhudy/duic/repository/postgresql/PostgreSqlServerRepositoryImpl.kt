@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
 class PostgreSqlServerRepositoryImpl(private val dc: DatabaseClient) : AbstractRelationalServerRepository(dc) {
 
     companion object {
-        private const val REGISTER_SQL = "INSERT INTO DUIC_SERVER(id,host,port,init_at,active_at) VALUES(:id,:host,:port,now(),now()) ON CONFLICT (ID) DO UPDATE SET init_at=now(),active_at=NOW()"
+        private const val REGISTER_SQL = "INSERT INTO DUIC_SERVER(id,host,port,init_at,active_at) VALUES(:id,:host,:port,now(),now()) ON CONFLICT (ID) DO UPDATE SET init_at=NOW(),active_at=NOW()"
     }
 
     override fun register(host: String, port: Int): Mono<Int> = Mono.defer {

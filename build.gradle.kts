@@ -34,17 +34,17 @@ configurations {
 
 dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:2.2.0.RELEASE"))
-    implementation(platform("io.r2dbc:r2dbc-bom:Arabba-RC2"))
+    implementation(platform("io.r2dbc:r2dbc-bom:Arabba-RELEASE"))
     implementation(platform("com.fasterxml.jackson:jackson-bom:2.9.9"))
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1")
 
-    // FIXME
-    implementation("io.zhudy.kitty:core:2.0.0")
-    implementation("io.zhudy.kitty:rest-problem:2.0.0")
-    implementation("io.zhudy.kitty.extensions:spring-webflux:2.0.0")
+    val kittyVersion = "2.0.0"
+    implementation("io.zhudy.kitty:kitty-core:${kittyVersion}")
+    implementation("io.zhudy.kitty:kitty-rest-problem:${kittyVersion}")
+    implementation("io.zhudy.kitty.extensions:kitty-spring-webflux:${kittyVersion}")
 
     val resilience4jVersion = "0.16.0"
     implementation("io.github.resilience4j:resilience4j-ratelimiter:$resilience4jVersion")
@@ -59,16 +59,16 @@ dependencies {
     implementation("org.valiktor:valiktor-core:0.8.0")
     implementation("com.github.ben-manes.caffeine:caffeine:2.7.0")
     implementation("com.auth0:java-jwt:3.3.0")
+    implementation("io.jsonwebtoken:jjwt-impl:0.10.7")
     implementation("org.simplejavamail:simple-java-mail:5.1.6")
     implementation("io.github.java-diff-utils:java-diff-utils:4.0")
     implementation("org.springframework.security:spring-security-crypto:5.0.4.RELEASE")
 
-    implementation("io.projectreactor.tools:blockhound:1.0.1.RELEASE")
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
-    implementation("io.r2dbc:r2dbc-postgresql")
     implementation("org.springframework.data:spring-data-r2dbc:1.0.0.RC1")
-    implementation("dev.miku:r2dbc-mysql:0.8.0.RC1")
+    implementation("io.r2dbc:r2dbc-postgresql")
+    implementation("dev.miku:r2dbc-mysql")
 
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.projectreactor:reactor-test")
