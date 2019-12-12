@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import java.util.*
+import java.time.LocalDateTime
 
 /**
  * 服务主机信息。
@@ -30,6 +30,6 @@ import java.util.*
 class Server(
         val host: String = "",
         val port: Int = 0,
-        val initAt: Date,
-        val activeAt: Date
+        val initAt: LocalDateTime,
+        val activeAt: LocalDateTime
 )

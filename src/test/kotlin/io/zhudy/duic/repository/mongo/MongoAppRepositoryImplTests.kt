@@ -19,7 +19,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.reactive.TransactionalOperator
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.time.Instant
+import java.time.LocalDateTime
 import java.util.*
 
 /**
@@ -82,7 +82,7 @@ internal class MongoAppRepositoryImplTests {
                 updatedBy = "integration-test@mail.com",
                 deletedBy = "integration-test@mail.com",
                 users = listOf("integration-test@mail.com"),
-                createdAt = Instant.now()
+                createdAt = LocalDateTime.now()
         )
         val ap = AppPair(appHistory.name, appHistory.profile)
         val p = appRepository.insertHistory(appHistory).flatMap { n ->
@@ -156,7 +156,7 @@ internal class MongoAppRepositoryImplTests {
                 .containsEntry("description", vo.description)
                 .containsEntry("token", vo.token)
                 .containsEntry("ip_limit", vo.ipLimit)
-                .containsEntry("v", vo.v)
+                .containsEntry("v", vo.v + 1)
                 .containsEntry("users", vo.users)
     }
 
@@ -217,7 +217,7 @@ internal class MongoAppRepositoryImplTests {
 
     @Test
     fun find4UpdatedAt() {
-        val time = Instant.now()
+        val time = LocalDateTime.now()
         val app = newApp()
         val p = appRepository.insert(app).thenMany(appRepository.find4UpdatedAt(time)).collectList()
         val list = transactionalOperator.transactional(p).block()

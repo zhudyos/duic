@@ -52,7 +52,8 @@ internal class PostgreSqlAppRepositoryImplTests {
         val page = appRepository.insert(app).then(appRepository.search(vo, pageable))
                 .`as`(transactionalOperator::transactional)
                 .block()
-        assertThat(page.totalElements).isEqualTo(0)
+        assertThat(page.totalElements).isGreaterThanOrEqualTo(1)
+        assertThat(page.content).isNotEmpty
     }
 
 }

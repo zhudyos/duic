@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.dto
 
-import java.util.*
+import java.time.LocalDateTime
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -23,7 +23,7 @@ import java.util.*
 data class ServerStateDto(
         val host: String = "",
         val port: Int = 0,
-        val initAt: Date,
-        val activeAt: Date,
+        val initAt: LocalDateTime,
+        val activeAt: LocalDateTime,
         val lastDataTime: Long
 )

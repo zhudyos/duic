@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 /**
  * 应用配置修改历史信息。
@@ -46,5 +46,5 @@ data class AppHistory(
         val updatedBy: String = "",
         val deletedBy: String = "",
         val users: List<String>,
-        val createdAt: Instant
+        val createdAt: LocalDateTime
 )

@@ -11,6 +11,7 @@ import io.zhudy.duic.domain.AppHistory
 import io.zhudy.duic.domain.AppPair
 import io.zhudy.duic.repository.AppRepository
 import io.zhudy.duic.vo.AppVo
+import io.zhudy.kitty.core.util.toLocalDateTime
 import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
@@ -27,7 +28,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
-import java.time.Instant
+import java.time.LocalDateTime
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -84,8 +85,8 @@ class MongoAppRepositoryImpl(
                 append("ip_limit", ipLimit)
                 append("users", users)
                 append("v", 1)
-                append("created_at", Instant.now())
-                append("updated_at", Instant.now())
+                append("created_at", LocalDateTime.now())
+                append("updated_at", LocalDateTime.now())
             }
         }
 
@@ -107,7 +108,7 @@ class MongoAppRepositoryImpl(
                 append("users", users)
                 append("updated_by", updatedBy)
                 append("deleted_by", deletedBy)
-                append("created_at", Instant.now())
+                append("created_at", LocalDateTime.now())
             }
         }
 
@@ -178,9 +179,10 @@ class MongoAppRepositoryImpl(
         }.next()
     }
 
-    override fun find4UpdatedAt(time: Instant): Flux<App> = Flux.defer {
+    override fun find4UpdatedAt(time: LocalDateTime): Flux<App> = Flux.defer {
         ops.execute("app") { coll ->
-            coll.find(gt("updated_at", time)).sort(ascending("updated_at"))
+            coll.find(gt("updated_at", time))
+                    .sort(ascending("updated_at"))
         }.map(::mapToApp)
     }
 
@@ -195,7 +197,7 @@ class MongoAppRepositoryImpl(
                     hid = it.getString("hid"),
                     content = it.getString("content"),
                     updatedBy = it.getString("updated_by"),
-                    updatedAt = it.getDate("created_at").toInstant()
+                    updatedAt = it.get("updated_at", LocalDateTime::class.java)
             )
         }
     }
@@ -212,9 +214,10 @@ class MongoAppRepositoryImpl(
         }.map { it.getString("profile") }
     }
 
-    override fun findLatestDeleted(time: Instant): Flux<AppHistory> = Flux.defer {
+    override fun findLatestDeleted(time: LocalDateTime): Flux<AppHistory> = Flux.defer {
         ops.execute("app_history") { coll ->
-            coll.find(and(gt("created_at", time), ne("deleted_by", ""))).sort(ascending("created_at"))
+            coll.find(and(gt("created_at", time), ne("deleted_by", "")))
+                    .sort(ascending("created_at"))
         }.map(::mapToAppHistory)
     }
 
@@ -235,8 +238,8 @@ class MongoAppRepositoryImpl(
             ipLimit = doc.getString("ip_limit") ?: "",
             v = doc.getInteger("v"),
             users = doc["users"] as List<String>,
-            createdAt = doc.getDate("created_at").toInstant(),
-            updatedAt = doc.getDate("updated_at").toInstant()
+            createdAt = doc.getDate("created_at").toLocalDateTime(),
+            updatedAt = doc.getDate("updated_at").toLocalDateTime()
     )
 
     private fun mapToAppHistory(doc: Document) = AppHistory(
@@ -250,6 +253,6 @@ class MongoAppRepositoryImpl(
             updatedBy = doc.getString("updated_by") ?: "",
             deletedBy = doc.getString("deleted_by") ?: "",
             users = doc["users"] as List<String>,
-            createdAt = doc.getDate("created_at").toInstant()
+            createdAt = doc.getDate("created_at").toLocalDateTime()
     )
 }

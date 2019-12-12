@@ -8,11 +8,11 @@ import io.zhudy.duic.domain.Server
 import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.repository.ServerRepository.Companion.ACTIVE_TIMEOUT
 import io.zhudy.duic.repository.ServerRepository.Companion.CLEAN_BEFORE
+import io.zhudy.kitty.core.util.toLocalDateTime
 import org.bson.Document
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.time.Instant
 import java.time.LocalDateTime
 
 /**
@@ -29,8 +29,8 @@ class MongoServerRepositoryImpl(
                     combine(
                             set("host", host),
                             set("port", port),
-                            set("init_at", Instant.now()),
-                            set("active_at", Instant.now())
+                            set("init_at", LocalDateTime.now()),
+                            set("active_at", LocalDateTime.now())
                     ),
                     UpdateOptions().upsert(true)
             )
@@ -56,8 +56,8 @@ class MongoServerRepositoryImpl(
             Server(
                     host = it.getString("host"),
                     port = it.getInteger("port"),
-                    initAt = it.getDate("init_at"),
-                    activeAt = it.getDate("active_at")
+                    initAt = it.getDate("init_at").toLocalDateTime(),
+                    activeAt = it.getDate("active_at").toLocalDateTime()
             )
         }
     }

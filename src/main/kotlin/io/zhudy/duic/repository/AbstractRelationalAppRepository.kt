@@ -10,9 +10,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.r2dbc.core.DatabaseClient
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.time.Instant
 import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -112,7 +110,7 @@ abstract class AbstractRelationalAppRepository(
                 .all()
     }
 
-    override fun find4UpdatedAt(time: Instant): Flux<App> = Flux.defer {
+    override fun find4UpdatedAt(time: LocalDateTime): Flux<App> = Flux.defer {
         dc.execute(FIND_4_UPDATED_AT_SQL)
                 .bind("time", time)
                 .map(::mapToApp)
@@ -140,7 +138,7 @@ abstract class AbstractRelationalAppRepository(
                 .all()
     }
 
-    override fun findLatestDeleted(time: Instant): Flux<AppHistory> = Flux.defer {
+    override fun findLatestDeleted(time: LocalDateTime): Flux<AppHistory> = Flux.defer {
         dc.execute(FIND_LATEST_DELETED)
                 .bind("time", time)
                 .map(::mapToAppHistory)
@@ -163,8 +161,8 @@ abstract class AbstractRelationalAppRepository(
             ipLimit = row["ip_limit"] as String,
             v = row["v"] as Int,
             users = (row["users"] as String).split(","),
-            createdAt = (row["created_at"] as LocalDateTime).toInstant(ZoneOffset.UTC),
-            updatedAt = (row["updated_at"] as LocalDateTime).toInstant(ZoneOffset.UTC)
+            createdAt = row["created_at"] as LocalDateTime,
+            updatedAt = row["updated_at"] as LocalDateTime
     )
 
     private fun mapToAppHistory(row: Row) = AppHistory(
@@ -178,13 +176,13 @@ abstract class AbstractRelationalAppRepository(
             updatedBy = row["updated_by"] as String,
             deletedBy = row["deleted_by"] as String,
             users = (row["users"] as String).split(","),
-            createdAt = row.get("created_at", Instant::class.java)
+            createdAt = row["created_at"] as LocalDateTime
     )
 
     private fun mapToAppContentHistory(row: Row) = AppContentHistory(
             hid = row["hid"] as String,
             content = row["content"] as String,
             updatedBy = row["updated_by"] as String,
-            updatedAt = row.get("created_at", Instant::class.java)
+            updatedAt = row["updated_at"] as LocalDateTime
     )
 }

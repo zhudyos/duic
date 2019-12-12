@@ -87,7 +87,7 @@ internal class MySqlUserRepositoryImplTests {
 
         val p = userRepository.insert(UserVo.NewUser(email = email, password = password))
                 .then(
-                        userRepository.updatePassword(email, password)
+                        userRepository.updatePassword(email, "[NEW-PASSWORD]")
                 )
         val n = transactionalOperator.transactional(p).block()
         assertThat(n).isEqualTo(1)

@@ -49,7 +49,8 @@ internal class MySqlAppRepositoryImplTests {
                 .then(appRepository.findOne(AppPair(app.name, app.profile)))
                 .`as`(transactionalOperator::transactional)
                 .block()
-        assertThat(dbApp).isEqualToComparingOnlyGivenFields(app, "name", "profile", "description", "content")
+        assertThat(dbApp)
+                .isEqualToComparingOnlyGivenFields(app, "name", "profile", "description", "content")
     }
 
     @Test
@@ -69,6 +70,7 @@ internal class MySqlAppRepositoryImplTests {
                 }
                 .block()
         assertThat(page.totalElements).isGreaterThanOrEqualTo(1)
+        assertThat(page.content).isNotEmpty
     }
 
 }

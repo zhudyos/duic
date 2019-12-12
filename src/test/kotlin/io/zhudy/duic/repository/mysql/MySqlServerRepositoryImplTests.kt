@@ -44,9 +44,9 @@ internal class MySqlServerRepositoryImplTests {
     fun `register duplicate`() {
         val host = "integration-test"
         val port = 7777
-        val p = serverRepository.register(host, port).repeat(1)
-        val n = transactionalOperator.transactional(p).blockLast()
-        assertThat(n).isEqualTo(1)
+        serverRepository.register(host, port)
+                .repeat(1)
+                .`as`(transactionalOperator::transactional)
     }
 
     @Test

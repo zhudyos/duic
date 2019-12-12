@@ -15,7 +15,7 @@
  */
 package io.zhudy.duic.domain
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 /**
  * 应用配置信息。
@@ -41,7 +41,7 @@ data class App(
         val token: String,
         val ipLimit: String,
         val v: Int,
-        val createdAt: Instant,
-        val updatedAt: Instant,
+        val createdAt: LocalDateTime,
+        val updatedAt: LocalDateTime,
         val users: List<String>
 )

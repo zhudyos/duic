@@ -17,28 +17,29 @@ class MySqlAppRepositoryImpl(
 ) : AbstractRelationalAppRepository(dc) {
 
     override fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>> = Mono.defer {
-        val searchSql = StringBuilder("SELECT * FROM DUIC_APP WHERE 1=1")
-        val searchCountSql = StringBuilder("SELECT COUNT(*) FROM DUIC_APP WHERE 1=1")
+        val sql = StringBuilder("SELECT * FROM DUIC_APP WHERE 1=1")
+        val countSql = StringBuilder("SELECT COUNT(*) FROM DUIC_APP WHERE 1=1")
+
         val params = mutableListOf<Pair<String, Any>>()
+        val where = StringBuilder()
         if (vo.q != null) {
-            searchSql.append(" AND MATCH(name, profile, content) AGAINST(:q)")
-            searchCountSql.append(" AND MATCH(name, profile, content) AGAINST(:q)")
+            where.append(" AND MATCH(name, profile, content) AGAINST(:q)")
             params.add("q" to vo.q)
         }
         if (vo.email != null) {
-            searchSql.append(" AND users LIKE CONCAT('%', :email, '%')")
-            searchCountSql.append(" AND users LIKE CONCAT('%', :email, '%')")
+            where.append(" AND users LIKE CONCAT('%', :email, '%')")
             params.add("email" to vo.email)
         }
-        searchSql.append(" LIMIT :offset,:limit")
+        sql.append(where).append(" LIMIT :offset,:limit")
+        countSql.append(where)
 
         // query
-        var spec = dc.execute(searchSql.toString())
+        var spec = dc.execute(sql.toString())
                 .bind("offset", pageable.offset)
                 .bind("limit", pageable.pageSize)
 
         // count
-        var specCount = dc.execute(searchCountSql.toString())
+        var specCount = dc.execute(countSql.toString())
         if (params.isNotEmpty()) {
             for (o in params) {
                 spec = spec.bind(o.first, o.second)

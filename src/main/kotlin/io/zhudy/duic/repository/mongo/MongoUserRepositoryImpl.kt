@@ -6,6 +6,7 @@ import com.mongodb.client.model.Updates.set
 import io.zhudy.duic.dto.UserDto
 import io.zhudy.duic.repository.UserRepository
 import io.zhudy.duic.vo.UserVo
+import io.zhudy.kitty.core.util.toLocalDateTime
 import org.bson.Document
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -18,6 +19,7 @@ import reactor.core.publisher.Mono
 import reactor.kotlin.core.publisher.toFlux
 import reactor.kotlin.core.publisher.toMono
 import java.time.Instant
+import java.time.LocalDateTime
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
@@ -92,7 +94,7 @@ class MongoUserRepositoryImpl(
     private fun mapToUser(doc: Document) = UserDto(
             email = doc.getString("email"),
             password = doc.getString("password"),
-            createdAt = doc.getDate("created_at").toInstant(),
-            updatedAt = doc.getDate("updated_at")?.toInstant()
+            createdAt = doc.getDate("created_at").toLocalDateTime(),
+            updatedAt = doc.getDate("updated_at")?.toLocalDateTime() ?: LocalDateTime.MIN
     )
 }

@@ -55,7 +55,7 @@ internal class PostgreSqlUserRepositoryImplTests {
         assertThatThrownBy { transactionalOperator.transactional(p).block() }
                 .isInstanceOf(DataIntegrityViolationException::class.java)
                 .hasCauseInstanceOf(R2dbcDataIntegrityViolationException::class.java)
-                .hasMessageContaining("Duplicate")
+                .hasMessageContaining("duplicate key value violates unique constraint")
     }
 
     @Test

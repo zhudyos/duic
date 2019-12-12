@@ -50,11 +50,13 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.MonoSink
 import reactor.core.scheduler.Schedulers
-import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * 应用配置逻辑处理实现。
@@ -87,11 +89,12 @@ class AppService(
     // 配置缓存
     private val appCaches = Caffeine.newBuilder().build<String, CachedApp>()
 
-    @Volatile
-    private var lastDataTime: Instant? = null
-    @Volatile
-    private var lastAppHistoryCreatedAt = Instant.now()
     private val yaml = Yaml()
+
+    //
+    private val lastDataTimeRef = AtomicReference<LocalDateTime>(LocalDateTime.MIN)
+    //
+    private val lastAppHistoryCreatedAtRef = AtomicReference<LocalDateTime>(LocalDateTime.MAX)
 
     /**
      * 缓存的 APP 实例。
@@ -131,14 +134,15 @@ class AppService(
     @Scheduled(initialDelay = 1000, fixedDelayString = "%{duic.app.watch.deleted.fixed-delay:600000}")
     fun watchDeletedApps() {
         // 清理已经删除的 APP
-        appRepository.findLatestDeleted(lastAppHistoryCreatedAt)
+        val createdAt = lastAppHistoryCreatedAtRef.get()
+        appRepository.findLatestDeleted(createdAt)
                 .doOnError {
                     log.error("evict app config: ", it)
                 }.doFinally {
-                    log.debug("lastAppHistoryCreatedAt={}", lastAppHistoryCreatedAt.toEpochMilli())
+                    log.debug("lastAppHistoryCreatedAt={}", createdAt)
                 }.subscribe {
                     appCaches.invalidate(localKey(it.name, it.profile))
-                    lastAppHistoryCreatedAt = it.createdAt!!
+                    lastAppHistoryCreatedAtRef.set(it.createdAt)
                 }
     }
 
@@ -149,46 +153,51 @@ class AppService(
      */
     fun refresh(): Mono<Long> = Mono.create { sink ->
         // 更新 APP 配置信息
-        if (lastDataTime == null) {
+        val lastDataTime = lastDataTimeRef.get()
+        if (lastDataTime == LocalDateTime.MIN) {
             findAll()
         } else {
-            find4UpdatedAt(lastDataTime!!)
-        }.doOnError {
-            log.error("refresh app config: ", it)
-        }.doFinally {
-            log.debug("lastDataTime={}", lastDataTime?.toEpochMilli())
-        }.doOnComplete {
-            sink.success(lastDataTime?.toEpochMilli() ?: 0L)
-        }.subscribe {
-            // 刷新缓存配置
-            val k = localKey(it.name, it.profile)
-            val app = mapToCachedApp(it)
-            appCaches.put(k, app)
-            lastDataTime = it.updatedAt
-            updateAppQueue.offer(k)
-
-            // 更新成功通知客户端最新的状态
-            watchStateSinks.parallelStream()
-                    .filter { e ->
-                        e.name == app.name && e.profiles.indexOf(app.profile) >= 0
-                    }
-                    .forEach { wss ->
-                        configState0(wss.name, wss.profiles)
-                                .subscribeOn(Schedulers.parallel())
-                                .subscribe { state ->
-                                    watchStateSinks.remove(wss)
-                                    wss.sink.success(state)
-                                    wss.timeoutJob?.cancel()
-                                    wss.done.compareAndSet(false, true)
-                                }
-                    }
+            find4UpdatedAt(lastDataTime)
         }
+                .doOnError {
+                    log.error("refresh app config: ", it)
+                }
+                .doFinally {
+                    log.debug("lastDataTime={}", lastDataTime)
+                }
+                .doOnComplete {
+                    sink.success(lastDataTimeRef.get().toEpochSecond(ZoneOffset.ofHours(8)))
+                }
+                .subscribe {
+                    // 刷新缓存配置
+                    val k = localKey(it.name, it.profile)
+                    val app = mapToCachedApp(it)
+                    appCaches.put(k, app)
+                    lastDataTimeRef.set(it.updatedAt)
+                    updateAppQueue.offer(k)
+
+                    // 更新成功通知客户端最新的状态
+                    watchStateSinks.parallelStream()
+                            .filter { e ->
+                                e.name == app.name && e.profiles.indexOf(app.profile) >= 0
+                            }
+                            .forEach { wss ->
+                                configState0(wss.name, wss.profiles)
+                                        .subscribeOn(Schedulers.parallel())
+                                        .subscribe { state ->
+                                            watchStateSinks.remove(wss)
+                                            wss.sink.success(state)
+                                            wss.timeoutJob?.cancel()
+                                            wss.done.compareAndSet(false, true)
+                                        }
+                            }
+                }
     }
 
     /**
      * 获取内存配置状态，如果当前不存在任何配置则返回0。
      */
-    fun getMemoryLastDataTime() = lastDataTime?.toEpochMilli() ?: 0
+    fun getMemoryLastDataTime() = lastDataTimeRef.get().toEpochSecond(ZoneOffset.ofHours(8))
 
     /**
      * 保存应用。
@@ -216,7 +225,7 @@ class AppService(
                             v = v,
                             deletedBy = uc.email,
                             users = users,
-                            createdAt = Instant.now()
+                            createdAt = LocalDateTime.now()
                     )
                 }
                 appRepository.insertHistory(appHistory).then(appRepository.delete(ap))
@@ -240,7 +249,7 @@ class AppService(
                             v = v,
                             deletedBy = uc.email,
                             users = users,
-                            createdAt = Instant.now()
+                            createdAt = LocalDateTime.now()
                     )
                 }
                 appRepository.insertHistory(appHistory).then(appRepository.update(ap, vo))
@@ -417,7 +426,7 @@ class AppService(
      *
      * @param time 更新时间
      */
-    fun find4UpdatedAt(time: Instant): Flux<App> = appRepository.find4UpdatedAt(time)
+    fun find4UpdatedAt(time: LocalDateTime): Flux<App> = appRepository.find4UpdatedAt(time)
 
     /**
      * 全文检索配置。
@@ -640,7 +649,7 @@ class AppService(
                     })
                     .bodyToMono(ServerRefreshDto::class.java)
                     .handle<ServerRefreshDto> { t, u ->
-                        val luat = lastDataTime!!.toEpochMilli()
+                        val luat = lastDataTimeRef.get().toEpochSecond(ZoneOffset.ofHours(8))
                         if (t.lastDataTime != luat) {
                             u.error(IllegalStateException("${s.host}:${s.port} 刷新最终更新时间不一致 local-lastDataTime: $luat, remote-lastDataTime: ${t.lastDataTime}"))
                         }

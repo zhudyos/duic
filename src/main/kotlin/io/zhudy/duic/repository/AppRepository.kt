@@ -24,7 +24,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
-import java.time.Instant
+import java.time.LocalDateTime
 
 /**
  * 应用配置操作。
@@ -50,23 +50,22 @@ interface AppRepository {
     /**
      * 删除应用配置信息，并在 `app_history` 中保存已删除的应用配置信息。
      *
-     * @param name 应用名称
-     * @param profile 应用配置
+     * @param ap 应用标识
      */
     fun delete(ap: AppPair): Mono<Int>
 
     /**
      * 返回指定的应用配置信息。
      *
-     * @param ap 应用名称
-     * @param profile 应用配置
+     * @param ap 应用标识
      */
     fun findOne(ap: AppPair): Mono<App>
 
     /**
      * 更新指定的应用配置信息。
      *
-     * @param ap 更新的应用配置信息
+     * @param ap 应用标识
+     * @param vo 更新的应用配置信息
      */
     fun update(ap: AppPair, vo: AppVo.UpdateBasicInfo): Mono<Int>
 
@@ -86,7 +85,7 @@ interface AppRepository {
     /**
      * 搜索应用配置并分页返回。
      *
-     * @param q 搜索关键字
+     * @param vo 搜索条件
      * @param pageable 分页参数
      */
     fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>>
@@ -96,12 +95,12 @@ interface AppRepository {
      *
      * @param time 应用更新时间
      */
-    fun find4UpdatedAt(time: Instant): Flux<App>
+    fun find4UpdatedAt(time: LocalDateTime): Flux<App>
 
     /**
      * 返回应用配置最新 50 条修改记录信息。
      *
-     * @param ap 应用名称
+     * @param ap 应用标识
      * @param pageable 应用配置
      */
     fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHistory>
@@ -121,7 +120,7 @@ interface AppRepository {
      *
      * @param time 删除时间
      */
-    fun findLatestDeleted(time: Instant): Flux<AppHistory>
+    fun findLatestDeleted(time: LocalDateTime): Flux<AppHistory>
 
     /**
      * 返回数据库中最新配置信息的修改时间戳。
