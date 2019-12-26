@@ -66,7 +66,7 @@ dependencies {
 
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
-    implementation("org.springframework.data:spring-data-r2dbc:1.0.0.RC1")
+    implementation("org.springframework.data:spring-data-r2dbc:1.0.0.RELEASE")
     implementation("io.r2dbc:r2dbc-postgresql")
     implementation("dev.miku:r2dbc-mysql")
 
@@ -76,7 +76,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.9.3")
     testImplementation("com.ninja-squad:springmockk:1.1.3")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.springframework.boot.experimental:spring-boot-starter-data-r2dbc:0.1.0.M2")
+    testImplementation("org.springframework.boot.experimental:spring-boot-starter-data-r2dbc:0.1.0.M3")
     testImplementation("org.testcontainers:junit-jupiter:1.12.0")
 
 //    kapt("org.springframework.boot:spring-boot-configuration-processor")
