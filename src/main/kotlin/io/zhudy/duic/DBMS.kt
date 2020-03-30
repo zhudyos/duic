@@ -18,16 +18,10 @@ package io.zhudy.duic
 /**
  * duic 支持数据库名称。
  *
- * @property isNoSQL 如果是 NoSQL 数据库则为 `true` 反之为 `false`
- *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-enum class DBMS(@JvmField val isNoSQL: Boolean = false) {
+enum class DBMS {
 
-    /**
-     * MongoDB 数据库。
-     */
-    MongoDB(true),
     /**
      * MySQL/MariaDB 数据库。
      */
@@ -39,7 +33,7 @@ enum class DBMS(@JvmField val isNoSQL: Boolean = false) {
     /**
      * 无数据库，应用于单元测试环境。
      */
-    None(true),
+    None,
     ;
 
     companion object {
