@@ -1,0 +1,1 @@
+create database `duic` character set utf8mb4;
