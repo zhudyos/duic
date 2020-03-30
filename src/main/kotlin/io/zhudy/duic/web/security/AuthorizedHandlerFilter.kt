@@ -15,10 +15,10 @@
  */
 package io.zhudy.duic.web.security
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
-import com.auth0.jwt.exceptions.JWTDecodeException
-import com.auth0.jwt.exceptions.SignatureVerificationException
+import io.jsonwebtoken.ExpiredJwtException
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.MalformedJwtException
+import io.jsonwebtoken.security.Keys
 import io.zhudy.duic.Config
 import io.zhudy.duic.UserContext
 import io.zhudy.kitty.core.biz.BizCode
@@ -28,13 +28,12 @@ import org.springframework.web.reactive.function.server.HandlerFunction
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import reactor.core.publisher.Mono
+import java.security.SignatureException
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class AuthorizedHandlerFilter(
-        private val jwtAlgorithm: Algorithm
-) : HandlerFilterFunction<ServerResponse, ServerResponse> {
+class AuthorizedHandlerFilter : HandlerFilterFunction<ServerResponse, ServerResponse> {
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
         if (request.uri().path.endsWith("/api/admins/login")) {
@@ -44,26 +43,27 @@ class AuthorizedHandlerFilter(
         if (token.isNullOrEmpty()) {
             throw BizCodeException(BizCode.C401, "缺少 token")
         }
+
+
         val jwt = try {
-            JWT.decode(token)
-        } catch (e: JWTDecodeException) {
+            Jwts.parser()
+                    .setSigningKey(Keys.hmacShaKeyFor(Config.jwt.secret.toByteArray()))
+                    .parseClaimsJwt(token)
+        } catch (e: MalformedJwtException) {
             throw BizCodeException(BizCode.C401, "解析 token 失败 ${e.message}")
-        }
-        try {
-            jwtAlgorithm.verify(jwt)
-        } catch (e: SignatureVerificationException) {
+        } catch (e: ExpiredJwtException) {
+            throw BizCodeException(BizCode.C401, "token 已经过期请重新登录")
+        } catch (e: SignatureException) {
             throw BizCodeException(BizCode.C401, "access_token 校验失败")
         }
-        if ((jwt.expiresAt?.time ?: 0) < System.currentTimeMillis()) {
-            throw BizCodeException(BizCode.C401, "token 已经过期请重新登录")
-        }
-        if (jwt.id.isNullOrEmpty()) {
+
+        if (jwt.body.id.isNullOrEmpty()) {
             throw BizCodeException(BizCode.C401, "错误的 token")
         }
 
         request.attributes()[UserContext.CONTEXT_KEY] = object : UserContext {
             override val email: String
-                get() = jwt.id
+                get() = jwt.body.id
             override val isRoot: Boolean
                 get() = Config.rootEmail == email
         }

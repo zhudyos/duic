@@ -15,8 +15,8 @@
  */
 package io.zhudy.duic.web.admin
 
-import com.auth0.jwt.JWT
-import com.auth0.jwt.algorithms.Algorithm
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.security.Keys
 import io.zhudy.duic.Config
 import io.zhudy.duic.domain.AppContentHistory
 import io.zhudy.duic.domain.AppPair
@@ -41,6 +41,7 @@ import org.valiktor.functions.hasSize
 import org.valiktor.functions.matches
 import org.valiktor.validate
 import reactor.core.publisher.Mono
+import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -52,7 +53,6 @@ import java.util.*
 class AdminResource(
         val userService: UserService,
         val appService: AppService,
-        val jwtAlgorithm: Algorithm,
         val serverService: ServerService
 ) {
 
@@ -64,10 +64,14 @@ class AdminResource(
      */
     fun login(request: ServerRequest): Mono<ServerResponse> = request.bodyToMono(LoginUser::class.java).flatMap {
         userService.login(it.email, it.password).flatMap { user ->
-            val expiresAt = Instant.now().plus(Duration.ofSeconds(Config.jwt.expiresIn))
-            val token = JWT.create().withJWTId(user.email)
-                    .withExpiresAt(Date.from(expiresAt))
-                    .sign(jwtAlgorithm)
+            val expiresAt = Instant.now(Clock.systemDefaultZone()).plus(Duration.ofSeconds(Config.jwt.expiresIn))
+            val token = Jwts.builder()
+                    .setId(user.email)
+                    .setIssuedAt(Date())
+                    .setExpiration(Date.from(expiresAt))
+                    .setNotBefore(Date.from(expiresAt))
+                    .signWith(Keys.hmacShaKeyFor(Config.jwt.secret.toByteArray()))
+                    .compact()
 
             ok().cookie(
                     ResponseCookie.from("token", token)

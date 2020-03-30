@@ -1,6 +1,5 @@
 package io.zhudy.duic.config
 
-import com.auth0.jwt.algorithms.Algorithm
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.github.resilience4j.ratelimiter.RateLimiterConfig
 import io.zhudy.duic.Config
@@ -49,9 +48,6 @@ class BasicConfiguration {
         )
         return c
     }
-
-    @Bean
-    fun jwtAlgorithm(config: Config) = Algorithm.HMAC256(config.jwt.secret)!!
 
     @Bean
     fun jackson2ObjectMapperBuilderCustomizer() = Jackson2ObjectMapperBuilderCustomizer {

@@ -1,6 +1,5 @@
 package io.zhudy.duic.web.config
 
-import com.auth0.jwt.algorithms.Algorithm
 import io.github.resilience4j.ratelimiter.RateLimiter
 import io.zhudy.duic.web.admin.AdminResource
 import io.zhudy.duic.web.security.AuthorizedHandlerFilter
@@ -23,7 +22,6 @@ import org.springframework.web.reactive.function.server.router
  */
 @Configuration
 class Routers(
-        private val jwtAlgorithm: Algorithm,
         private val rateLimiterProvider: ObjectProvider<RateLimiter>
 ) {
 
@@ -95,5 +93,5 @@ class Routers(
             GET("/search/apps", adminResource::searchAppByUser)
             GET("/servers", adminResource::loadServerStates)
         }
-    }.filter(AuthorizedHandlerFilter(jwtAlgorithm))
+    }.filter(AuthorizedHandlerFilter())
 }
