@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-abstract class AbstractRelationalUserRepository(
+abstract class AbstractUserRepository(
         private val dc: DatabaseClient
 ) : UserRepository {
 

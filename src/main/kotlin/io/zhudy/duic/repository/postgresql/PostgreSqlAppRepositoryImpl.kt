@@ -1,7 +1,7 @@
 package io.zhudy.duic.repository.postgresql
 
 import io.zhudy.duic.domain.App
-import io.zhudy.duic.repository.AbstractRelationalAppRepository
+import io.zhudy.duic.repository.AbstractAppRepository
 import io.zhudy.duic.vo.AppVo
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono
  */
 class PostgreSqlAppRepositoryImpl(
         private val dc: DatabaseClient
-) : AbstractRelationalAppRepository(dc) {
+) : AbstractAppRepository(dc) {
 
     override fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>> = Mono.defer {
         val sql = StringBuilder("SELECT * FROM DUIC_APP WHERE 1=1")

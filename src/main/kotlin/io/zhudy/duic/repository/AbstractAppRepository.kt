@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-abstract class AbstractRelationalAppRepository(
+abstract class AbstractAppRepository(
         private val dc: DatabaseClient
 ) : AppRepository {
 
