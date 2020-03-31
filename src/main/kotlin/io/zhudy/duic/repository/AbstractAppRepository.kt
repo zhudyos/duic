@@ -2,8 +2,8 @@ package io.zhudy.duic.repository
 
 import io.r2dbc.spi.Row
 import io.zhudy.duic.domain.App
-import io.zhudy.duic.domain.AppContentHistory
-import io.zhudy.duic.domain.AppHistory
+import io.zhudy.duic.domain.AppContentHis
+import io.zhudy.duic.domain.AppHis
 import io.zhudy.duic.domain.AppPair
 import io.zhudy.duic.vo.AppVo
 import org.springframework.data.domain.Pageable
@@ -20,12 +20,12 @@ abstract class AbstractAppRepository(
 ) : AppRepository {
 
     companion object {
-        private const val INSERT_SQL = "INSERT INTO DUIC_APP(name,profile,description,token,ip_limit,content,v,users,updated_at,created_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:users,NOW(),NOW())"
-        private const val INSERT_HISTORY_SQL = "INSERT INTO DUIC_APP_HISTORY(name,profile,description,token,ip_limit,content,v,users,updated_by,deleted_by,created_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:users,:updatedBy,:deletedBy,NOW())"
+        private const val INSERT_SQL = "INSERT INTO DUIC_APP(name,profile,description,token,ip_limit,content,v,gv,users,updated_at,created_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:gv,:users,NOW(),NOW())"
+        private const val INSERT_HISTORY_SQL = "INSERT INTO DUIC_APP_HISTORY(name,profile,description,token,ip_limit,content,v,gv,users,updated_by,deleted_by,created_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:gv,:users,:updatedBy,:deletedBy,NOW())"
         private const val DELETE_SQL = "DELETE FROM DUIC_APP WHERE name=:name AND profile=:profile"
         private const val FIND_ONE_SQL = "SELECT * FROM DUIC_APP WHERE name=:name AND profile=:profile"
         private const val UPDATE_SQL = "UPDATE DUIC_APP SET token=:token,ip_limit=:ipLimit,description=:description,users=:users,updated_at=now() WHERE name=:name AND profile=:profile AND v=:v"
-        private const val UPDATE_CONTENT_SQL = "UPDATE DUIC_APP SET content=:content,v=v+1,updated_at=now() WHERE name=:name AND profile=:profile AND v=:v"
+        private const val UPDATE_CONTENT_SQL = "UPDATE DUIC_APP SET content=:content,v=v+1,gv=:gv,updated_at=now() WHERE name=:name AND profile=:profile AND v=:v"
         private const val FIND_ALL_SQL = "SELECT * FROM DUIC_APP"
         private const val FIND_4_UPDATED_AT_SQL = "SELECT * FROM DUIC_APP WHERE updated_at>:time ORDER BY updated_at DESC"
         private const val FIND_APP_HISTORY_SQL = "SELECT * FROM DUIC_APP_HISTORY WHERE name=:name AND profile=:profile AND updated_by<>''"
@@ -35,7 +35,7 @@ abstract class AbstractAppRepository(
         private const val FIND_LAST_DATA_TIME_SQL = "SELECT updated_at FROM DUIC_APP ORDER BY updated_at DESC"
     }
 
-    override fun insert(vo: AppVo.NewApp): Mono<Int> = Mono.defer {
+    override fun insert(vo: AppVo.NewApp): Mono<Int> = nextGv().flatMap { gv ->
         dc.execute(INSERT_SQL)
                 .bind("name", vo.name)
                 .bind("profile", vo.profile)
@@ -44,12 +44,13 @@ abstract class AbstractAppRepository(
                 .bind("ipLimit", vo.ipLimit)
                 .bind("content", vo.content)
                 .bind("v", 1)
+                .bind("gv", gv)
                 .bind("users", vo.users.joinToString(","))
                 .fetch()
                 .rowsUpdated()
     }
 
-    override fun insertHistory(ah: AppHistory): Mono<Int> = Mono.defer {
+    override fun insertHis(ah: AppHis): Mono<Int> = Mono.defer {
         dc.execute(INSERT_HISTORY_SQL)
                 .bind("name", ah.name)
                 .bind("profile", ah.profile)
@@ -58,6 +59,7 @@ abstract class AbstractAppRepository(
                 .bind("ipLimit", ah.ipLimit)
                 .bind("content", ah.content)
                 .bind("v", ah.v)
+                .bind("gv", ah.gv)
                 .bind("users", ah.users.joinToString(","))
                 .bind("updated_by", ah.updatedBy)
                 .bind("deleted_by", ah.deletedBy)
@@ -94,12 +96,13 @@ abstract class AbstractAppRepository(
                 .rowsUpdated()
     }
 
-    override fun updateContent(ap: AppPair, vo: AppVo.UpdateContent): Mono<Int> = Mono.defer {
+    override fun updateContent(ap: AppPair, vo: AppVo.UpdateContent): Mono<Int> = nextGv().flatMap { gv ->
         dc.execute(UPDATE_CONTENT_SQL)
                 .bind("name", ap.name)
                 .bind("profile", ap.profile)
                 .bind("v", vo.v)
                 .bind("content", vo.content)
+                .bind("gv", gv)
                 .fetch()
                 .rowsUpdated()
     }
@@ -117,11 +120,11 @@ abstract class AbstractAppRepository(
                 .all()
     }
 
-    override fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHistory> = Flux.defer {
+    override fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHis> = Flux.defer {
         dc.execute(FIND_APP_HISTORY_SQL)
                 .bind("name", ap.name)
                 .bind("profile", ap.profile)
-                .map(::mapToAppContentHistory)
+                .map(::mapToAppContentHis)
                 .all()
     }
 
@@ -138,10 +141,10 @@ abstract class AbstractAppRepository(
                 .all()
     }
 
-    override fun findLatestDeleted(time: LocalDateTime): Flux<AppHistory> = Flux.defer {
+    override fun findLatestDeleted(time: LocalDateTime): Flux<AppHis> = Flux.defer {
         dc.execute(FIND_LATEST_DELETED)
                 .bind("time", time)
-                .map(::mapToAppHistory)
+                .map(::mapToAppHis)
                 .all()
     }
 
@@ -153,6 +156,7 @@ abstract class AbstractAppRepository(
     }
 
     protected fun mapToApp(row: Row) = App(
+            id = row["id"] as Int,
             name = row["name"] as String,
             profile = row["profile"] as String,
             description = row["description"] as String,
@@ -160,12 +164,14 @@ abstract class AbstractAppRepository(
             token = row["token"] as String,
             ipLimit = row["ip_limit"] as String,
             v = row["v"] as Int,
+            gv = row["gv"] as Long,
             users = (row["users"] as String).split(","),
             createdAt = row["created_at"] as LocalDateTime,
             updatedAt = row["updated_at"] as LocalDateTime
     )
 
-    private fun mapToAppHistory(row: Row) = AppHistory(
+    private fun mapToAppHis(row: Row) = AppHis(
+            id = row["id"] as Int,
             name = row["name"] as String,
             profile = row["profile"] as String,
             description = row["description"] as String,
@@ -173,14 +179,15 @@ abstract class AbstractAppRepository(
             token = row["token"] as String,
             ipLimit = row["ip_limit"] as String,
             v = row["v"] as Int,
+            gv = row["gv"] as Long,
             updatedBy = row["updated_by"] as String,
             deletedBy = row["deleted_by"] as String,
             users = (row["users"] as String).split(","),
             createdAt = row["created_at"] as LocalDateTime
     )
 
-    private fun mapToAppContentHistory(row: Row) = AppContentHistory(
-            hid = row["hid"] as String,
+    private fun mapToAppContentHis(row: Row) = AppContentHis(
+            id = row["id"] as Int,
             content = row["content"] as String,
             updatedBy = row["updated_by"] as String,
             updatedAt = row["updated_at"] as LocalDateTime

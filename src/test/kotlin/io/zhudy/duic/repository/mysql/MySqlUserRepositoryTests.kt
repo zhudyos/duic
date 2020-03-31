@@ -21,11 +21,11 @@ import java.util.*
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootTest(classes = [
-    MySqlUserRepositoryImpl::class
+    MySqlUserRepository::class
 ])
 @ActiveProfiles("mysql")
 @ImportAutoConfiguration(classes = [BasicTestRelationalConfiguration::class])
-internal class MySqlUserRepositoryImplTests {
+internal class MySqlUserRepositoryTests {
 
     @Autowired
     private lateinit var userRepository: UserRepository

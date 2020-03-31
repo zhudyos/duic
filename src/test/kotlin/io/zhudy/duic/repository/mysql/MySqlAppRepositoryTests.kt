@@ -13,17 +13,18 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.r2dbc.core.DatabaseClient
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.reactive.TransactionalOperator
+import reactor.test.StepVerifier
 import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootTest(classes = [
-    MySqlAppRepositoryImpl::class
+    MySqlAppRepository::class
 ])
 @ActiveProfiles("mysql")
 @ImportAutoConfiguration(classes = [BasicTestRelationalConfiguration::class])
-internal class MySqlAppRepositoryImplTests {
+internal class MySqlAppRepositoryTests {
 
     @Autowired
     private lateinit var databaseClient: DatabaseClient
@@ -41,6 +42,15 @@ internal class MySqlAppRepositoryImplTests {
             ipLimit = "",
             users = listOf("integration-test@mail.com")
     )
+
+    @Test
+    fun nextGv() {
+        val p = appRepository.nextGv()
+        StepVerifier.create(p)
+                .expectNextMatches { it >= 1 }
+                .expectComplete()
+                .verify()
+    }
 
     @Test
     fun findOne() {

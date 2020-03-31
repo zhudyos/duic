@@ -21,11 +21,11 @@ import java.util.*
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootTest(classes = [
-    PostgreSqlUserRepositoryImpl::class
+    PostgreSqlUserRepository::class
 ])
 @ActiveProfiles("postgresql")
 @ImportAutoConfiguration(classes = [BasicTestRelationalConfiguration::class])
-internal class PostgreSqlUserRepositoryImplTests {
+internal class PostgreSqlUserRepositoryTests {
 
     @Autowired
     private lateinit var userRepository: UserRepository

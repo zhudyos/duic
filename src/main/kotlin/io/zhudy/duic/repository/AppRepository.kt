@@ -16,8 +16,8 @@
 package io.zhudy.duic.repository
 
 import io.zhudy.duic.domain.App
-import io.zhudy.duic.domain.AppContentHistory
-import io.zhudy.duic.domain.AppHistory
+import io.zhudy.duic.domain.AppContentHis
+import io.zhudy.duic.domain.AppHis
 import io.zhudy.duic.domain.AppPair
 import io.zhudy.duic.vo.AppVo
 import org.springframework.data.domain.Page
@@ -34,6 +34,11 @@ import java.time.LocalDateTime
 interface AppRepository {
 
     /**
+     * 下一个全局版本号.
+     */
+    fun nextGv(): Mono<Long>
+
+    /**
      * 保存应用配置信息。
      *
      * @param vo 应用配置信息
@@ -43,9 +48,9 @@ interface AppRepository {
     /**
      * 保存应用配置历史信息。
      *
-     * @param appHistory 应用配置历史信息
+     * @param appHis 应用配置历史信息
      */
-    fun insertHistory(appHistory: AppHistory): Mono<Int>
+    fun insertHis(appHis: AppHis): Mono<Int>
 
     /**
      * 删除应用配置信息，并在 `app_history` 中保存已删除的应用配置信息。
@@ -103,7 +108,7 @@ interface AppRepository {
      * @param ap 应用标识
      * @param pageable 应用配置
      */
-    fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHistory>
+    fun findAppHistory(ap: AppPair, pageable: Pageable): Flux<AppContentHis>
 
     /**
      * 返回所有的应用名称。
@@ -120,7 +125,7 @@ interface AppRepository {
      *
      * @param time 删除时间
      */
-    fun findLatestDeleted(time: LocalDateTime): Flux<AppHistory>
+    fun findLatestDeleted(time: LocalDateTime): Flux<AppHis>
 
     /**
      * 返回数据库中最新配置信息的修改时间戳。

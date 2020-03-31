@@ -1,4 +1,4 @@
-package io.zhudy.duic.repository.mysql
+package io.zhudy.duic.repository.postgresql
 
 import io.zhudy.duic.domain.App
 import io.zhudy.duic.repository.AbstractAppRepository
@@ -12,9 +12,19 @@ import reactor.core.publisher.Mono
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class MySqlAppRepositoryImpl(
+class PostgreSqlAppRepository(
         private val dc: DatabaseClient
 ) : AbstractAppRepository(dc) {
+
+    companion object {
+        private const val NEXT_GV_SQL = "select nextval('duic_app_gv_seq')"
+    }
+
+    override fun nextGv(): Mono<Long> = Mono.defer {
+        dc.execute(NEXT_GV_SQL)
+                .map { row -> row[0] as Long }
+                .one()
+    }
 
     override fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>> = Mono.defer {
         val sql = StringBuilder("SELECT * FROM DUIC_APP WHERE 1=1")
@@ -23,14 +33,15 @@ class MySqlAppRepositoryImpl(
         val params = mutableListOf<Pair<String, Any>>()
         val where = StringBuilder()
         if (vo.q != null) {
-            where.append(" AND MATCH(name, profile, content) AGAINST(:q)")
+            where.append(" AND TO_TSVECTOR(name || ' ' || profile || ' ' || content) @@ TO_TSQUERY(:q)")
             params.add("q" to vo.q)
         }
         if (vo.email != null) {
             where.append(" AND users LIKE CONCAT('%', :email, '%')")
             params.add("email" to vo.email)
         }
-        sql.append(where).append(" LIMIT :offset,:limit")
+
+        sql.append(where).append(" LIMIT :limit OFFSET :offset")
         countSql.append(where)
 
         // query
@@ -49,10 +60,11 @@ class MySqlAppRepositoryImpl(
 
         spec.map(::mapToApp).all().collectList()
                 .zipWith(
-                        specCount.map { row -> row.get(0, Long::class.java) }.one()
+                        specCount.map { row -> row[0] as Long }.one()
                 )
                 .map {
                     PageImpl(it.t1, pageable, it.t2)
                 }
     }
+
 }

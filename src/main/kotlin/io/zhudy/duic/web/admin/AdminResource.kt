@@ -18,7 +18,7 @@ package io.zhudy.duic.web.admin
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import io.zhudy.duic.Config
-import io.zhudy.duic.domain.AppContentHistory
+import io.zhudy.duic.domain.AppContentHis
 import io.zhudy.duic.domain.AppPair
 import io.zhudy.duic.service.AppService
 import io.zhudy.duic.service.UserService
@@ -228,7 +228,7 @@ class AdminResource(
      */
     fun findAppContentHistory(request: ServerRequest): Mono<ServerResponse> {
         return ok().body(appService.findLast50History(getAppPair(request), request.userContext()),
-                AppContentHistory::class.java)
+                AppContentHis::class.java)
     }
 
     fun findAllNames(request: ServerRequest): Mono<ServerResponse> = appService.findAllNames().collectList()

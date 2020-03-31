@@ -6,4 +6,4 @@ import org.springframework.data.r2dbc.core.DatabaseClient
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class MySqlUserRepositoryImpl(dc: DatabaseClient) : AbstractUserRepository(dc)
+class MySqlUserRepository(dc: DatabaseClient) : AbstractUserRepository(dc)

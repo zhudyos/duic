@@ -6,4 +6,4 @@ import org.springframework.data.r2dbc.core.DatabaseClient
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-class PostgreSqlUserRepositoryImpl(dc: DatabaseClient) : AbstractUserRepository(dc)
+class PostgreSqlUserRepository(dc: DatabaseClient) : AbstractUserRepository(dc)

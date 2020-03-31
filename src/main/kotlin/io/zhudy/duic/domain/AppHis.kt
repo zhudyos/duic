@@ -27,7 +27,8 @@ import java.time.LocalDateTime
  * @property content 应用配置内容
  * @property token 访问令牌
  * @property ipLimit 可访问 IP
- * @property v 应用版本
+ * @property v 应用版本号
+ * @property gv 全局应用版本号
  * @property createdAt 应用创建时间
  * @property updatedBy 修改者
  * @property deletedBy 删除者
@@ -35,7 +36,8 @@ import java.time.LocalDateTime
  *
  * @author Kevin Zou (kevinz@weghst.com)
  */
-data class AppHistory(
+data class AppHis(
+        val id: Int,
         val name: String,
         val profile: String,
         val description: String,
@@ -43,6 +45,7 @@ data class AppHistory(
         val token: String = "",
         val ipLimit: String = "",
         val v: Int,
+        val gv: Long,
         val updatedBy: String = "",
         val deletedBy: String = "",
         val users: List<String>,

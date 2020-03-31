@@ -20,13 +20,15 @@ import java.time.LocalDateTime
 /**
  * 应用配置信息。
  *
+ * @property id 主键
  * @property name 应用名称
  * @property profile 应用环境
  * @property description 应用描述
  * @property content 应用配置内容
  * @property token 访问令牌
  * @property ipLimit 可访问 IP
- * @property v 应用版本
+ * @property v 应用版本号
+ * @property gv 全局应用版本号
  * @property createdAt 应用创建时间
  * @property updatedAt 应用修改时间
  * @property users 应用所属用户
@@ -34,6 +36,7 @@ import java.time.LocalDateTime
  * @author Kevin Zou (kevinz@weghst.com)
  */
 data class App(
+        val id: Int,
         val name: String,
         val profile: String,
         val description: String,
@@ -41,6 +44,7 @@ data class App(
         val token: String,
         val ipLimit: String,
         val v: Int,
+        val gv: Long,
         val createdAt: LocalDateTime,
         val updatedAt: LocalDateTime,
         val users: List<String>

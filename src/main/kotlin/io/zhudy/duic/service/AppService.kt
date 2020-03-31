@@ -20,7 +20,6 @@ import io.zhudy.duic.BizCodes
 import io.zhudy.duic.Config
 import io.zhudy.duic.UserContext
 import io.zhudy.duic.domain.*
-import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
@@ -39,7 +38,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.http.MediaType.APPLICATION_JSON
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -213,7 +211,8 @@ class AppService(
             .doOnNext { checkPermission(it, uc) }
             .flatMap { dbApp ->
                 val appHistory = dbApp.run {
-                    AppHistory(
+                    AppHis(
+                            id = dbApp.id,
                             name = name,
                             profile = profile,
                             description = description,
@@ -221,12 +220,13 @@ class AppService(
                             token = token,
                             ipLimit = ipLimit,
                             v = v,
+                            gv = dbApp.gv,
                             deletedBy = uc.email,
                             users = users,
                             createdAt = LocalDateTime.now()
                     )
                 }
-                appRepository.insertHistory(appHistory).then(appRepository.delete(ap))
+                appRepository.insertHis(appHistory).then(appRepository.delete(ap))
             }
 
     /**
@@ -237,7 +237,8 @@ class AppService(
             .doOnNext { checkPermission(it, uc) }
             .flatMap { dbApp ->
                 val appHistory = dbApp.run {
-                    AppHistory(
+                    AppHis(
+                            id = dbApp.id,
                             name = name,
                             profile = profile,
                             description = description,
@@ -245,12 +246,13 @@ class AppService(
                             token = token,
                             ipLimit = ipLimit,
                             v = v,
+                            gv = dbApp.gv,
                             deletedBy = uc.email,
                             users = users,
                             createdAt = LocalDateTime.now()
                     )
                 }
-                appRepository.insertHistory(appHistory).then(appRepository.update(ap, vo))
+                appRepository.insertHis(appHistory).then(appRepository.update(ap, vo))
             }
             .doOnNext {
                 if (it != 1) {
@@ -442,7 +444,7 @@ class AppService(
     /**
      * 查询应用更新的最新 50 条更新记录。
      */
-    fun findLast50History(ap: AppPair, uc: UserContext): Flux<AppContentHistory> = Flux.defer {
+    fun findLast50History(ap: AppPair, uc: UserContext): Flux<AppContentHis> = Flux.defer {
         TODO("还未实现")
     }
 

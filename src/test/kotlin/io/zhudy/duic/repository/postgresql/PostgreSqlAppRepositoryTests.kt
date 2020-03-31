@@ -12,17 +12,18 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.r2dbc.core.DatabaseClient
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.transaction.reactive.TransactionalOperator
+import reactor.test.StepVerifier
 import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
 @SpringBootTest(classes = [
-    PostgreSqlAppRepositoryImpl::class
+    PostgreSqlAppRepository::class
 ])
 @ActiveProfiles("postgresql")
 @ImportAutoConfiguration(classes = [BasicTestRelationalConfiguration::class])
-internal class PostgreSqlAppRepositoryImplTests {
+internal class PostgreSqlAppRepositoryTests {
 
     @Autowired
     private lateinit var databaseClient: DatabaseClient
@@ -40,6 +41,15 @@ internal class PostgreSqlAppRepositoryImplTests {
             ipLimit = "",
             users = listOf("integration-test@mail.com")
     )
+
+    @Test
+    fun nextGv() {
+        val p = appRepository.nextGv()
+        StepVerifier.create(p)
+                .expectNextMatches { it >= 1 }
+                .expectComplete()
+                .verify()
+    }
 
     @Test
     fun search() {
