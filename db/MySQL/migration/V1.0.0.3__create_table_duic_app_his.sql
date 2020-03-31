@@ -16,4 +16,4 @@ create table duic_app_his
 	constraint duic_app_his_pk primary key (id)
 ) comment '应用配置历史记录' engine = InnoDB;
 
-create unique index duic_app_his_gv_uindex on duic_app_history (gv);
+create unique index duic_app_his_gv_uindex on duic_app_his (gv);
