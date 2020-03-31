@@ -4,7 +4,6 @@ import io.github.resilience4j.ratelimiter.RateLimiter
 import io.zhudy.duic.web.admin.AdminResource
 import io.zhudy.duic.web.security.AuthorizedHandlerFilter
 import io.zhudy.duic.web.security.RootRoleHandler
-import io.zhudy.duic.web.server.ServerResource
 import io.zhudy.duic.web.v1.AppResource
 import io.zhudy.duic.web.v1.OAIResource
 import org.springframework.beans.factory.ObjectProvider
@@ -29,17 +28,6 @@ class Routers(
     @ConditionalOnBean(OAIResource::class)
     fun oaiRouter(oaiResource: OAIResource): RouterFunction<ServerResponse> = router {
         GET("/api/oai.yml", oaiResource::index)
-    }
-
-    @Bean
-    @ConditionalOnBean(ServerResource::class)
-    fun serverRouter(serverResource: ServerResource): RouterFunction<ServerResponse> = router {
-        "/api".nest {
-            GET("/info", serverResource::info)
-            GET("/health", serverResource::health)
-            POST("/servers/apps/refresh", serverResource::refreshApp)
-            GET("/servers/last-data-time", serverResource::getLastDataTime)
-        }
     }
 
     @Bean
@@ -91,7 +79,6 @@ class Routers(
             GET("/tests/apps/{name}/profiles", adminResource::findProfilesByName)
 
             GET("/search/apps", adminResource::searchAppByUser)
-            GET("/servers", adminResource::loadServerStates)
         }
     }.filter(AuthorizedHandlerFilter())
 }

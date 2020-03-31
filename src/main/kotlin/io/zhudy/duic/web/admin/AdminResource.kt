@@ -21,7 +21,6 @@ import io.zhudy.duic.Config
 import io.zhudy.duic.domain.AppContentHistory
 import io.zhudy.duic.domain.AppPair
 import io.zhudy.duic.service.AppService
-import io.zhudy.duic.service.ServerService
 import io.zhudy.duic.service.UserService
 import io.zhudy.duic.vo.AppVo
 import io.zhudy.duic.vo.UserVo
@@ -36,7 +35,6 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.ServerResponse.noContent
 import org.springframework.web.reactive.function.server.ServerResponse.ok
-import org.springframework.web.reactive.function.server.body
 import org.valiktor.functions.hasSize
 import org.valiktor.functions.matches
 import org.valiktor.validate
@@ -52,8 +50,7 @@ import java.util.*
 @Controller
 class AdminResource(
         val userService: UserService,
-        val appService: AppService,
-        val serverService: ServerService
+        val appService: AppService
 ) {
 
     data class LoginUser(val email: String, val password: String)
@@ -249,12 +246,6 @@ class AdminResource(
             .flatMap(ok()::bodyValue)
 
     // ======================================= APP ======================================================= //
-
-    // ======================================= SERVER ==================================================== //
-
-    fun loadServerStates(request: ServerRequest): Mono<ServerResponse> = ok().body(serverService.loadServerStates())
-
-    // ======================================= SERVER ==================================================== //
 
     private fun getAppPair(request: ServerRequest) = AppPair(
             name = request.pathVariable("name"),

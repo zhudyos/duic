@@ -24,7 +24,6 @@ import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
 import io.zhudy.duic.repository.AppRepository
-import io.zhudy.duic.repository.ServerRepository
 import io.zhudy.duic.service.ip.SectionIpChecker
 import io.zhudy.duic.service.ip.SingleIpChecker
 import io.zhudy.duic.utils.IpUtils
@@ -67,7 +66,6 @@ import java.util.concurrent.atomic.AtomicReference
 @DependsOn(Config.BEAN_NAME)
 class AppService(
         private val appRepository: AppRepository,
-        private val serverRepository: ServerRepository,
         private val webClientBuilder: WebClient.Builder
 ) {
 
@@ -626,40 +624,5 @@ class AppService(
     }
 
     private fun localKey(name: String, profile: String) = "${name}_$profile"
-
-    // 刷新集群配置
-    private fun refreshClusterConfig() {
-        serverRepository.findServers().subscribe { s ->
-            val server = Config.server
-            // 跳过本机
-            if (s.host == server.host && s.port == server.port) {
-                return@subscribe
-            }
-
-            val schema = if (server.sslEnabled) "https" else "http"
-            webClientBuilder
-                    .baseUrl("$schema://${s.host}:${s.port}")
-                    .build()
-                    .post()
-                    .uri("/servers/apps/refresh")
-                    .accept(APPLICATION_JSON)
-                    .retrieve()
-                    .onStatus({ !it.is2xxSuccessful }, {
-                        Mono.error(IllegalStateException("http status: ${it.statusCode().value()}"))
-                    })
-                    .bodyToMono(ServerRefreshDto::class.java)
-                    .handle<ServerRefreshDto> { t, u ->
-                        val luat = lastDataTimeRef.get().toEpochSecond(ZoneOffset.ofHours(8))
-                        if (t.lastDataTime != luat) {
-                            u.error(IllegalStateException("${s.host}:${s.port} 刷新最终更新时间不一致 local-lastDataTime: $luat, remote-lastDataTime: ${t.lastDataTime}"))
-                        }
-                    }
-                    .retry(3)
-                    .doOnError {
-                        log.error("${s.host}:${s.port} 刷新失败", it)
-                    }
-                    .subscribe()
-        }
-    }
 
 }
