@@ -1,4 +1,4 @@
-create table duic_app_history
+create table duic_app_his
 (
 	id int auto_increment comment '主键',
 	name varchar(64) not null comment '应用名称',
@@ -13,7 +13,7 @@ create table duic_app_history
 	updated_by varchar(64) null comment '修改者',
 	deleted_by varchar(64) null comment '删除者',
 	created_at datetime not null comment '创建时间',
-	constraint duic_app_history_pk primary key (id)
+	constraint duic_app_his_pk primary key (id)
 ) comment '应用配置历史记录' engine = InnoDB;
 
-create unique index duic_app_history_gv_uindex on duic_app_history (gv);
+create unique index duic_app_his_gv_uindex on duic_app_history (gv);
