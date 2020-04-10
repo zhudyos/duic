@@ -13,14 +13,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
-import java.net.InetAddress
 import java.time.Duration
 import java.util.*
 
 /**
  * @author Kevin Zou (kevinz@weghst.com)
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(ServerProperties::class)
 class BasicConfiguration {
 
@@ -40,13 +39,7 @@ class BasicConfiguration {
     @Bean(Config.BEAN_NAME)
     @ConfigurationProperties(prefix = "duic")
     fun config(serverProperties: ServerProperties): Config {
-        val c = Config
-        c.server = Config.Server(
-                host = InetAddress.getLocalHost().hostName,
-                port = serverProperties.port,
-                sslEnabled = serverProperties.ssl?.isEnabled ?: false
-        )
-        return c
+        return Config
     }
 
     @Bean

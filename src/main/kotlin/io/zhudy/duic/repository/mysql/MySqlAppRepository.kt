@@ -7,6 +7,9 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.data.r2dbc.core.DatabaseClient
+import org.springframework.data.r2dbc.query.Criteria
+import org.springframework.data.r2dbc.query.Criteria.from
+import org.springframework.data.r2dbc.query.Criteria.where
 import reactor.core.publisher.Mono
 
 /**
@@ -27,6 +30,18 @@ class MySqlAppRepository(
     }
 
     override fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>> = Mono.defer {
+        val filters = ArrayList<Criteria>(2)
+        if (vo.q != null) {
+            val s = "%${vo.q}%"
+            filters.add(where("name").like(s).or("profile").like(s).or("description").like(s).or("content").like(s))
+        }
+        if (vo.email != null) {
+            filters.add(where("email").like("%${vo.email}%"))
+        }
+
+
+        dc.select().from("DUIC_APP").matching(from(filters)).project("count(*)")
+
         val sql = StringBuilder("SELECT * FROM DUIC_APP WHERE 1=1")
         val countSql = StringBuilder("SELECT COUNT(*) FROM DUIC_APP WHERE 1=1")
 

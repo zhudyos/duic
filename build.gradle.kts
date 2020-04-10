@@ -65,10 +65,8 @@ dependencies {
     implementation("com.googlecode.java-diff-utils:diffutils:1.3.0")
 
     implementation("com.github.seancfoley:ipaddress:5.2.1")
-    implementation("org.apache.lucene:lucene-memory:8.5.0")
 
     implementation("org.springframework.security:spring-security-crypto:5.0.4.RELEASE")
-
     implementation("io.projectreactor.kotlin:reactor-kotlin-extensions")
     implementation("org.springframework.data:spring-data-r2dbc:1.0.0.RELEASE")
     implementation("io.r2dbc:r2dbc-postgresql")

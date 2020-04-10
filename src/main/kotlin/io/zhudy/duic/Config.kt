@@ -28,10 +28,6 @@ object Config {
     const val BEAN_NAME = "io.zhudy.duic.Config"
 
     /**
-     * 服务信息。
-     */
-    lateinit var server: Server
-    /**
      * 超级管理员用户名。
      */
     var rootEmail: String = ""
@@ -42,7 +38,7 @@ object Config {
     /**
      * 管理控制台 JWT 生成、管理信息。
      */
-    var jwt = Jwt()
+    val jwt = Jwt()
     /**
      * 服务并发限制。
      */
@@ -62,19 +58,6 @@ object Config {
          */
         var expiresIn: Long = 12 * 60 // 默认2小时过期
     }
-
-    /**
-     * 服务信息。
-     *
-     * @property host 主机地址
-     * @property port 服务端口
-     * @property sslEnabled 是否启用 SSL
-     */
-    class Server(
-            val host: String,
-            val port: Int,
-            val sslEnabled: Boolean
-    )
 
     /**
      * 服务并发限制。
