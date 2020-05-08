@@ -187,6 +187,13 @@ class AppService(
             // 刷新缓存配置
             val k = localKey(it.name, it.profile)
             val app = mapToCachedApp(it)
+
+            // 如果 APP 的版本号与缓存中的相同则不做任何处理
+            val existsApp = appCaches.get(k) { null }
+            if (existsApp != null && app.v == existsApp.v) {
+                return@subscribe
+            }
+
             appCaches.put(k, app)
             lastDataTime = it.updatedAt
             updateAppQueue.offer(k)

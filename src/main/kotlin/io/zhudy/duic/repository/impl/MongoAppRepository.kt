@@ -229,7 +229,7 @@ open class MongoAppRepository(
      */
     @Suppress("HasPlatformType")
     override fun findByUpdatedAt(updateAt: Date) = appColl
-            .find(gt("updated_at", updateAt))
+            .find(gte("updated_at", updateAt))
             .sort(ascending("updated_at"))
             .toFlux().map(::mapToApp)
 
