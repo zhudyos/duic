@@ -21,17 +21,17 @@ abstract class AbstractAppRepository(
 
     companion object {
         private const val INSERT_SQL = "INSERT INTO DUIC_APP(name,profile,description,token,ip_limit,content,v,gv,users,updated_at,created_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:gv,:users,NOW(),NOW())"
-        private const val INSERT_HISTORY_SQL = "INSERT INTO DUIC_APP_HISTORY(name,profile,description,token,ip_limit,content,v,gv,users,updated_by,deleted_by,created_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:gv,:users,:updatedBy,:deletedBy,NOW())"
+        private const val INSERT_HISTORY_SQL = "INSERT INTO DUIC_APP_HIS(name,profile,description,token,ip_limit,content,v,gv,users,updated_by,deleted_by,created_at) VALUES(:name,:profile,:description,:token,:ipLimit,:content,:v,:gv,:users,:updatedBy,:deletedBy,NOW())"
         private const val DELETE_SQL = "DELETE FROM DUIC_APP WHERE name=:name AND profile=:profile"
         private const val FIND_ONE_SQL = "SELECT * FROM DUIC_APP WHERE name=:name AND profile=:profile"
         private const val UPDATE_SQL = "UPDATE DUIC_APP SET token=:token,ip_limit=:ipLimit,description=:description,users=:users,updated_at=now() WHERE name=:name AND profile=:profile AND v=:v"
         private const val UPDATE_CONTENT_SQL = "UPDATE DUIC_APP SET content=:content,v=v+1,gv=:gv,updated_at=now() WHERE name=:name AND profile=:profile AND v=:v"
         private const val FIND_ALL_SQL = "SELECT * FROM DUIC_APP"
         private const val FIND_4_UPDATED_AT_SQL = "SELECT * FROM DUIC_APP WHERE updated_at>:time ORDER BY updated_at DESC"
-        private const val FIND_APP_HISTORY_SQL = "SELECT * FROM DUIC_APP_HISTORY WHERE name=:name AND profile=:profile AND updated_by<>''"
+        private const val FIND_APP_HISTORY_SQL = "SELECT * FROM DUIC_APP_HIS WHERE name=:name AND profile=:profile AND updated_by<>''"
         private const val FIND_ALL_NAMES = "SELECT name FROM DUIC_APP"
         private const val FIND_PROFILES_BY_NAME = "SELECT profile FROM DUIC_APP WHERE name=:name"
-        private const val FIND_LATEST_DELETED = "SELECT * FROM DUIC_APP_HISTORY WHERE created_at>:time AND deleted_by<>''"
+        private const val FIND_LATEST_DELETED = "SELECT * FROM DUIC_APP_HIS WHERE created_at>:time AND deleted_by<>''"
         private const val FIND_LAST_DATA_TIME_SQL = "SELECT updated_at FROM DUIC_APP ORDER BY updated_at DESC"
     }
 
@@ -160,9 +160,9 @@ abstract class AbstractAppRepository(
             name = row["name"] as String,
             profile = row["profile"] as String,
             description = row["description"] as String,
-            content = row["content"] as String,
-            token = row["token"] as String,
-            ipLimit = row["ip_limit"] as String,
+            content = (row["content"] as? String) ?: "",
+            token = row["token"] as? String,
+            ipLimit = row["ip_limit"] as? String,
             v = row["v"] as Int,
             gv = row["gv"] as Long,
             users = (row["users"] as String).split(","),

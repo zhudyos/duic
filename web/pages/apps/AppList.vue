@@ -2,14 +2,13 @@
   <q-page>
     <q-table
       flat
-      virtual-scroll
-      :data="items"
+      class="app-list"
+      :data.sync="items"
       :columns="columns"
       :pagination.sync="pagination"
-      :rows-per-page-options="[10, 30, 100]"
+      :rows-per-page-options="[0]"
       :loading="loading"
-      :row-key="row => row.name + row.profile"
-      @request="loadApps"
+      row-key="index"
     >
       <template v-slot:top>
         <div class="col-2 q-table__title">应用列表</div>
@@ -88,7 +87,7 @@
                 <q-item-label header>详细</q-item-label>
                 <q-item>
                   <q-item-section side class="caption">
-                    <q-item-label caption>名称（name）</q-item-label>
+                    <q-item-label caption>名称(name)</q-item-label>
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>{{ props.row.name }}</q-item-label>
@@ -96,7 +95,7 @@
                 </q-item>
                 <q-item>
                   <q-item-section side class="caption">
-                    <q-item-label caption>环境（profile）</q-item-label>
+                    <q-item-label caption>环境(profile(</q-item-label>
                   </q-item-section>
                   <q-item-section>
                     <q-item-label>{{ props.row.profile }}</q-item-label>
@@ -159,21 +158,19 @@ import AppEdit from "./AppEdit.vue";
 
 export default {
   data: () => ({
-    pagination: {
-      page: 1,
-      rowsPerPage: 10,
-      rowsNumber: 0
-    },
     loading: false,
     filter: "",
+    pagination: {
+      rowsPerPage: 0
+    },
     columns: [
       {
         name: "name",
-        label: "名称（name）"
+        label: "名称(name)"
       },
       {
         name: "profile",
-        label: "环境（profile）"
+        label: "环境(profile)"
       },
       {
         name: "description",
@@ -190,24 +187,18 @@ export default {
     this.loadApps();
   },
   methods: {
-    loadApps(props) {
-      this.loadApps0(props || { pagination: this.pagination });
+    loadApps() {
+      this.loadApps0();
     },
-    loadApps0(props) {
+    loadApps0() {
       this.loading = true;
 
-      let { page, rowsPerPage } = props.pagination;
       axios
         .get(
-          `/api/admins/apps/user?q=${this.filter}&page=${page}&size=${rowsPerPage}`
+          `/api/admins/apps/user?q=${this.filter}`
         )
         .then(response => {
-          const data = response.data || {};
-          this.items = data.items;
-
-          this.pagination.page = page;
-          this.pagination.rowsPerPage = rowsPerPage;
-          this.pagination.rowsNumber = data.total_items;
+          this.items = response.data || [];
           this.loading = false;
         })
         .catch(() => {
@@ -275,6 +266,14 @@ export default {
 };
 </script>
 <style lang="stylus" scoped>
+.app-list {
+  height: calc(100vh - 200px);
+
+  th {
+    position: sticky;
+    z-index: 1;
+  }
+}
 .details {
   width: 400px;
   max-width: 500px;

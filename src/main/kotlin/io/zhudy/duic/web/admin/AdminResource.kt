@@ -66,7 +66,6 @@ class AdminResource(
                     .setId(user.email)
                     .setIssuedAt(Date())
                     .setExpiration(Date.from(expiresAt))
-                    .setNotBefore(Date.from(expiresAt))
                     .signWith(Keys.hmacShaKeyFor(Config.jwt.secret.toByteArray()))
                     .compact()
 
@@ -208,19 +207,22 @@ class AdminResource(
     /**
      * 查询用户的 apps.
      */
-    fun findAppByUser(request: ServerRequest): Mono<ServerResponse> = appService.search(
-            request.queryParam("q").orElse(null),
-            request.popularParams.pageable,
-            request.userContext()
-    ).flatMap(ok()::bodyValue)
+    fun findAppByUser(request: ServerRequest): Mono<ServerResponse> = appService
+            .search(
+                    request.queryParam("q").orElse(null),
+                    request.userContext()
+            )
+            .collectList()
+            .flatMap(ok()::bodyValue)
 
     /**
      * 搜索配置。
      */
     fun searchAppByUser(request: ServerRequest): Mono<ServerResponse> {
-        val page = request.popularParams.pageable
         val q = request.queryParam("q").orElse("").trim()
-        return appService.search(q, page, request.userContext()).flatMap(ok()::bodyValue)
+        return appService.search(q, request.userContext())
+                .collectList()
+                .flatMap(ok()::bodyValue)
     }
 
     /**

@@ -36,12 +36,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.DependsOn
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.reactive.function.client.WebClient
 import org.yaml.snakeyaml.Yaml
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -63,8 +60,7 @@ import java.util.concurrent.atomic.AtomicReference
 @Service
 @DependsOn(Config.BEAN_NAME)
 class AppService(
-        private val appRepository: AppRepository,
-        private val webClientBuilder: WebClient.Builder
+        private val appRepository: AppRepository
 ) {
 
     companion object {
@@ -90,7 +86,7 @@ class AppService(
     //
     private val lastDataTimeRef = AtomicReference<LocalDateTime>(LocalDateTime.MIN)
     //
-    private val lastAppHistoryCreatedAtRef = AtomicReference<LocalDateTime>(LocalDateTime.MAX)
+    private val lastAppHistoryCreatedAtRef = AtomicReference<LocalDateTime>(LocalDateTime.now())
 
     /**
      * 缓存的 APP 实例。
@@ -98,7 +94,7 @@ class AppService(
     internal data class CachedApp(
             val name: String,
             val profile: String,
-            val token: String,
+            val token: String?,
             val ipLimit: List<IpChecker> = emptyList(),
             val v: Int,
             val properties: Map<Any, Any>
@@ -189,11 +185,6 @@ class AppService(
                             }
                 }
     }
-
-    /**
-     * 获取内存配置状态，如果当前不存在任何配置则返回0。
-     */
-    fun getMemoryLastDataTime() = lastDataTimeRef.get().toEpochSecond(ZoneOffset.ofHours(8))
 
     /**
      * 保存应用。
@@ -431,14 +422,9 @@ class AppService(
     /**
      * 全文检索配置。
      */
-    fun search(q: String?, pageable: Pageable, uc: UserContext): Mono<Page<App>> {
-        val vo = if (uc.isRoot) {
-            AppVo.UserQuery(q = q)
-        } else {
-            AppVo.UserQuery(q = q, email = uc.email)
-        }
-
-        return appRepository.search(vo, pageable)
+    fun search(q: String?, uc: UserContext): Flux<App> {
+        val vo = AppVo.UserQuery(q = q, email = if (uc.isRoot) null else uc.email)
+        return appRepository.search(vo)
     }
 
     /**
@@ -492,7 +478,7 @@ class AppService(
                 }
             }
 
-            if (app.token.isNotEmpty() && !vo.configTokens.contains(app.token)) {
+            if (!app.token.isNullOrEmpty() && !vo.configTokens.contains(app.token)) {
                 throw BizCodeException(BizCode.C401, "${app.name}/${app.profile} 认证失败")
             }
         }

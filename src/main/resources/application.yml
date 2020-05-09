@@ -16,8 +16,7 @@
 
 logging:
   level:
-    root: info
-    liquibase: error
+    root: debug
 
 spring:
   reactor:

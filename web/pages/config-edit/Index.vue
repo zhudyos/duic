@@ -16,9 +16,7 @@
       </q-toolbar>
     </q-header>
     <q-page-container>
-      <q-page>
-        <div ref="codeEditor" style="min-height: calc(100vh - 54px)"></div>
-      </q-page>
+      <div ref="codeEditor" style="min-height: calc(100vh - 54px); overflow: hidden;"></div>
     </q-page-container>
   </q-layout>
 </template>

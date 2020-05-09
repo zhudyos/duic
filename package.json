@@ -15,18 +15,18 @@
     "dll": "webpack -p --progress --config ./webpack.dll.config.js"
   },
   "dependencies": {
-    "@quasar/extras": "^1.6.0",
+    "@quasar/extras": "^1.6.4",
     "axios": "^0.19.2",
     "js-yaml": "^3.13.1",
     "monaco-editor": "^0.20.0",
-    "quasar": "^1.9.11",
+    "quasar": "^1.9.15",
     "vue": "^2.6.11",
     "vue-router": "^3.1.6"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.2.3",
-    "@vue/cli-plugin-eslint": "^4.2.3",
-    "@vue/cli-service": "^4.2.3",
+    "@vue/cli-plugin-babel": "^4.3.1",
+    "@vue/cli-plugin-eslint": "^4.3.1",
+    "@vue/cli-service": "^4.3.1",
     "assets-webpack-plugin": "^3.9.12",
     "babel-eslint": "^10.1.0",
     "clean-webpack-plugin": "^3.0.0",

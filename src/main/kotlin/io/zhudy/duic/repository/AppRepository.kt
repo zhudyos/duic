@@ -20,7 +20,6 @@ import io.zhudy.duic.domain.AppContentHis
 import io.zhudy.duic.domain.AppHis
 import io.zhudy.duic.domain.AppPair
 import io.zhudy.duic.vo.AppVo
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -91,9 +90,8 @@ interface AppRepository {
      * 搜索应用配置并分页返回。
      *
      * @param vo 搜索条件
-     * @param pageable 分页参数
      */
-    fun search(vo: AppVo.UserQuery, pageable: Pageable): Mono<Page<App>>
+    fun search(vo: AppVo.UserQuery): Flux<App>
 
     /**
      * 返回大于指定更新时间的应用配置信息，并且按更新时间 `updated_at` 升序排列。

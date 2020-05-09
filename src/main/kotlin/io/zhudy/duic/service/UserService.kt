@@ -54,7 +54,10 @@ class UserService(
         @PostConstruct
         fun init() {
             userRepository.findByEmail(Config.rootEmail)
-                    .thenEmpty { insert(UserVo.NewUser(Config.rootEmail, Config.rootPassword)) }
+                    .hasElement()
+                    .flatMap {
+                        if (it) Mono.empty() else insert(UserVo.NewUser(Config.rootEmail, Config.rootPassword))
+                    }
                     .subscribe()
         }
     }

@@ -37,6 +37,8 @@ import Quasar, {
   QItem,
   QItemLabel,
   QItemSection,
+  // 
+  QVirtualScroll,
   // table
   QTable,
   QTh,
@@ -85,6 +87,7 @@ Vue.use(Quasar, {
     QItem,
     QItemLabel,
     QItemSection,
+    QVirtualScroll,
     QTable,
     QTh,
     QTr,

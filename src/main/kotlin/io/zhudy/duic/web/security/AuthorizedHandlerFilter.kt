@@ -23,6 +23,7 @@ import io.zhudy.duic.Config
 import io.zhudy.duic.UserContext
 import io.zhudy.kitty.core.biz.BizCode
 import io.zhudy.kitty.core.biz.BizCodeException
+import org.apache.logging.log4j.LogManager
 import org.springframework.web.reactive.function.server.HandlerFilterFunction
 import org.springframework.web.reactive.function.server.HandlerFunction
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -34,6 +35,10 @@ import java.security.SignatureException
  * @author Kevin Zou (kevinz@weghst.com)
  */
 class AuthorizedHandlerFilter : HandlerFilterFunction<ServerResponse, ServerResponse> {
+
+    companion object {
+        private val log = LogManager.getLogger(AuthorizedHandlerFilter::class.java)
+    }
 
     override fun filter(request: ServerRequest, next: HandlerFunction<ServerResponse>): Mono<ServerResponse> {
         if (request.uri().path.endsWith("/api/admins/login")) {
@@ -48,13 +53,16 @@ class AuthorizedHandlerFilter : HandlerFilterFunction<ServerResponse, ServerResp
         val jwt = try {
             Jwts.parser()
                     .setSigningKey(Keys.hmacShaKeyFor(Config.jwt.secret.toByteArray()))
-                    .parseClaimsJwt(token)
+                    .parseClaimsJws(token)
         } catch (e: MalformedJwtException) {
             throw BizCodeException(BizCode.C401, "解析 token 失败 ${e.message}")
         } catch (e: ExpiredJwtException) {
             throw BizCodeException(BizCode.C401, "token 已经过期请重新登录")
         } catch (e: SignatureException) {
             throw BizCodeException(BizCode.C401, "access_token 校验失败")
+        } catch (e: Exception) {
+            log.error("解析 TOKEN 失败 {}", token, e)
+            throw BizCodeException(BizCode.C401, "解析 TOKEN 失败")
         }
 
         if (jwt.body.id.isNullOrEmpty()) {

@@ -42,12 +42,12 @@ data class AppHis(
         val profile: String,
         val description: String,
         val content: String,
-        val token: String = "",
-        val ipLimit: String = "",
+        val token: String?,
+        val ipLimit: String?,
         val v: Int,
         val gv: Long,
-        val updatedBy: String = "",
-        val deletedBy: String = "",
+        val updatedBy: String? = null,
+        val deletedBy: String? = null,
         val users: List<String>,
         val createdAt: LocalDateTime
 )
