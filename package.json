@@ -20,7 +20,7 @@
     "js-cookie": "^2.1.3",
     "js-yaml": "^3.13.1",
     "monaco-editor": "^0.14.2",
-    "swagger-ui": "^3.18.2",
+    "swagger-ui": "^3.23.11",
     "vue": "^2.5.17",
     "vue-clipboard2": "0.0.9",
     "vue-router": "^3.0.1",
