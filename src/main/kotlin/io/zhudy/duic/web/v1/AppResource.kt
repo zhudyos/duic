@@ -81,7 +81,7 @@ class AppResource(
     fun getConfigByNameProfile(request: ServerRequest): Mono<ServerResponse> {
         val vo = getRequestConfigVo(request)
         return appService.loadConfigByNameProfile(vo).flatMap {
-            ok().body(it)
+            ok().header("x-duic-config-state", it.state).body(it.properties)
         }
     }
 

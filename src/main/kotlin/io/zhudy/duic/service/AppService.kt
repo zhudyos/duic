@@ -22,6 +22,7 @@ import io.zhudy.duic.domain.App
 import io.zhudy.duic.domain.Page
 import io.zhudy.duic.domain.Pageable
 import io.zhudy.duic.domain.SingleValue
+import io.zhudy.duic.dto.ConfigResponse
 import io.zhudy.duic.dto.ServerRefreshDto
 import io.zhudy.duic.dto.SpringCloudPropertySource
 import io.zhudy.duic.dto.SpringCloudResponseDto
@@ -417,14 +418,21 @@ class AppService(
     /**
      * 获取配置。
      */
-    fun loadConfigByNameProfile(vo: RequestConfigVo) = loadAndCheckApps(vo).map(::mergeProps)
+    fun loadConfigByNameProfile(vo: RequestConfigVo) = loadAndCheckApps(vo)
+            .map { apps ->
+                val state = StringBuilder()
+                apps.forEach {
+                    state.append(it.v)
+                }
+                return@map ConfigResponse(state = state.toString(), properties = this.mergeProps(apps))
+            }
 
     /**
      * 获取某个 `key` 的具体配置。
      */
     fun loadConfigByNameProfileKey(vo: RequestConfigVo): Mono<Any> {
         return loadConfigByNameProfile(vo).map {
-            var props = it
+            var props = it.properties
             var v: Any? = null
             for (k in vo.key.split(".")) {
                 v = props[k]
