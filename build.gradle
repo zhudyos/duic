@@ -20,11 +20,11 @@ plugins {
     id "net.researchgate.release" version "2.8.0"
     id "com.moowork.node" version "1.3.1"
     id "com.github.hierynomus.license" version "0.15.0"
-    id "com.bmuschko.docker-remote-api" version "4.10.0"
+    id "com.bmuschko.docker-remote-api" version "7.1.0"
 }
 
 apply plugin: "java"
-apply plugin: "maven"
+apply plugin: "maven-publish"
 apply plugin: "idea"
 apply plugin: "jacoco"
 apply plugin: "kotlin"
@@ -230,7 +230,7 @@ task createDockerfile(type: com.bmuschko.gradle.docker.tasks.image.Dockerfile, d
 task buildImage(type: com.bmuschko.gradle.docker.tasks.image.DockerBuildImage, dependsOn: createDockerfile) {
     group = "docker"
     inputDir = project.file("${project.buildDir}/docker")
-    tags = ["zhudyos/${project.name}:${project.version}".toString(), "zhudyos/${project.name}:latest".toString()]
+//    tags = ["zhudyos/${project.name}:${project.version}".toString(), "zhudyos/${project.name}:latest".toString()]
 }
 
 task copyRelease(type: Copy) {
